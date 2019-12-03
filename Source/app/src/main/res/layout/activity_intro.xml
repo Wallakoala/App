@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center|bottom">
+
+    <com.movielix.font.MovieLixTextView
+        android:id="@+id/intro_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/app_name"
+        android:textSize="46sp"
+        android:textColor="@color/colorAccent"
+        app:customFont="BebasNeue-Regular.otf"/>
+
+    <com.movielix.font.MovieLixTextView
+        android:id="@+id/intro_slogan"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:textAlignment="center"
+        android:text="@string/intro_slogan"
+        android:textColor="@color/textDark"
+        app:customFont="Raleway-Light.ttf"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingBottom="136dp"
+        android:paddingStart="48dp"
+        android:paddingEnd="48dp"
+        android:paddingTop="128dp">
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/intro_register"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:text="@string/intro_register"
+            android:textColor="@color/colorAccent"
+            android:background="@drawable/rounded_button_border"/>
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/intro_login"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/intro_login"
+            android:background="@drawable/rounded_button_fill"/>
+
+    </LinearLayout>
+
+    <com.movielix.font.MovieLixTextView
+        android:id="@+id/intro_terms"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/intro_terms"
+        android:textColor="@color/textIdle"
+        android:textSize="12sp"
+        android:layout_marginBottom="16dp"
+        app:customFont="Raleway-Medium.ttf"/>
+
+</LinearLayout>

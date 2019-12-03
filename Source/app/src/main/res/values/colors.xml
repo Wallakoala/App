@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#363636</color>
+    <color name="colorPrimaryMedium">#232323</color>
+    <color name="colorPrimaryDark">#131313</color>
+    <color name="colorAccent">#F59309</color>
+    <color name="colorAccent2">#DB3264</color>
+    <color name="lightGray">#DDDDDD</color>
+
+    <color name="lightBackground">#F5F5F5</color>
+
+    <color name="textIdle">#AAAAAA</color>
+    <color name="textLight">#EEEEEE</color>
+    <color name="textDark">#888888</color>
+
+    <color name="dark_divider">#999999</color>
+    <color name="divider">#DDDDDD</color>
+</resources>

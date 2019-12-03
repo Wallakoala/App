@@ -1,0 +1,40 @@
+<resources>
+    <string name="app_name">MovieLix</string>
+
+    <string name="tab_left">Valoraciones</string>
+    <string name="tab_right">Amigos</string>
+
+    <string name="navigation_drawer_open">Navigation drawer opened</string>
+    <string name="navigation_drawer_close">Navigation drawer closed</string>
+    <string name="navigation_item_reviews">Mis valoraciones</string>
+    <string name="navigation_item_feedback">Valóranos</string>
+    <string name="navigation_item_licencias">Licencias</string>
+    <string name="navigation_item_salir">Salir</string>
+    <string name="navigation_profile_name">Dani Mancebo</string>
+    <string name="navigation_profile_email">daniel.m.aldea@hotmail.com</string>
+
+    <string name="reviews_item_name">Rebecca la ha valorado con:</string>
+    <string name="reviews_item_movie">La La Land</string>
+    <string name="reviews_item_movie_info">(2016) - Comedia, Romance</string>
+    <string name="reviews_item_movie_overview">Mia (Emma Stone), una joven aspirante a actriz que trabaja como camarera mientras acude a castings, y Sebastian (Ryan Gosling), un …</string>
+    <string name="reviews_item_movie_duration">2h 8m</string>
+    <string name="reviews_item_movie_rating_1">9.1 /</string>
+    <string name="reviews_item_movie_rating_2">10</string>
+
+    <string name="friend_num_reviews">4 valoraciones</string>
+    <string name="friend_follow">Seguir</string>
+    <string name="friend_unfollow">Siguiendo</string>
+
+    <string name="rating_image">Rating image</string>
+
+    <string name="intro_slogan">Todas las opiniones que te importan\n en un sólo sitio.</string>
+    <string name="intro_register">REGISTRAR</string>
+    <string name="intro_login">ENTRAR</string>
+    <string name="intro_terms">Términos y condiciones</string>
+    <string name="register_option">O REGÍSTRATE CON</string>
+    <string name="login_option">O ENTRA CON</string>
+    <string name="login_forget_password">¿Has olvidado la contraseña?</string>
+
+    <string name="hint_email">E-mail</string>
+    <string name="hint_password">Contraseña</string>
+</resources>

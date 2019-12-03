@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="MovieLixTextView">
+        <attr name="customFont" format="string"/>
+    </declare-styleable>
+
+    <declare-styleable name="MovieLixEditText">
+        <attr name="customFontEd" format="string"/>
+    </declare-styleable>
+</resources>
