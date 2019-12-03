@@ -16,4 +16,5 @@ jobs:
     - name: Build with Gradle
       run: |
         cd Source/
+        chmod a+x gradlew
         ./gradlew build
