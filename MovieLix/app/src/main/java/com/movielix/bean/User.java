@@ -1,5 +1,7 @@
 package com.movielix.bean;
 
+import androidx.annotation.NonNull;
+
 import java.util.List;
 
 /**
@@ -17,6 +19,9 @@ public class User {
 
     private User() {}
 
+    /**
+     * Builder class for constructing a User.
+     */
     public static class Builder {
 
         private int id;
@@ -30,19 +35,19 @@ public class User {
             this.id = id;
         }
 
-        public Builder withEmail(String email) {
+        public Builder withEmail(final String email) {
             this.email = email;
 
             return this;
         }
 
-        public Builder named(String name) {
+        public Builder named(final String name) {
             this.name = name;
 
             return this;
         }
 
-        public Builder withFriends(List<User> friends) {
+        public Builder withFriends(final List<User> friends) {
             this.friends = friends;
 
             return this;
