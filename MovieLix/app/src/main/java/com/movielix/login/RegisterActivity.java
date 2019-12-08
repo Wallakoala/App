@@ -4,21 +4,24 @@ import android.animation.ObjectAnimator;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
 import android.view.ViewTreeObserver;
+import android.view.WindowManager;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.DecelerateInterpolator;
-import android.widget.Button;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
 import androidx.appcompat.widget.AppCompatEditText;
 
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.movielix.R;
 import com.movielix.constants.Constants;
+import com.movielix.util.InputValidator;
 import com.movielix.view.TextInputLayout;
 import com.movielix.font.TypeFace;
 
@@ -190,6 +193,9 @@ public class RegisterActivity extends AppCompatActivity {
         mNameInputLayout.setTypeface(TypeFace.getTypeFace(this, "Raleway-Light.ttf"));
         mEmailInputLayout.setTypeface(TypeFace.getTypeFace(this, "Raleway-Light.ttf"));
         mPasswordInputLayout.setTypeface(TypeFace.getTypeFace(this, "Raleway-Light.ttf"));
+
+        mNameEditText.addTextChangedListener(new MyTextWatcher(mNameEditText));
+        mPasswordEditText.addTextChangedListener(new MyTextWatcher(mPasswordEditText));
     }
 
     private void runEnterAnimation() {
@@ -364,5 +370,87 @@ public class RegisterActivity extends AppCompatActivity {
         bgAnim.setDuration(EXIT_ANIM_DURATION - 225);
         bgAnim.setStartDelay(225);
         bgAnim.start();
+    }
+
+    /**
+     * Custom TextWatcher to validate the fields.
+     */
+    private class MyTextWatcher implements TextWatcher {
+
+        private View view;
+
+        private MyTextWatcher(View view) {
+            this.view = view;
+        }
+
+        public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
+
+        public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
+
+        public void afterTextChanged(Editable editable) {
+            switch (view.getId()) {
+                case R.id.name_edittext:
+                    validateName(mNameEditText, mNameInputLayout);
+                    break;
+
+                case R.id.password_edittext:
+                    validatePassword(mPasswordEditText, mPasswordInputLayout);
+                    break;
+            }
+        }
+    }
+
+    /**
+     * Checks whether the name is valid or not, and updates the UI accordingly.
+     *
+     * @return true if the name is correct.
+     */
+    private boolean validateName(@NonNull AppCompatEditText editText, @NonNull TextInputLayout textInputLayout) {
+        Editable name = editText.getText();
+
+        if ((name == null) || !InputValidator.isValidName(name.toString())) {
+            textInputLayout.setErrorEnabled(true);
+            textInputLayout.setError("Nombre incorrecto");
+
+            requestFocus(editText);
+
+            return false;
+
+        } else {
+            textInputLayout.setError(null);
+            textInputLayout.setErrorEnabled(false);
+        }
+
+        return true;
+    }
+
+    /**
+     * Checks whether the password is valid or not, and updates the UI accordingly.
+     *
+     * @return true if the password is correct.
+     */
+    private boolean validatePassword(@NonNull AppCompatEditText editText, @NonNull TextInputLayout textInputLayout) {
+        Editable password = editText.getText();
+
+        if ((password == null) || !InputValidator.isValidPassword(password.toString())) {
+            textInputLayout.setErrorEnabled(true);
+            textInputLayout.setError("Contraseña incorrecta (6 caracteres min)");
+
+            requestFocus(editText);
+
+            return false;
+
+        } else {
+            textInputLayout.setError(null);
+            textInputLayout.setErrorEnabled(false);
+        }
+
+        return true;
+    }
+
+    private void requestFocus(@NonNull final View view) {
+        if (view.requestFocus()) {
+            getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
+        }
     }
 }
