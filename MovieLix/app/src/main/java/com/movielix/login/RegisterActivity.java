@@ -9,10 +9,14 @@ import android.view.ViewTreeObserver;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.DecelerateInterpolator;
+import android.widget.Button;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
+import androidx.appcompat.widget.AppCompatEditText;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.movielix.R;
 import com.movielix.constants.Constants;
 import com.movielix.view.TextInputLayout;
@@ -35,14 +39,22 @@ public class RegisterActivity extends AppCompatActivity {
     private static final int ENTER_ANIM_TRANSLATION = -200;
     private static final int EXIT_ANIM_TRANSLATION = 200;
 
+    /* Firebase */
+    private FirebaseAuth mAuth;
+
     /* Views */
     private View mContainer;
     private View mDivider;
     private View mSocialButtons;
     private View mTitle;
 
+    private TextInputLayout mNameInputLayout;
     private TextInputLayout mEmailInputLayout;
     private TextInputLayout mPasswordInputLayout;
+
+    private AppCompatEditText mNameEditText;
+    private AppCompatEditText mEmailEditText;
+    private AppCompatEditText mPasswordEditText;
 
     private AppCompatButton mRegisterButton;
 
@@ -114,10 +126,8 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     @Override
-    public void onBackPressed()
-    {
-        if (!mExiting)
-        {
+    public void onBackPressed() {
+        if (!mExiting) {
             runExitAnimation(new Runnable() {
                 public void run() {
                     finish();
@@ -127,8 +137,7 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     @Override
-    public void finish()
-    {
+    public void finish() {
         super.finish();
 
         overridePendingTransition(0, 0);
@@ -148,6 +157,9 @@ public class RegisterActivity extends AppCompatActivity {
         mButtonHeight = bundle.getInt(Constants.PACKAGE + ".heightButton");
 
         mExiting = false;
+
+        // Initialize Firebase Auth
+        mAuth = FirebaseAuth.getInstance();
     }
 
     private void initViews() {
@@ -156,14 +168,26 @@ public class RegisterActivity extends AppCompatActivity {
         mSocialButtons       = findViewById(R.id.register_social_buttons);
         mTitle               = findViewById(R.id.register_title);
         mRegisterButton      = findViewById(R.id.register_button);
+        mNameInputLayout     = findViewById(R.id.name_input_layout);
         mEmailInputLayout    = findViewById(R.id.email_input_layout);
         mPasswordInputLayout = findViewById(R.id.password_input_layout);
+        mNameEditText        = findViewById(R.id.name_edittext);
+        mEmailEditText       = findViewById(R.id.email_edittext);
+        mPasswordEditText    = findViewById(R.id.password_edittext);
 
         mBackground = getDrawable(R.drawable.dark_background);
         mContainer.setBackground(mBackground);
+
+        mRegisterButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
     }
 
     private void initEditText() {
+        mNameInputLayout.setTypeface(TypeFace.getTypeFace(this, "Raleway-Light.ttf"));
         mEmailInputLayout.setTypeface(TypeFace.getTypeFace(this, "Raleway-Light.ttf"));
         mPasswordInputLayout.setTypeface(TypeFace.getTypeFace(this, "Raleway-Light.ttf"));
     }
@@ -193,11 +217,13 @@ public class RegisterActivity extends AppCompatActivity {
         mRegisterButton.setTranslationX(mLeftDeltaButton);
         mRegisterButton.setTranslationY(mTopDeltaButton);
 
+        mNameInputLayout.setTranslationY(-ENTER_ANIM_TRANSLATION);
         mEmailInputLayout.setTranslationY(-ENTER_ANIM_TRANSLATION);
         mPasswordInputLayout.setTranslationY(-ENTER_ANIM_TRANSLATION);
         mDivider.setTranslationY(-ENTER_ANIM_TRANSLATION);
         mSocialButtons.setTranslationY(-ENTER_ANIM_TRANSLATION);
 
+        mNameInputLayout.setAlpha(0.0f);
         mEmailInputLayout.setAlpha(0.0f);
         mPasswordInputLayout.setAlpha(0.0f);
         mDivider.setAlpha(0.0f);
@@ -210,7 +236,7 @@ public class RegisterActivity extends AppCompatActivity {
                 .translationX(0).translationY(0)
                 .setInterpolator(new AccelerateDecelerateInterpolator());
 
-        mEmailInputLayout.animate()
+        mNameInputLayout.animate()
                 .withLayer()
                 .setDuration(ENTER_ANIM_DURATION - ENTER_ANIM_OFFSET)
                 .setStartDelay(ENTER_ANIM_OFFSET)
@@ -218,7 +244,7 @@ public class RegisterActivity extends AppCompatActivity {
                 .translationYBy(ENTER_ANIM_TRANSLATION)
                 .alpha(1.0f);
 
-        mPasswordInputLayout.animate()
+        mEmailInputLayout.animate()
                 .withLayer()
                 .setDuration(ENTER_ANIM_DURATION - ENTER_ANIM_OFFSET * 2)
                 .setStartDelay(ENTER_ANIM_OFFSET * 2)
@@ -226,26 +252,34 @@ public class RegisterActivity extends AppCompatActivity {
                 .translationYBy(ENTER_ANIM_TRANSLATION)
                 .alpha(1.0f);
 
-        mRegisterButton.animate()
+        mPasswordInputLayout.animate()
                 .withLayer()
                 .setDuration(ENTER_ANIM_DURATION - ENTER_ANIM_OFFSET * 3)
                 .setStartDelay(ENTER_ANIM_OFFSET * 3)
+                .setInterpolator(new DecelerateInterpolator())
+                .translationYBy(ENTER_ANIM_TRANSLATION)
+                .alpha(1.0f);
+
+        mRegisterButton.animate()
+                .withLayer()
+                .setDuration(ENTER_ANIM_DURATION - ENTER_ANIM_OFFSET * 4)
+                .setStartDelay(ENTER_ANIM_OFFSET * 4)
                 .scaleX(1).scaleY(1)
                 .translationX(0).translationY(0)
                 .setInterpolator(new AccelerateDecelerateInterpolator());
 
         mDivider.animate()
                 .withLayer()
-                .setDuration(ENTER_ANIM_DURATION - ENTER_ANIM_OFFSET * 4)
-                .setStartDelay(ENTER_ANIM_OFFSET * 4)
+                .setDuration(ENTER_ANIM_DURATION - ENTER_ANIM_OFFSET * 5)
+                .setStartDelay(ENTER_ANIM_OFFSET * 5)
                 .setInterpolator(new DecelerateInterpolator())
                 .translationYBy(ENTER_ANIM_TRANSLATION)
                 .alpha(1.0f);
 
         mSocialButtons.animate()
                 .withLayer()
-                .setDuration(ENTER_ANIM_DURATION - ENTER_ANIM_OFFSET * 5)
-                .setStartDelay(ENTER_ANIM_OFFSET * 5)
+                .setDuration(ENTER_ANIM_DURATION - ENTER_ANIM_OFFSET * 6)
+                .setStartDelay(ENTER_ANIM_OFFSET * 6)
                 .setInterpolator(new DecelerateInterpolator())
                 .translationYBy(ENTER_ANIM_TRANSLATION)
                 .alpha(1.0f);
@@ -307,10 +341,18 @@ public class RegisterActivity extends AppCompatActivity {
                 .translationYBy(EXIT_ANIM_TRANSLATION)
                 .alpha(0.0f);
 
-        mTitle.animate()
+        mNameInputLayout.animate()
                 .withLayer()
                 .setDuration(EXIT_ANIM_DURATION - EXIT_ANIM_OFFSET * 5)
                 .setStartDelay(EXIT_ANIM_OFFSET * 5)
+                .setInterpolator(new AccelerateInterpolator())
+                .translationYBy(EXIT_ANIM_TRANSLATION)
+                .alpha(0.0f);
+
+        mTitle.animate()
+                .withLayer()
+                .setDuration(EXIT_ANIM_DURATION - EXIT_ANIM_OFFSET * 6)
+                .setStartDelay(EXIT_ANIM_OFFSET * 6)
                 .setInterpolator(new AccelerateDecelerateInterpolator())
                 .scaleX(mWidthScaleTitle).scaleY(mHeightScaleTitle)
                 .translationX(mLeftDeltaTitle).translationY(mTopDeltaTitle)

@@ -35,10 +35,37 @@
         android:paddingBottom="16dp"
         android:orientation="vertical">
 
+        <!-- Name -->
+        <com.movielix.view.TextInputLayout
+            android:id="@+id/name_input_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColorHint="@color/textDark"
+            android:theme="@style/TextLabel">
+
+            <com.movielix.font.MovieLixEditText
+                android:id="@+id/name_edittext"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textPersonName"
+                android:maxLines="1"
+                android:maxLength="64"
+                android:textSize="16sp"
+                android:textColor="@color/textLight"
+                android:textColorHint="@color/textDark"
+                android:hint="@string/hint_username"
+                android:nextFocusUp="@id/email_edittext"
+                android:nextFocusLeft="@id/email_edittext"
+                app:customFontEd="Raleway-Light.ttf"/>
+
+        </com.movielix.view.TextInputLayout>
+
+        <!-- Email -->
         <com.movielix.view.TextInputLayout
             android:id="@+id/email_input_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
             android:textColorHint="@color/textDark"
             android:theme="@style/TextLabel">
 
@@ -53,12 +80,13 @@
                 android:textColor="@color/textLight"
                 android:textColorHint="@color/textDark"
                 android:hint="@string/hint_email"
-                android:nextFocusUp="@id/email_edittext"
-                android:nextFocusLeft="@id/email_edittext"
+                android:nextFocusUp="@id/password_edittext"
+                android:nextFocusLeft="@id/password_edittext"
                 app:customFontEd="Raleway-Light.ttf"/>
 
         </com.movielix.view.TextInputLayout>
 
+        <!-- Password -->
         <com.movielix.view.TextInputLayout
             android:id="@+id/password_input_layout"
             android:layout_width="match_parent"
@@ -84,6 +112,7 @@
 
         </com.movielix.view.TextInputLayout>
 
+        <!-- Register button -->
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/register_button"
             android:layout_width="match_parent"
@@ -127,6 +156,7 @@
 
         </LinearLayout>
 
+        <!-- Social buttons -->
         <LinearLayout
             android:id="@+id/register_social_buttons"
             android:layout_width="match_parent"
