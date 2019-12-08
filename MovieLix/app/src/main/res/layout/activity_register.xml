@@ -113,13 +113,15 @@
         </com.movielix.view.TextInputLayout>
 
         <!-- Register button -->
-        <androidx.appcompat.widget.AppCompatButton
+        <br.com.simplepass.loadingbutton.customViews.CircularProgressButton
             android:id="@+id/register_button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="48dp"
             android:text="@string/intro_register"
-            android:background="@drawable/rounded_button_fill"/>
+            android:background="@drawable/rounded_button_fill"
+            app:spinning_bar_width="2dp"
+            app:spinning_bar_padding="6dp"/>
 
         <LinearLayout
             android:id="@+id/register_divider"

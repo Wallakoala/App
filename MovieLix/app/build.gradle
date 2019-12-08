@@ -48,6 +48,7 @@ dependencies {
     implementation 'com.mashape.unirest:unirest-java:1.4.9'
     implementation 'org.json:json:20190722'
     implementation 'de.hdodenhof:circleimageview:3.0.1'
+    implementation 'br.com.simplepass:loading-button-android:2.2.0'
     implementation 'com.makeramen:roundedimageview:2.3.0'
     implementation 'com.squareup.picasso:picasso:2.71828'
     implementation 'com.daimajia.easing:library:2.1@aar'

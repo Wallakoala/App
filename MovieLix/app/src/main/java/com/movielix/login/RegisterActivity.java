@@ -15,7 +15,6 @@ import android.view.animation.DecelerateInterpolator;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.AppCompatButton;
 import androidx.appcompat.widget.AppCompatEditText;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -26,6 +25,8 @@ import com.movielix.view.TextInputLayout;
 import com.movielix.font.TypeFace;
 
 import java.util.Objects;
+
+import br.com.simplepass.loadingbutton.customViews.CircularProgressButton;
 
 /**
  * Register screen
@@ -59,7 +60,7 @@ public class RegisterActivity extends AppCompatActivity {
     private AppCompatEditText mEmailEditText;
     private AppCompatEditText mPasswordEditText;
 
-    private AppCompatButton mRegisterButton;
+    private CircularProgressButton mRegisterButton;
 
     private Drawable mBackground;
 
@@ -184,7 +185,7 @@ public class RegisterActivity extends AppCompatActivity {
         mRegisterButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                
             }
         });
     }
