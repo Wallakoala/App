@@ -6,6 +6,7 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.view.WindowManager;
@@ -17,7 +18,14 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatEditText;
 
+import com.daimajia.androidanimations.library.Techniques;
+import com.daimajia.androidanimations.library.YoYo;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.UserProfileChangeRequest;
 import com.movielix.R;
 import com.movielix.constants.Constants;
 import com.movielix.util.InputValidator;
@@ -33,6 +41,8 @@ import br.com.simplepass.loadingbutton.customViews.CircularProgressButton;
  */
 
 public class RegisterActivity extends AppCompatActivity {
+
+    private static final int SHAKE_ANIM_DURATION = 250;
 
     private static final int ENTER_ANIM_DURATION = 350;
     private static final int EXIT_ANIM_DURATION = 250;
@@ -185,7 +195,66 @@ public class RegisterActivity extends AppCompatActivity {
         mRegisterButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                
+                if (!validateName(mNameEditText, mNameInputLayout)) {
+                    YoYo.with(Techniques.Shake)
+                        .duration(SHAKE_ANIM_DURATION)
+                        .playOn(mNameEditText);
+
+                } else if (!validateEmail(mEmailEditText, mEmailInputLayout)) {
+                    YoYo.with(Techniques.Shake)
+                        .duration(SHAKE_ANIM_DURATION)
+                        .playOn(mEmailEditText);
+
+                } else if (!validatePassword(mPasswordEditText, mPasswordInputLayout)) {
+                    YoYo.with(Techniques.Shake)
+                        .duration(SHAKE_ANIM_DURATION)
+                        .playOn(mPasswordEditText);
+
+                } else {
+                    Log.d(Constants.TAG, "All fields are correct, signing user up");
+
+                    final String name = Objects.requireNonNull(mNameEditText.getText()).toString();
+                    final String email = Objects.requireNonNull(mEmailEditText.getText()).toString();
+                    final String password = Objects.requireNonNull(mPasswordEditText.getText()).toString();
+
+                    mAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(RegisterActivity.this, new OnCompleteListener<AuthResult>() {
+                        @Override
+                        public void onComplete(@NonNull Task<AuthResult> task) {
+                            if (task.isSuccessful()) {
+                                Log.d(Constants.TAG, "createUserWithEmail: success");
+                                FirebaseUser user = mAuth.getCurrentUser();
+
+                                if (user != null) {
+                                    UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
+                                            .setDisplayName(name)
+                                            .build();
+
+                                    user.updateProfile(profileUpdates)
+                                            .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                                @Override
+                                                public void onComplete(@NonNull Task<Void> task) {
+                                                    if (task.isSuccessful()) {
+                                                        Log.d(Constants.TAG, "User profile updated.");
+
+                                                        // TODO show success message
+                                                    }
+                                                }
+                                            });
+
+                                } else {
+                                    Log.wtf(Constants.TAG, "User is null after creation");
+
+                                    // TODO show error
+                                }
+
+                            } else {
+                                Log.w(Constants.TAG, "createUserWithEmail: failure", task.getException());
+
+                                // TODO show error
+                            }
+                        }
+                    });
+                }
             }
         });
     }
@@ -196,6 +265,7 @@ public class RegisterActivity extends AppCompatActivity {
         mPasswordInputLayout.setTypeface(TypeFace.getTypeFace(this, "Raleway-Light.ttf"));
 
         mNameEditText.addTextChangedListener(new MyTextWatcher(mNameEditText));
+        mEmailEditText.addTextChangedListener(new MyTextWatcher(mEmailEditText));
         mPasswordEditText.addTextChangedListener(new MyTextWatcher(mPasswordEditText));
     }
 
@@ -394,6 +464,10 @@ public class RegisterActivity extends AppCompatActivity {
                     validateName(mNameEditText, mNameInputLayout);
                     break;
 
+                case R.id.email_edittext:
+                    validateEmail(mEmailEditText, mEmailInputLayout);
+                    break;
+
                 case R.id.password_edittext:
                     validatePassword(mPasswordEditText, mPasswordInputLayout);
                     break;
@@ -412,6 +486,31 @@ public class RegisterActivity extends AppCompatActivity {
         if ((name == null) || !InputValidator.isValidName(name.toString())) {
             textInputLayout.setErrorEnabled(true);
             textInputLayout.setError("Nombre incorrecto");
+
+            requestFocus(editText);
+
+            return false;
+
+        } else {
+            textInputLayout.setError(null);
+            textInputLayout.setErrorEnabled(false);
+        }
+
+        return true;
+    }
+
+    /**
+     * Checks whether the email is valid or not, and updates the UI accordingly.
+     *
+     * @return true if the email is correct.
+     */
+    private boolean validateEmail(@NonNull AppCompatEditText editText, @NonNull TextInputLayout textInputLayout) {
+        Editable email = editText.getText();
+
+
+        if ((email == null) || !InputValidator.isValidEmail(email.toString())) {
+            textInputLayout.setErrorEnabled(true);
+            textInputLayout.setError("Email incorrecto");
 
             requestFocus(editText);
 

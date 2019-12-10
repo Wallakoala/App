@@ -25,6 +25,16 @@ public class InputValidator {
     }
 
     /**
+     * Validates an email address.
+     *
+     * @param email: email address to be validated.
+     * @return true if the email address is correcet.
+     */
+    public static boolean isValidEmail(@NonNull final String email) {
+        return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches();
+    }
+
+    /**
      * Validates the password.
      *
      * @param password: password to be validated.
