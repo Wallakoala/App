@@ -13,6 +13,10 @@ public class InputValidator {
      * @return true if the name is correct.
      */
     public static boolean isValidName(@NonNull final String name) {
+        if (name.isEmpty()) {
+            return false;
+        }
+
         final char[] chars = name.toCharArray();
 
         for (char c : chars) {

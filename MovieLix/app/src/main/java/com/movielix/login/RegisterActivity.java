@@ -1,5 +1,6 @@
 package com.movielix.login;
 
+import android.animation.Animator;
 import android.animation.ObjectAnimator;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.Drawable;
@@ -12,6 +13,7 @@ import android.view.ViewTreeObserver;
 import android.view.WindowManager;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.AccelerateInterpolator;
+import android.view.animation.AnimationUtils;
 import android.view.animation.DecelerateInterpolator;
 
 import androidx.annotation.NonNull;
@@ -42,7 +44,7 @@ import br.com.simplepass.loadingbutton.customViews.CircularProgressButton;
 
 public class RegisterActivity extends AppCompatActivity {
 
-    private static final int SHAKE_ANIM_DURATION = 250;
+    private static final int SHAKE_ANIM_DURATION = 350;
 
     private static final int ENTER_ANIM_DURATION = 350;
     private static final int EXIT_ANIM_DURATION = 250;
@@ -94,6 +96,7 @@ public class RegisterActivity extends AppCompatActivity {
     private float mHeightScaleButton;
 
     private boolean mExiting;
+    private boolean mRegistering;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -171,6 +174,7 @@ public class RegisterActivity extends AppCompatActivity {
         mButtonHeight = bundle.getInt(Constants.PACKAGE + ".heightButton");
 
         mExiting = false;
+        mRegistering = false;
 
         // Initialize Firebase Auth
         mAuth = FirebaseAuth.getInstance();
@@ -195,65 +199,69 @@ public class RegisterActivity extends AppCompatActivity {
         mRegisterButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (!validateName(mNameEditText, mNameInputLayout)) {
-                    YoYo.with(Techniques.Shake)
-                        .duration(SHAKE_ANIM_DURATION)
-                        .playOn(mNameEditText);
+                if (!mRegistering) {
+                    if (!validateName(mNameEditText, mNameInputLayout)) {
+                        YoYo.with(Techniques.Shake)
+                                .duration(SHAKE_ANIM_DURATION)
+                                .playOn(mNameInputLayout);
 
-                } else if (!validateEmail(mEmailEditText, mEmailInputLayout)) {
-                    YoYo.with(Techniques.Shake)
-                        .duration(SHAKE_ANIM_DURATION)
-                        .playOn(mEmailEditText);
+                    } else if (!validateEmail(mEmailEditText, mEmailInputLayout)) {
+                        YoYo.with(Techniques.Shake)
+                                .duration(SHAKE_ANIM_DURATION)
+                                .playOn(mEmailInputLayout);
 
-                } else if (!validatePassword(mPasswordEditText, mPasswordInputLayout)) {
-                    YoYo.with(Techniques.Shake)
-                        .duration(SHAKE_ANIM_DURATION)
-                        .playOn(mPasswordEditText);
+                    } else if (!validatePassword(mPasswordEditText, mPasswordInputLayout)) {
+                        YoYo.with(Techniques.Shake)
+                                .duration(SHAKE_ANIM_DURATION)
+                                .playOn(mPasswordInputLayout);
 
-                } else {
-                    Log.d(Constants.TAG, "All fields are correct, signing user up");
+                    } else {
+                        Log.d(Constants.TAG, "All fields are correct, signing user up");
 
-                    final String name = Objects.requireNonNull(mNameEditText.getText()).toString();
-                    final String email = Objects.requireNonNull(mEmailEditText.getText()).toString();
-                    final String password = Objects.requireNonNull(mPasswordEditText.getText()).toString();
+                        mRegisterButton.startAnimation();
 
-                    mAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(RegisterActivity.this, new OnCompleteListener<AuthResult>() {
-                        @Override
-                        public void onComplete(@NonNull Task<AuthResult> task) {
-                            if (task.isSuccessful()) {
-                                Log.d(Constants.TAG, "createUserWithEmail: success");
-                                FirebaseUser user = mAuth.getCurrentUser();
+                        final String name = Objects.requireNonNull(mNameEditText.getText()).toString();
+                        final String email = Objects.requireNonNull(mEmailEditText.getText()).toString();
+                        final String password = Objects.requireNonNull(mPasswordEditText.getText()).toString();
 
-                                if (user != null) {
-                                    UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
-                                            .setDisplayName(name)
-                                            .build();
+                        mAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(RegisterActivity.this, new OnCompleteListener<AuthResult>() {
+                            @Override
+                            public void onComplete(@NonNull Task<AuthResult> task) {
+                                if (task.isSuccessful()) {
+                                    Log.d(Constants.TAG, "createUserWithEmail: success");
+                                    FirebaseUser user = mAuth.getCurrentUser();
 
-                                    user.updateProfile(profileUpdates)
-                                            .addOnCompleteListener(new OnCompleteListener<Void>() {
-                                                @Override
-                                                public void onComplete(@NonNull Task<Void> task) {
-                                                    if (task.isSuccessful()) {
-                                                        Log.d(Constants.TAG, "User profile updated.");
+                                    if (user != null) {
+                                        UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
+                                                .setDisplayName(name)
+                                                .build();
 
-                                                        // TODO show success message
+                                        user.updateProfile(profileUpdates)
+                                                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                                    @Override
+                                                    public void onComplete(@NonNull Task<Void> task) {
+                                                        if (task.isSuccessful()) {
+                                                            Log.d(Constants.TAG, "User profile updated.");
+
+                                                            animateSucces(mRegisterButton);
+                                                        }
                                                     }
-                                                }
-                                            });
+                                                });
+
+                                    } else {
+                                        Log.wtf(Constants.TAG, "User is null after creation");
+
+                                        // TODO show error
+                                    }
 
                                 } else {
-                                    Log.wtf(Constants.TAG, "User is null after creation");
+                                    Log.w(Constants.TAG, "createUserWithEmail: failure", task.getException());
 
                                     // TODO show error
                                 }
-
-                            } else {
-                                Log.w(Constants.TAG, "createUserWithEmail: failure", task.getException());
-
-                                // TODO show error
                             }
-                        }
-                    });
+                        });
+                    }
                 }
             }
         });
@@ -441,6 +449,54 @@ public class RegisterActivity extends AppCompatActivity {
         bgAnim.setDuration(EXIT_ANIM_DURATION - 225);
         bgAnim.setStartDelay(225);
         bgAnim.start();
+    }
+
+    /**
+     * Starts the success animation with a circular reveal where the user can advance
+     * to the next screen.
+     */
+    private void animateSucces(@NonNull View origin) {
+        int enterButtonX = (origin.getLeft()
+                + origin.getRight()) / 2;
+
+        int enterButtonY = (origin.getTop()
+                + origin.getBottom()) / 2;
+
+        View background = findViewById(R.id.register_background);
+
+        int radiusReveal = Math.max(background.getWidth(), background.getHeight());
+
+        background.setVisibility(View.VISIBLE);
+
+        Animator animator =
+                android.view.ViewAnimationUtils.createCircularReveal(background
+                        , enterButtonX
+                        , enterButtonY
+                        , 0
+                        , radiusReveal);
+
+        animator.setDuration(500);
+        animator.setInterpolator(
+                AnimationUtils.loadInterpolator(RegisterActivity.this, R.anim.accelerator_interpolator));
+
+        animator.start();
+
+        background.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                // Avanzamos automaticamente a la siguiente pantalla.
+                /*Intent intent = new Intent(LoginActivity.this, MainScreenUI.class);
+
+                startActivity(intent);
+
+                finish();
+
+                // Animacion de transicion para pasar de una activity a otra.
+                overridePendingTransition(R.anim.right_in_animation, R.anim.right_out_animation);*/
+            }
+        });
     }
 
     /**

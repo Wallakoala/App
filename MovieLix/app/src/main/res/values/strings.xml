@@ -35,6 +35,9 @@
     <string name="login_option">O ENTRA CON</string>
     <string name="login_forget_password">¿Has olvidado la contraseña?</string>
 
+    <string name="register_ok">Te has registado correctamente\n\nPulsa para continuar</string>
+    <string name="login_ok">Has iniciado sesión correctamente\n\nPulsa para continuar</string>
+
     <string name="hint_username">Nombre de usuario</string>
     <string name="hint_email">E-mail</string>
     <string name="hint_password">Contraseña</string>
