@@ -2,6 +2,7 @@ package com.movielix.login;
 
 import android.animation.Animator;
 import android.animation.ObjectAnimator;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
@@ -24,6 +25,7 @@ import com.daimajia.androidanimations.library.Techniques;
 import com.daimajia.androidanimations.library.YoYo;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -216,7 +218,7 @@ public class RegisterActivity extends AppCompatActivity {
                                 .playOn(mPasswordInputLayout);
 
                     } else {
-                        Log.d(Constants.TAG, "All fields are correct, signing user up");
+                        Log.d(Constants.TAG, "validateFields: success");
 
                         mRegisterButton.startAnimation();
 
@@ -241,7 +243,7 @@ public class RegisterActivity extends AppCompatActivity {
                                                     @Override
                                                     public void onComplete(@NonNull Task<Void> task) {
                                                         if (task.isSuccessful()) {
-                                                            Log.d(Constants.TAG, "User profile updated.");
+                                                            Log.d(Constants.TAG, "updateProfileName: success");
 
                                                             animateSucces(mRegisterButton);
                                                         }
@@ -249,15 +251,15 @@ public class RegisterActivity extends AppCompatActivity {
                                                 });
 
                                     } else {
-                                        Log.wtf(Constants.TAG, "User is null after creation");
+                                        Log.wtf(Constants.TAG, "user is null after creation");
 
-                                        // TODO show error
+                                        showError();
                                     }
 
                                 } else {
                                     Log.w(Constants.TAG, "createUserWithEmail: failure", task.getException());
 
-                                    // TODO show error
+                                    showError();
                                 }
                             }
                         });
@@ -277,6 +279,28 @@ public class RegisterActivity extends AppCompatActivity {
         mPasswordEditText.addTextChangedListener(new MyTextWatcher(mPasswordEditText));
     }
 
+    private void showError() {
+        // Show the retry icon in the button
+        mRegisterButton.doneLoadingAnimation(
+                R.drawable.accent_background, BitmapFactory.decodeResource(getResources(), R.drawable.ic_retry_white));
+
+        // And show the snackbar
+        Snackbar snackbar = Snackbar.make(mContainer, R.string.something_went_wrong, Snackbar.LENGTH_INDEFINITE).setAction("Reintentar", new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
+
+        snackbar.setActionTextColor(getResources().getColor(R.color.colorAccent, getTheme()));
+        snackbar.getView().setBackgroundColor(getColor(R.color.colorPrimaryMedium));
+
+        snackbar.show();
+    }
+
+    /**
+     * Show the initial animation when the activity is created.
+     */
     private void runEnterAnimation() {
         // Animate the change of background
         final AnimationDrawable drawable = new AnimationDrawable();
@@ -372,6 +396,9 @@ public class RegisterActivity extends AppCompatActivity {
         drawable.start();
     }
 
+    /**
+     * Show the exit animation when the activity is destroyed.
+     */
     private void runExitAnimation(final Runnable endAction) {
         mExiting = true;
 
