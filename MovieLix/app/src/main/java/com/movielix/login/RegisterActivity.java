@@ -201,70 +201,7 @@ public class RegisterActivity extends AppCompatActivity {
         mRegisterButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (!mRegistering) {
-                    if (!validateName(mNameEditText, mNameInputLayout)) {
-                        YoYo.with(Techniques.Shake)
-                                .duration(SHAKE_ANIM_DURATION)
-                                .playOn(mNameInputLayout);
-
-                    } else if (!validateEmail(mEmailEditText, mEmailInputLayout)) {
-                        YoYo.with(Techniques.Shake)
-                                .duration(SHAKE_ANIM_DURATION)
-                                .playOn(mEmailInputLayout);
-
-                    } else if (!validatePassword(mPasswordEditText, mPasswordInputLayout)) {
-                        YoYo.with(Techniques.Shake)
-                                .duration(SHAKE_ANIM_DURATION)
-                                .playOn(mPasswordInputLayout);
-
-                    } else {
-                        Log.d(Constants.TAG, "validateFields: success");
-
-                        mRegisterButton.startAnimation();
-
-                        final String name = Objects.requireNonNull(mNameEditText.getText()).toString();
-                        final String email = Objects.requireNonNull(mEmailEditText.getText()).toString();
-                        final String password = Objects.requireNonNull(mPasswordEditText.getText()).toString();
-
-                        mAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(RegisterActivity.this, new OnCompleteListener<AuthResult>() {
-                            @Override
-                            public void onComplete(@NonNull Task<AuthResult> task) {
-                                if (task.isSuccessful()) {
-                                    Log.d(Constants.TAG, "createUserWithEmail: success");
-                                    FirebaseUser user = mAuth.getCurrentUser();
-
-                                    if (user != null) {
-                                        UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
-                                                .setDisplayName(name)
-                                                .build();
-
-                                        user.updateProfile(profileUpdates)
-                                                .addOnCompleteListener(new OnCompleteListener<Void>() {
-                                                    @Override
-                                                    public void onComplete(@NonNull Task<Void> task) {
-                                                        if (task.isSuccessful()) {
-                                                            Log.d(Constants.TAG, "updateProfileName: success");
-
-                                                            animateSucces(mRegisterButton);
-                                                        }
-                                                    }
-                                                });
-
-                                    } else {
-                                        Log.wtf(Constants.TAG, "user is null after creation");
-
-                                        showError();
-                                    }
-
-                                } else {
-                                    Log.w(Constants.TAG, "createUserWithEmail: failure", task.getException());
-
-                                    showError();
-                                }
-                            }
-                        });
-                    }
-                }
+                register();
             }
         });
     }
@@ -279,16 +216,89 @@ public class RegisterActivity extends AppCompatActivity {
         mPasswordEditText.addTextChangedListener(new MyTextWatcher(mPasswordEditText));
     }
 
+    /**
+     * Registers the user.
+     */
+    private void register() {
+        if (!mRegistering) {
+            if (!validateName(mNameEditText, mNameInputLayout)) {
+                YoYo.with(Techniques.Shake)
+                        .duration(SHAKE_ANIM_DURATION)
+                        .playOn(mNameInputLayout);
+
+            } else if (!validateEmail(mEmailEditText, mEmailInputLayout)) {
+                YoYo.with(Techniques.Shake)
+                        .duration(SHAKE_ANIM_DURATION)
+                        .playOn(mEmailInputLayout);
+
+            } else if (!validatePassword(mPasswordEditText, mPasswordInputLayout)) {
+                YoYo.with(Techniques.Shake)
+                        .duration(SHAKE_ANIM_DURATION)
+                        .playOn(mPasswordInputLayout);
+
+            } else {
+                Log.d(Constants.TAG, "validateFields: success");
+
+                mRegistering = true;
+                mRegisterButton.startAnimation();
+
+                final String name = Objects.requireNonNull(mNameEditText.getText()).toString();
+                final String email = Objects.requireNonNull(mEmailEditText.getText()).toString();
+                final String password = Objects.requireNonNull(mPasswordEditText.getText()).toString();
+
+                mAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(RegisterActivity.this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        if (task.isSuccessful()) {
+                            Log.d(Constants.TAG, "createUserWithEmail: success");
+                            FirebaseUser user = mAuth.getCurrentUser();
+
+                            if (user != null) {
+                                UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
+                                        .setDisplayName(name)
+                                        .build();
+
+                                user.updateProfile(profileUpdates)
+                                        .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                            @Override
+                                            public void onComplete(@NonNull Task<Void> task) {
+                                                if (task.isSuccessful()) {
+                                                    Log.d(Constants.TAG, "updateProfileName: success");
+
+                                                    mRegistering = false;
+                                                    animateSucces(mRegisterButton);
+                                                }
+                                            }
+                                        });
+
+                            } else {
+                                Log.wtf(Constants.TAG, "createUserWithEmail: user is null after creation");
+
+                                mRegistering = false;
+                                showError();
+                            }
+
+                        } else {
+                            Log.w(Constants.TAG, "createUserWithEmail: failure", task.getException());
+
+                            mRegistering = false;
+                            showError();
+                        }
+                    }
+                });
+            }
+        }
+    }
+
     private void showError() {
         // Show the retry icon in the button
-        mRegisterButton.doneLoadingAnimation(
-                R.drawable.accent_background, BitmapFactory.decodeResource(getResources(), R.drawable.ic_retry_white));
+        mRegisterButton.revertAnimation();
 
         // And show the snackbar
         Snackbar snackbar = Snackbar.make(mContainer, R.string.something_went_wrong, Snackbar.LENGTH_INDEFINITE).setAction("Reintentar", new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                register();
             }
         });
 
