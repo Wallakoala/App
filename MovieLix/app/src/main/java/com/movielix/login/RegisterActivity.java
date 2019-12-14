@@ -2,7 +2,7 @@ package com.movielix.login;
 
 import android.animation.Animator;
 import android.animation.ObjectAnimator;
-import android.graphics.BitmapFactory;
+import android.content.Intent;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
@@ -28,8 +28,10 @@ import com.google.android.gms.tasks.Task;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthUserCollisionException;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
+import com.movielix.MainActivity;
 import com.movielix.R;
 import com.movielix.constants.Constants;
 import com.movielix.util.InputValidator;
@@ -45,6 +47,11 @@ import br.com.simplepass.loadingbutton.customViews.CircularProgressButton;
  */
 
 public class RegisterActivity extends AppCompatActivity {
+
+    private enum AuthError {
+        EMAIL_ALREADY_REGISTERED,
+        OTHER
+    }
 
     private static final int SHAKE_ANIM_DURATION = 350;
 
@@ -275,14 +282,18 @@ public class RegisterActivity extends AppCompatActivity {
                                 Log.wtf(Constants.TAG, "createUserWithEmail: user is null after creation");
 
                                 mRegistering = false;
-                                showError();
+                                showError(AuthError.OTHER);
                             }
 
                         } else {
                             Log.w(Constants.TAG, "createUserWithEmail: failure", task.getException());
+                            if (task.getException() instanceof FirebaseAuthUserCollisionException) {
+                                showError(AuthError.EMAIL_ALREADY_REGISTERED);
+                            } else {
+                                showError(AuthError.OTHER);
+                            }
 
                             mRegistering = false;
-                            showError();
                         }
                     }
                 });
@@ -293,17 +304,24 @@ public class RegisterActivity extends AppCompatActivity {
     /**
      * Shows an error message when registering.
      */
-    private void showError() {
+    private void showError(AuthError error) {
         // Show the retry icon in the button
         mRegisterButton.revertAnimation();
 
         // And show the snackbar
-        Snackbar snackbar = Snackbar.make(mContainer, R.string.something_went_wrong, Snackbar.LENGTH_INDEFINITE).setAction("Reintentar", new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                register();
-            }
-        });
+        Snackbar snackbar;
+        if (error == AuthError.EMAIL_ALREADY_REGISTERED) {
+            snackbar = Snackbar.make(mContainer, R.string.email_already_register, Snackbar.LENGTH_SHORT);
+
+        } else {
+            snackbar = Snackbar.make(mContainer, R.string.something_went_wrong, Snackbar.LENGTH_INDEFINITE).setAction("Reintentar", new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    register();
+                }
+            });
+        }
+
 
         snackbar.setActionTextColor(getResources().getColor(R.color.colorAccent, getTheme()));
         snackbar.getView().setBackgroundColor(getColor(R.color.colorPrimaryMedium));
@@ -527,14 +545,11 @@ public class RegisterActivity extends AppCompatActivity {
             public void onClick(View v)
             {
                 // Avanzamos automaticamente a la siguiente pantalla.
-                /*Intent intent = new Intent(LoginActivity.this, MainScreenUI.class);
+                Intent intent = new Intent(RegisterActivity.this, MainActivity.class);
 
                 startActivity(intent);
 
                 finish();
-
-                // Animacion de transicion para pasar de una activity a otra.
-                overridePendingTransition(R.anim.right_in_animation, R.anim.right_out_animation);*/
             }
         });
     }

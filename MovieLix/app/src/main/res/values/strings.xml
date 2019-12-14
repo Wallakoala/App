@@ -39,8 +39,9 @@
     <string name="login_ok">Has iniciado sesión correctamente\n\nPulsa para continuar</string>
 
     <string name="hint_username">Nombre de usuario</string>
-    <string name="hint_email">E-mail</string>
+    <string name="hint_email">Email</string>
     <string name="hint_password">Contraseña</string>
 
     <string name="something_went_wrong">¡Oops! Algo ha ido mal</string>
+    <string name="email_already_register">Este email ya ha sido registrado</string>
 </resources>
