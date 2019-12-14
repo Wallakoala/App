@@ -41,7 +41,7 @@ import java.util.Objects;
 import br.com.simplepass.loadingbutton.customViews.CircularProgressButton;
 
 /**
- * Register screen
+ * Register activity.
  */
 
 public class RegisterActivity extends AppCompatActivity {
@@ -49,13 +49,13 @@ public class RegisterActivity extends AppCompatActivity {
     private static final int SHAKE_ANIM_DURATION = 350;
 
     private static final int ENTER_ANIM_DURATION = 350;
-    private static final int EXIT_ANIM_DURATION = 250;
+    private static final int EXIT_ANIM_DURATION  = 250;
 
     private static final int ENTER_ANIM_OFFSET = 35;
-    private static final int EXIT_ANIM_OFFSET = 25;
+    private static final int EXIT_ANIM_OFFSET  = 25;
 
     private static final int ENTER_ANIM_TRANSLATION = -200;
-    private static final int EXIT_ANIM_TRANSLATION = 200;
+    private static final int EXIT_ANIM_TRANSLATION  = 200;
 
     /* Firebase */
     private FirebaseAuth mAuth;
@@ -130,10 +130,10 @@ public class RegisterActivity extends AppCompatActivity {
                     mTopDeltaButton  = mButtonTop - buttonScreenLocation[1];
 
                     // Calculate the scale factors
-                    mWidthScaleTitle = (float)mTitleWidth / (float)mTitle.getWidth();
+                    mWidthScaleTitle  = (float)mTitleWidth  / (float)mTitle.getWidth();
                     mHeightScaleTitle = (float)mTitleHeight / (float)mTitle.getHeight();
 
-                    mWidthScaleButton = (float)mButtonWidth / (float)mRegisterButton.getWidth();
+                    mWidthScaleButton  = (float)mButtonWidth  / (float)mRegisterButton.getWidth();
                     mHeightScaleButton = (float)mButtonHeight / (float)mRegisterButton.getHeight();
 
                     runEnterAnimation();
@@ -290,6 +290,9 @@ public class RegisterActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Shows an error message when registering.
+     */
     private void showError() {
         // Show the retry icon in the button
         mRegisterButton.revertAnimation();
@@ -309,7 +312,7 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     /**
-     * Show the initial animation when the activity is created.
+     * Shows the initial animation when the activity is created.
      */
     private void runEnterAnimation() {
         // Animate the change of background
@@ -407,7 +410,7 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     /**
-     * Show the exit animation when the activity is destroyed.
+     * Shows the exit animation when the activity is destroyed.
      */
     private void runExitAnimation(final Runnable endAction) {
         mExiting = true;
