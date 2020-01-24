@@ -2,6 +2,7 @@ package com.movielix;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -28,16 +29,22 @@ public class SplashActivity extends AppCompatActivity {
         super.onStart();
 
         // Check if user is signed in (non-null) and update UI accordingly.
-        FirebaseUser currentUser = mAuth.getCurrentUser();
-        routeToAppropriateScreen(currentUser != null);
+        final FirebaseUser currentUser = mAuth.getCurrentUser();
+        final Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                routeToAppropriateScreen(currentUser != null);
+            }
+        }, 2000);
     }
 
     private void routeToAppropriateScreen(boolean signedIn) {
         if (signedIn){
-            Log.d(Constants.TAG, "User is signed in");
+            Log.d(Constants.TAG, "user is signed in");
 
         } else {
-            Log.d(Constants.TAG, "User is NOT signed in");
+            Log.d(Constants.TAG, "user is NOT signed in");
 
             startActivity(new Intent(this, IntroActivity.class));
         }
