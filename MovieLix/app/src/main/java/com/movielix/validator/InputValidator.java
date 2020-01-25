@@ -1,4 +1,4 @@
-package com.movielix.util;
+package com.movielix.validator;
 
 import androidx.annotation.NonNull;
 

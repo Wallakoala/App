@@ -2,6 +2,7 @@ package com.movielix.login;
 
 import android.animation.Animator;
 import android.animation.ObjectAnimator;
+import android.app.Activity;
 import android.content.Intent;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.Drawable;
@@ -11,7 +12,6 @@ import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewTreeObserver;
-import android.view.WindowManager;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.AnimationUtils;
@@ -34,7 +34,9 @@ import com.google.firebase.auth.UserProfileChangeRequest;
 import com.movielix.MainActivity;
 import com.movielix.R;
 import com.movielix.constants.Constants;
-import com.movielix.util.InputValidator;
+import com.movielix.validator.EmailValidator;
+import com.movielix.validator.NameValidator;
+import com.movielix.validator.PasswordValidator;
 import com.movielix.view.TextInputLayout;
 import com.movielix.font.TypeFace;
 
@@ -218,9 +220,9 @@ public class RegisterActivity extends AppCompatActivity {
         mEmailInputLayout.setTypeface(TypeFace.getTypeFace(this, "Raleway-Light.ttf"));
         mPasswordInputLayout.setTypeface(TypeFace.getTypeFace(this, "Raleway-Light.ttf"));
 
-        mNameEditText.addTextChangedListener(new MyTextWatcher(mNameEditText));
-        mEmailEditText.addTextChangedListener(new MyTextWatcher(mEmailEditText));
-        mPasswordEditText.addTextChangedListener(new MyTextWatcher(mPasswordEditText));
+        mNameEditText.addTextChangedListener(new MyTextWatcher(this, mNameEditText));
+        mEmailEditText.addTextChangedListener(new MyTextWatcher(this, mEmailEditText));
+        mPasswordEditText.addTextChangedListener(new MyTextWatcher(this, mPasswordEditText));
     }
 
     /**
@@ -228,17 +230,17 @@ public class RegisterActivity extends AppCompatActivity {
      */
     private void register() {
         if (!mRegistering) {
-            if (!validateName(mNameEditText, mNameInputLayout)) {
+            if (!new NameValidator().validate(this, mNameEditText, mNameInputLayout)) {
                 YoYo.with(Techniques.Shake)
                         .duration(SHAKE_ANIM_DURATION)
                         .playOn(mNameInputLayout);
 
-            } else if (!validateEmail(mEmailEditText, mEmailInputLayout)) {
+            } else if (!new EmailValidator().validate(this, mEmailEditText, mEmailInputLayout)) {
                 YoYo.with(Techniques.Shake)
                         .duration(SHAKE_ANIM_DURATION)
                         .playOn(mEmailInputLayout);
 
-            } else if (!validatePassword(mPasswordEditText, mPasswordInputLayout)) {
+            } else if (!new PasswordValidator().validate(this, mPasswordEditText, mPasswordInputLayout)) {
                 YoYo.with(Techniques.Shake)
                         .duration(SHAKE_ANIM_DURATION)
                         .playOn(mPasswordInputLayout);
@@ -560,8 +562,10 @@ public class RegisterActivity extends AppCompatActivity {
     private class MyTextWatcher implements TextWatcher {
 
         private View view;
+        private Activity activity;
 
-        private MyTextWatcher(View view) {
+        private MyTextWatcher(Activity activity, View view) {
+            this.activity = activity;
             this.view = view;
         }
 
@@ -572,96 +576,17 @@ public class RegisterActivity extends AppCompatActivity {
         public void afterTextChanged(Editable editable) {
             switch (view.getId()) {
                 case R.id.name_edittext:
-                    validateName(mNameEditText, mNameInputLayout);
+                    new NameValidator().validate(activity, mNameEditText, mNameInputLayout);
                     break;
 
                 case R.id.email_edittext:
-                    validateEmail(mEmailEditText, mEmailInputLayout);
+                    new EmailValidator().validate(activity, mEmailEditText, mEmailInputLayout);
                     break;
 
                 case R.id.password_edittext:
-                    validatePassword(mPasswordEditText, mPasswordInputLayout);
+                    new PasswordValidator().validate(activity, mPasswordEditText, mPasswordInputLayout);
                     break;
             }
-        }
-    }
-
-    /**
-     * Checks whether the name is valid or not, and updates the UI accordingly.
-     *
-     * @return true if the name is correct.
-     */
-    private boolean validateName(@NonNull AppCompatEditText editText, @NonNull TextInputLayout textInputLayout) {
-        Editable name = editText.getText();
-
-        if ((name == null) || !InputValidator.isValidName(name.toString())) {
-            textInputLayout.setErrorEnabled(true);
-            textInputLayout.setError("Nombre incorrecto");
-
-            requestFocus(editText);
-
-            return false;
-
-        } else {
-            textInputLayout.setError(null);
-            textInputLayout.setErrorEnabled(false);
-        }
-
-        return true;
-    }
-
-    /**
-     * Checks whether the email is valid or not, and updates the UI accordingly.
-     *
-     * @return true if the email is correct.
-     */
-    private boolean validateEmail(@NonNull AppCompatEditText editText, @NonNull TextInputLayout textInputLayout) {
-        Editable email = editText.getText();
-
-
-        if ((email == null) || !InputValidator.isValidEmail(email.toString())) {
-            textInputLayout.setErrorEnabled(true);
-            textInputLayout.setError("Email incorrecto");
-
-            requestFocus(editText);
-
-            return false;
-
-        } else {
-            textInputLayout.setError(null);
-            textInputLayout.setErrorEnabled(false);
-        }
-
-        return true;
-    }
-
-    /**
-     * Checks whether the password is valid or not, and updates the UI accordingly.
-     *
-     * @return true if the password is correct.
-     */
-    private boolean validatePassword(@NonNull AppCompatEditText editText, @NonNull TextInputLayout textInputLayout) {
-        Editable password = editText.getText();
-
-        if ((password == null) || !InputValidator.isValidPassword(password.toString())) {
-            textInputLayout.setErrorEnabled(true);
-            textInputLayout.setError("Contraseña incorrecta (6 caracteres min)");
-
-            requestFocus(editText);
-
-            return false;
-
-        } else {
-            textInputLayout.setError(null);
-            textInputLayout.setErrorEnabled(false);
-        }
-
-        return true;
-    }
-
-    private void requestFocus(@NonNull final View view) {
-        if (view.requestFocus()) {
-            getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
         }
     }
 }

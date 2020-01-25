@@ -1,5 +1,7 @@
 package com.movielix.util;
 
+import com.movielix.validator.InputValidator;
+
 import org.junit.Test;
 
 import static org.junit.Assert.*;

@@ -42,6 +42,10 @@
     <string name="hint_email">Email</string>
     <string name="hint_password">Contraseña</string>
 
+    <string name="wrong_name">Nombre incorrecto</string>
+    <string name="wrong_email">Email incorrecto</string>
+    <string name="wrong_password">Contraseña incorrecta (6 caracteres min)</string>
+
     <string name="something_went_wrong">¡Oops! Algo ha ido mal</string>
     <string name="email_already_register">Este email ya ha sido registrado</string>
 </resources>
