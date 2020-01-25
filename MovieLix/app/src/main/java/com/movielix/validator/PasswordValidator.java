@@ -13,13 +13,24 @@ import com.movielix.view.TextInputLayout;
 
 public class PasswordValidator implements Validator {
 
+    private Activity activity;
+
+    private AppCompatEditText editText;
+    private TextInputLayout textInputLayout;
+
+    public PasswordValidator(@NonNull Activity activity, @NonNull AppCompatEditText editText, @NonNull TextInputLayout textInputLayout) {
+        this.activity = activity;
+        this.editText = editText;
+        this.textInputLayout = textInputLayout;
+    }
+    
     /**
      * Checks whether the password is valid or not, and updates the UI accordingly.
      *
      * @return true if the password is correct.
      */
     @Override
-    public boolean validate(@NonNull Activity activity, @NonNull AppCompatEditText editText, @NonNull TextInputLayout textInputLayout) {
+    public boolean validate() {
         Editable password = editText.getText();
 
         if ((password == null) || !InputValidator.isValidPassword(password.toString())) {

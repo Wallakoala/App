@@ -2,7 +2,6 @@ package com.movielix.login;
 
 import android.animation.Animator;
 import android.animation.ObjectAnimator;
-import android.app.Activity;
 import android.content.Intent;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.Drawable;
@@ -37,6 +36,7 @@ import com.movielix.constants.Constants;
 import com.movielix.validator.EmailValidator;
 import com.movielix.validator.NameValidator;
 import com.movielix.validator.PasswordValidator;
+import com.movielix.validator.Validator;
 import com.movielix.view.TextInputLayout;
 import com.movielix.font.TypeFace;
 
@@ -220,9 +220,9 @@ public class RegisterActivity extends AppCompatActivity {
         mEmailInputLayout.setTypeface(TypeFace.getTypeFace(this, "Raleway-Light.ttf"));
         mPasswordInputLayout.setTypeface(TypeFace.getTypeFace(this, "Raleway-Light.ttf"));
 
-        mNameEditText.addTextChangedListener(new MyTextWatcher(this, mNameEditText));
-        mEmailEditText.addTextChangedListener(new MyTextWatcher(this, mEmailEditText));
-        mPasswordEditText.addTextChangedListener(new MyTextWatcher(this, mPasswordEditText));
+        mNameEditText.addTextChangedListener(new MyTextWatcher(new NameValidator(this, mNameEditText, mNameInputLayout)));
+        mEmailEditText.addTextChangedListener(new MyTextWatcher(new EmailValidator(this, mEmailEditText, mEmailInputLayout)));
+        mPasswordEditText.addTextChangedListener(new MyTextWatcher(new PasswordValidator(this, mPasswordEditText, mPasswordInputLayout)));
     }
 
     /**
@@ -230,17 +230,17 @@ public class RegisterActivity extends AppCompatActivity {
      */
     private void register() {
         if (!mRegistering) {
-            if (!new NameValidator().validate(this, mNameEditText, mNameInputLayout)) {
+            if (!new NameValidator(this, mNameEditText, mNameInputLayout).validate()) {
                 YoYo.with(Techniques.Shake)
                         .duration(SHAKE_ANIM_DURATION)
                         .playOn(mNameInputLayout);
 
-            } else if (!new EmailValidator().validate(this, mEmailEditText, mEmailInputLayout)) {
+            } else if (!new EmailValidator(this, mEmailEditText, mEmailInputLayout).validate()) {
                 YoYo.with(Techniques.Shake)
                         .duration(SHAKE_ANIM_DURATION)
                         .playOn(mEmailInputLayout);
 
-            } else if (!new PasswordValidator().validate(this, mPasswordEditText, mPasswordInputLayout)) {
+            } else if (!new PasswordValidator(this, mPasswordEditText, mPasswordInputLayout).validate()) {
                 YoYo.with(Techniques.Shake)
                         .duration(SHAKE_ANIM_DURATION)
                         .playOn(mPasswordInputLayout);
@@ -561,12 +561,10 @@ public class RegisterActivity extends AppCompatActivity {
      */
     private class MyTextWatcher implements TextWatcher {
 
-        private View view;
-        private Activity activity;
+        private Validator validator;
 
-        private MyTextWatcher(Activity activity, View view) {
-            this.activity = activity;
-            this.view = view;
+        private MyTextWatcher(Validator validator) {
+            this.validator = validator;
         }
 
         public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
@@ -574,19 +572,7 @@ public class RegisterActivity extends AppCompatActivity {
         public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
 
         public void afterTextChanged(Editable editable) {
-            switch (view.getId()) {
-                case R.id.name_edittext:
-                    new NameValidator().validate(activity, mNameEditText, mNameInputLayout);
-                    break;
-
-                case R.id.email_edittext:
-                    new EmailValidator().validate(activity, mEmailEditText, mEmailInputLayout);
-                    break;
-
-                case R.id.password_edittext:
-                    new PasswordValidator().validate(activity, mPasswordEditText, mPasswordInputLayout);
-                    break;
-            }
+            validator.validate();
         }
     }
 }

@@ -13,13 +13,24 @@ import com.movielix.view.TextInputLayout;
 
 public class NameValidator implements Validator {
 
+    private Activity activity;
+
+    private AppCompatEditText editText;
+    private TextInputLayout textInputLayout;
+
+    public NameValidator(@NonNull Activity activity, @NonNull AppCompatEditText editText, @NonNull TextInputLayout textInputLayout) {
+        this.activity = activity;
+        this.editText = editText;
+        this.textInputLayout = textInputLayout;
+    }
+
     /**
      * Checks whether the name is valid or not, and updates the UI accordingly.
      *
      * @return true if the name is correct.
      */
     @Override
-    public boolean validate(@NonNull Activity activity, @NonNull AppCompatEditText editText, @NonNull TextInputLayout textInputLayout) {
+    public boolean validate() {
         Editable name = editText.getText();
 
         if ((name == null) || !InputValidator.isValidName(name.toString())) {
