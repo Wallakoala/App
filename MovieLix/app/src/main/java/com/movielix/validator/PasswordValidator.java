@@ -23,7 +23,7 @@ public class PasswordValidator implements Validator {
         this.editText = editText;
         this.textInputLayout = textInputLayout;
     }
-    
+
     /**
      * Checks whether the password is valid or not, and updates the UI accordingly.
      *

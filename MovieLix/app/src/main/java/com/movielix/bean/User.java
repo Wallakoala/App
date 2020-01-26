@@ -1,7 +1,5 @@
 package com.movielix.bean;
 
-import androidx.annotation.NonNull;
-
 import java.util.List;
 
 /**
