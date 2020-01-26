@@ -117,7 +117,7 @@ public class RegisterActivity extends AppCompatActivity {
 
         initData();
         initViews();
-        initEditText();
+        initEditTexts();
 
         if (savedInstanceState == null) {
             // Global listener
@@ -215,7 +215,7 @@ public class RegisterActivity extends AppCompatActivity {
         });
     }
 
-    private void initEditText() {
+    private void initEditTexts() {
         mNameInputLayout.setTypeface(TypeFace.getTypeFace(this, "Raleway-Light.ttf"));
         mEmailInputLayout.setTypeface(TypeFace.getTypeFace(this, "Raleway-Light.ttf"));
         mPasswordInputLayout.setTypeface(TypeFace.getTypeFace(this, "Raleway-Light.ttf"));
@@ -309,6 +309,7 @@ public class RegisterActivity extends AppCompatActivity {
     private void showError(AuthError error) {
         // Show the retry icon in the button
         mRegisterButton.revertAnimation();
+        mRegisterButton.setBackground(getResources().getDrawable(R.drawable.rounded_button_fill, getTheme()));
 
         // And show the snackbar
         Snackbar snackbar;
@@ -323,7 +324,6 @@ public class RegisterActivity extends AppCompatActivity {
                 }
             });
         }
-
 
         snackbar.setActionTextColor(getResources().getColor(R.color.colorAccent, getTheme()));
         snackbar.getView().setBackgroundColor(getColor(R.color.colorPrimaryMedium));
@@ -546,7 +546,7 @@ public class RegisterActivity extends AppCompatActivity {
             @Override
             public void onClick(View v)
             {
-                // Avanzamos automaticamente a la siguiente pantalla.
+                // Move to the next screen
                 Intent intent = new Intent(RegisterActivity.this, MainActivity.class);
 
                 startActivity(intent);
