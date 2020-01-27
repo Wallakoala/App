@@ -31,8 +31,12 @@ public class IntroActivity extends AppCompatActivity {
         initViews();
     }
 
-    private void initViews()
-    {
+    @Override
+    public void onEnterAnimationComplete() {
+        findViewById(R.id.intro_title).setTransitionName(null);
+    }
+
+    private void initViews() {
         mLoginButton = findViewById(R.id.intro_login);
         mRegisterButton = findViewById(R.id.intro_register);
         mTitle = findViewById(R.id.intro_title);

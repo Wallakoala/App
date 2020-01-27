@@ -276,7 +276,7 @@ public class LoginActivity extends AppCompatActivity {
         int enterButtonY = (origin.getTop()
                 + origin.getBottom()) / 2;
 
-        View background = findViewById(R.id.register_background);
+        View background = findViewById(R.id.login_background);
 
         int radiusReveal = Math.max(background.getWidth(), background.getHeight());
 
