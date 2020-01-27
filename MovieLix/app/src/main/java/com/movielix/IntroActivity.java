@@ -36,6 +36,11 @@ public class IntroActivity extends AppCompatActivity {
         findViewById(R.id.intro_title).setTransitionName(null);
     }
 
+    @Override
+    public void finishAfterTransition() {
+        finish();
+    }
+
     private void initViews() {
         mLoginButton = findViewById(R.id.intro_login);
         mRegisterButton = findViewById(R.id.intro_register);
