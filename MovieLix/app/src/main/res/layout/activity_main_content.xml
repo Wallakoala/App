@@ -24,7 +24,7 @@
             app:layout_scrollFlags="scroll|snap"
             app:titleEnabled="false">
 
-            <include layout="@layout/toolbar" />
+            <include layout="@layout/toolbar"/>
 
         </com.google.android.material.appbar.CollapsingToolbarLayout>
 
@@ -43,7 +43,7 @@
             android:layout_height="match_parent"
             android:layoutAnimation="@anim/layout_animation_slide_from_bottom"
             android:overScrollMode="always"
-            app:fastScrollEnabled="false" />
+            app:fastScrollEnabled="false"/>
 
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
@@ -55,7 +55,7 @@
         app:layout_behavior=".behavior.ScrollAwareFABBehavior"
         app:layout_anchor="@id/review_recyclerview"
         app:layout_anchorGravity="bottom|center"
-        app:srcCompat="@drawable/fab_background" />
+        app:srcCompat="@drawable/fab_background"/>
 
     <com.movielix.view.CurvedBottomNavigationView
         android:id="@+id/bottom_navigation"
@@ -67,6 +67,6 @@
         app:itemIconTint="@color/textLight"
         app:layout_anchor="@id/review_recyclerview"
         app:layout_anchorGravity="bottom|center"
-        app:layout_behavior="com.google.android.material.behavior.HideBottomViewOnScrollBehavior" />
+        app:layout_behavior="com.google.android.material.behavior.HideBottomViewOnScrollBehavior"/>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
