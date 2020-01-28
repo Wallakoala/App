@@ -17,19 +17,15 @@ jobs:
       uses: actions/setup-java@v1
       with:
         java-version: 1.8
-    - name: Build with Gradle
+
+    - name: Build debug APK
       run: |
         cd MovieLix/
         chmod a+x gradlew
-        ./gradlew build
-        cp src/build/outputs/apk/debug/app-debug.apk ../Binaries/Debug/app-debug.apk
+        ./gradlew assembleDebug
 
-    - name: Commit file
-      run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-        git commit -m "ci: updated debug APK" -a
-    - name: Push changes
-      uses: ad-m/github-push-action@master
+    - name: Upload APK
+      uses: actions/upload-artifact@v1
       with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
+        name: app
+        path: MovieLix/app/build/outputs/apk/debug/app-debug.apk

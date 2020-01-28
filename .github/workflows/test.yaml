@@ -9,8 +9,8 @@ on:
       - develop
 
 jobs:
-  build:
-
+  test:
+    name: Run Unit Tests
     runs-on: ubuntu-latest
 
     steps:
@@ -19,7 +19,7 @@ jobs:
       uses: actions/setup-java@v1
       with:
         java-version: 1.8
-    - name: Test with Gradle
+    - name: Unit tests
       run: |
         cd MovieLix/
         chmod a+x gradlew
