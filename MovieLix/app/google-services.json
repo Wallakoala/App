@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "556882803093",
+    "firebase_url": "https://movielix-36036.firebaseio.com",
+    "project_id": "movielix-36036",
+    "storage_bucket": "movielix-36036.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:556882803093:android:8275cda5ef071382e49e9c",
+        "android_client_info": {
+          "package_name": "com.movielix"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "556882803093-6rkc9dm8v6ta7teaasqkfqv0o5vttdcg.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.movielix",
+            "certificate_hash": "8e188dc3330d86b424431689b9f147503963c57d"
+          }
+        },
+        {
+          "client_id": "556882803093-5rualt6bsfiql0mdhp74fvka0ss8js5p.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAB8z1JngHWZOCznYhJzgIm_IbZUrjwGrI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "556882803093-5rualt6bsfiql0mdhp74fvka0ss8js5p.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

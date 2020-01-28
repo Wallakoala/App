@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/login_container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center_horizontal"
+        android:background="@drawable/dark_background">
+
+        <!-- Dummy item to prevent AutoCompleteTextView from receiving focus -->
+        <LinearLayout
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:layout_width="0px"
+            android:layout_height="0px"
+            tools:ignore="UselessLeaf"/>
+
+        <com.movielix.font.MovieLixTextView
+            android:id="@+id/login_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="64dp"
+            android:text="@string/app_name"
+            android:textSize="38sp"
+            android:textColor="@color/colorAccent"
+            app:customFont="BebasNeue-Regular.otf"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:paddingStart="48dp"
+            android:paddingEnd="48dp"
+            android:paddingBottom="16dp"
+            android:orientation="vertical">
+
+            <com.movielix.view.TextInputLayout
+                android:id="@+id/email_input_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColorHint="@color/textDark"
+                android:theme="@style/TextLabel">
+
+                <com.movielix.font.MovieLixEditText
+                    android:id="@+id/email_edittext"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textEmailAddress"
+                    android:maxLines="1"
+                    android:maxLength="64"
+                    android:textSize="16sp"
+                    android:textColor="@color/textLight"
+                    android:textColorHint="@color/textDark"
+                    android:hint="@string/hint_email"
+                    android:nextFocusUp="@id/email_edittext"
+                    android:nextFocusLeft="@id/email_edittext"
+                    app:customFontEd="Raleway-Light.ttf"/>
+
+            </com.movielix.view.TextInputLayout>
+
+            <com.movielix.view.TextInputLayout
+                android:id="@+id/password_input_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:textColorHint="@color/textDark"
+                app:passwordToggleEnabled="true"
+                app:passwordToggleTint="@color/textDark"
+                android:theme="@style/TextLabel">
+
+                <com.movielix.font.MovieLixEditText
+                    android:id="@+id/password_edittext"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textPassword"
+                    android:maxLines="1"
+                    android:maxLength="64"
+                    android:textSize="16sp"
+                    android:textColor="@color/textLight"
+                    android:textColorHint="@color/textDark"
+                    android:hint="@string/hint_password"
+                    app:customFontEd="Raleway-Light.ttf"/>
+
+            </com.movielix.view.TextInputLayout>
+
+            <com.movielix.font.MovieLixTextView
+                android:id="@+id/login_forgot_password"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="@string/login_forget_password"
+                android:textColor="@color/textDark"
+                android:gravity="end"
+                app:customFont="Raleway-SemiBold.ttf"/>
+
+            <!-- Entrar -->
+            <br.com.simplepass.loadingbutton.customViews.CircularProgressButton
+                android:id="@+id/login_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="48dp"
+                android:text="@string/intro_login"
+                android:background="@drawable/rounded_button_fill"
+                app:spinning_bar_color="@android:color/white"
+                app:spinning_bar_width="2dp"
+                app:spinning_bar_padding="6dp"/>
+
+            <LinearLayout
+                android:id="@+id/login_divider"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="36dp"
+                android:orientation="horizontal"
+                android:weightSum="1"
+                android:gravity="center">
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="1px"
+                    android:background="@color/textDark"
+                    android:layout_weight=".35"/>
+
+                <com.movielix.font.MovieLixTextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginEnd="16dp"
+                    android:gravity="center"
+                    android:layout_weight=".30"
+                    android:text="@string/login_option"
+                    android:textSize="10sp"
+                    android:textColor="@color/textDark"
+                    app:customFont="Raleway-Regular.ttf"/>
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="1px"
+                    android:layout_weight=".35"
+                    android:background="@color/textDark"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/login_social_buttons"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingTop="36dp"
+                android:paddingBottom="16dp"
+                android:clipToPadding="false"
+                android:gravity="center">
+
+                <de.hdodenhof.circleimageview.CircleImageView
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:src="@drawable/ic_twitter_96"
+                    android:scaleType="centerCrop"
+                    android:elevation="4dp"
+                    app:civ_circle_background_color="@color/textLight"
+                    app:civ_border_color="@color/textLight"
+                    app:civ_border_width="4dp"/>
+
+                <de.hdodenhof.circleimageview.CircleImageView
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:layout_marginStart="24dp"
+                    android:layout_marginEnd="24dp"
+                    android:src="@drawable/ic_facebook_96"
+                    android:scaleType="centerCrop"
+                    android:elevation="4dp"
+                    app:civ_circle_background_color="#4E71A8"
+                    app:civ_border_color="#4E71A8"
+                    app:civ_border_width="4dp"/>
+
+                <de.hdodenhof.circleimageview.CircleImageView
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:src="@drawable/ic_google_96"
+                    android:scaleType="centerCrop"
+                    android:elevation="4dp"
+                    app:civ_circle_background_color="@color/textLight"
+                    app:civ_border_color="@color/textLight"
+                    app:civ_border_width="4dp"/>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/login_background"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:visibility="invisible"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:background="@drawable/accent_background">
+
+        <ImageView
+            android:layout_width="74dp"
+            android:layout_height="74dp"
+            android:src="@drawable/ic_done"
+            android:layout_marginBottom="42dp"/>
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:textSize="18sp"
+            android:textColor="@android:color/white"
+            android:text="@string/login_ok"/>
+
+    </LinearLayout>
+
+</FrameLayout>
