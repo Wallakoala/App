@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/review_container"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:clipToPadding="false">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingBottom="16dp"
+        android:clipToPadding="false">
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="212dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            app:cardBackgroundColor="@color/colorPrimary"
+            app:cardCornerRadius="4dp"
+            app:cardElevation="8dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="152dp"
+                    android:paddingStart="142dp"
+                    android:paddingEnd="8dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="8dp"
+                    android:background="@drawable/border_transparent"
+                    android:orientation="vertical">
+
+                    <com.movielix.font.MovieLixTextView
+                        android:id="@+id/review_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/light_placeholder"
+                        android:textStyle="bold"
+                        android:text="@string/reviews_item_movie"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:textSize="16sp"
+                        android:textColor="@color/textLight"
+                        app:customFont="Raleway-SemiBold.ttf" />
+
+                    <com.movielix.font.MovieLixTextView
+                        android:id="@+id/review_release_year"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:background="@drawable/idle_placeholder"
+                        android:text="@string/reviews_item_movie_info"
+                        android:textSize="12sp"
+                        android:textColor="@color/textIdle"
+                        app:customFont="Raleway-Regular.ttf" />
+
+                    <com.movielix.font.MovieLixTextView
+                        android:id="@+id/review_overview"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:background="@drawable/long_idle_placeholder"
+                        android:textSize="12sp"
+                        android:textColor="@color/textIdle"
+                        android:ellipsize="end"
+                        android:maxLines="4"
+                        android:text="@string/reviews_item_movie_overview"
+                        app:customFont="Raleway-Regular.ttf" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginBottom="8dp"
+                        android:gravity="bottom">
+
+                        <com.movielix.font.MovieLixTextView
+                            android:id="@+id/review_duration"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/rounded_duration"
+                            android:paddingEnd="8dp"
+                            android:paddingStart="8dp"
+                            android:paddingTop="2dp"
+                            android:paddingBottom="2dp"
+                            android:gravity="center"
+                            android:textAlignment="center"
+                            android:textSize="12sp"
+                            android:textColor="@color/textLight"
+                            android:text="@string/reviews_item_movie_duration"
+                            app:customFont="Raleway-Regular.ttf" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginEnd="8dp"
+                    android:layout_marginBottom="8dp"
+                    android:layout_marginStart="8dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <de.hdodenhof.circleimageview.CircleImageView
+                        android:id="@+id/review_profile_pic"
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:src="@drawable/ic_default_profile_pic"
+                        android:scaleType="centerCrop"/>
+
+                    <com.movielix.font.MovieLixTextView
+                        android:id="@+id/review_profile_name"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:background="@drawable/light_placeholder"
+                        android:textColor="@color/textLight"
+                        android:textSize="14sp"
+                        android:text="@string/reviews_item_name"
+                        app:customFont="Raleway-SemiBold.ttf" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical|end">
+
+                        <ImageView
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:src="@drawable/ic_star"
+                            android:contentDescription="@string/rating_image" />
+
+                        <com.movielix.font.MovieLixTextView
+                            android:id="@+id/review_rating_var"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="6dp"
+                            android:gravity="center"
+                            android:background="@drawable/light_placeholder"
+                            android:text="@string/reviews_item_movie_rating_1"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/textLight"
+                            app:customFont="Raleway-SemiBold.ttf" />
+
+                        <com.movielix.font.MovieLixTextView
+                            android:id="@+id/review_rating_fixed"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="2dp"
+                            android:gravity="center"
+                            android:background="@drawable/idle_placeholder"
+                            android:text="@string/reviews_item_movie_rating_2"
+                            android:textColor="@color/textIdle"
+                            android:textSize="12sp"
+                            tools:ignore="SmallSp"
+                            app:customFont="Raleway-SemiBold.ttf" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
+
+    </FrameLayout>
+
+    <com.makeramen.roundedimageview.RoundedImageView
+        android:id="@+id/review_cover"
+        android:layout_width="126dp"
+        android:layout_height="168dp"
+        android:layout_marginStart="24dp"
+        android:src="@drawable/idle_placeholder"
+        android:scaleType="centerCrop"
+        android:elevation="4dp"
+        app:riv_corner_radius="2dp"/>
+
+</FrameLayout>
