@@ -1,23 +1,44 @@
 package com.movielix.login;
 
+import android.animation.Animator;
 import android.animation.ObjectAnimator;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.AccelerateInterpolator;
+import android.view.animation.AnimationUtils;
 import android.view.animation.DecelerateInterpolator;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.AppCompatButton;
+import androidx.appcompat.widget.AppCompatEditText;
 
+import com.daimajia.androidanimations.library.Techniques;
+import com.daimajia.androidanimations.library.YoYo;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.android.material.snackbar.Snackbar;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthInvalidUserException;
 import com.movielix.MainActivity;
 import com.movielix.R;
 import com.movielix.constants.Constants;
 import com.movielix.font.TypeFace;
+import com.movielix.validator.EmailValidator;
+import com.movielix.validator.PasswordValidator;
+import com.movielix.validator.Validator;
 import com.movielix.view.TextInputLayout;
+
+import java.util.Objects;
+
+import br.com.simplepass.loadingbutton.customViews.CircularProgressButton;
 
 /**
  * Login screen
@@ -25,14 +46,24 @@ import com.movielix.view.TextInputLayout;
 
 public class LoginActivity extends AppCompatActivity {
 
+    private enum AuthError {
+        USER_NOT_FOUND,
+        OTHER
+    }
+
+    private static final int SHAKE_ANIM_DURATION = 350;
+
     private static final int ENTER_ANIM_DURATION = 350;
-    private static final int EXIT_ANIM_DURATION = 250;
+    private static final int EXIT_ANIM_DURATION  = 250;
 
     private static final int ENTER_ANIM_OFFSET = 35;
-    private static final int EXIT_ANIM_OFFSET = 25;
+    private static final int EXIT_ANIM_OFFSET  = 25;
 
     private static final int ENTER_ANIM_TRANSLATION = -200;
-    private static final int EXIT_ANIM_TRANSLATION = 200;
+    private static final int EXIT_ANIM_TRANSLATION  = 200;
+
+    /* Firebase */
+    private FirebaseAuth mAuth;
 
     /* Views */
     private View mContainer;
@@ -44,7 +75,10 @@ public class LoginActivity extends AppCompatActivity {
     private TextInputLayout mEmailInputLayout;
     private TextInputLayout mPasswordInputLayout;
 
-    private AppCompatButton mLoginButton;
+    private AppCompatEditText mEmailEditText;
+    private AppCompatEditText mPasswordEditText;
+
+    private CircularProgressButton mLoginButton;
 
     private Drawable mBackground;
 
@@ -68,6 +102,7 @@ public class LoginActivity extends AppCompatActivity {
     private float mHeightScaleButton;
 
     private boolean mExiting;
+    private boolean mSigningIn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,7 +112,7 @@ public class LoginActivity extends AppCompatActivity {
 
         initData();
         initViews();
-        initEditText();
+        initEditTexts();
 
         if (savedInstanceState == null) {
             // Global listener
@@ -114,10 +149,8 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     @Override
-    public void onBackPressed()
-    {
-        if (!mExiting)
-        {
+    public void onBackPressed() {
+        if (!mExiting) {
             runExitAnimation(new Runnable() {
                 public void run() {
                     finish();
@@ -127,8 +160,7 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     @Override
-    public void finish()
-    {
+    public void finish() {
         super.finish();
 
         overridePendingTransition(0, 0);
@@ -137,7 +169,7 @@ public class LoginActivity extends AppCompatActivity {
     private void initData() {
         Bundle bundle = getIntent().getExtras();
 
-        mTitleTop    = bundle.getInt(Constants.PACKAGE + ".topTitle");
+        mTitleTop    = Objects.requireNonNull(bundle).getInt(Constants.PACKAGE + ".topTitle");
         mTitleLeft   = bundle.getInt(Constants.PACKAGE + ".leftTitle");
         mTitleWidth  = bundle.getInt(Constants.PACKAGE + ".widthTitle");
         mTitleHeight = bundle.getInt(Constants.PACKAGE + ".heightTitle");
@@ -148,6 +180,10 @@ public class LoginActivity extends AppCompatActivity {
         mButtonHeight = bundle.getInt(Constants.PACKAGE + ".heightButton");
 
         mExiting = false;
+        mSigningIn = false;
+
+        // Initialize Firebase Auth
+        mAuth = FirebaseAuth.getInstance();
     }
 
     private void initViews() {
@@ -159,6 +195,8 @@ public class LoginActivity extends AppCompatActivity {
         mEmailInputLayout    = findViewById(R.id.email_input_layout);
         mPasswordInputLayout = findViewById(R.id.password_input_layout);
         mForgotPassword      = findViewById(R.id.login_forgot_password);
+        mEmailEditText       = findViewById(R.id.email_edittext);
+        mPasswordEditText    = findViewById(R.id.password_edittext);
 
         // Background.
         mBackground = getDrawable(R.drawable.dark_background);
@@ -167,28 +205,143 @@ public class LoginActivity extends AppCompatActivity {
         mLoginButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-
-                // Get the title and button coordinates
-                int[] titleScreenLocation = new int[2];
-                mTitle.getLocationInWindow(titleScreenLocation);
-
-                intent.putExtra(Constants.PACKAGE + ".leftTitle", titleScreenLocation[0])
-                      .putExtra(Constants.PACKAGE + ".topTitle", titleScreenLocation[1])
-                      .putExtra(Constants.PACKAGE + ".widthTitle", mTitle.getWidth())
-                      .putExtra(Constants.PACKAGE + ".heightTitle", mTitle.getHeight());
-
-                startActivity(intent);
-                overridePendingTransition(0, 0);
+                signIn();
             }
         });
     }
 
-    private void initEditText() {
+    private void initEditTexts() {
         mEmailInputLayout.setTypeface(TypeFace.getTypeFace(this, "Raleway-Light.ttf"));
         mPasswordInputLayout.setTypeface(TypeFace.getTypeFace(this, "Raleway-Light.ttf"));
+
+        mEmailEditText.addTextChangedListener(new MyTextWatcher(new EmailValidator(this, mEmailEditText, mEmailInputLayout)));
+        mPasswordEditText.addTextChangedListener(new MyTextWatcher(new PasswordValidator(this, mPasswordEditText, mPasswordInputLayout)));
     }
 
+    private void signIn() {
+        if (!mSigningIn) {
+            if (!new EmailValidator(this, mEmailEditText, mEmailInputLayout).validate()) {
+                YoYo.with(Techniques.Shake)
+                        .duration(SHAKE_ANIM_DURATION)
+                        .playOn(mEmailInputLayout);
+
+            } else if (!new PasswordValidator(this, mPasswordEditText, mPasswordInputLayout).validate()) {
+                YoYo.with(Techniques.Shake)
+                        .duration(SHAKE_ANIM_DURATION)
+                        .playOn(mPasswordInputLayout);
+
+            } else {
+                Log.d(Constants.TAG, "validateFields: success");
+
+                mSigningIn = true;
+                mLoginButton.startAnimation();
+
+                final String email = Objects.requireNonNull(mEmailEditText.getText()).toString();
+                final String password = Objects.requireNonNull(mPasswordEditText.getText()).toString();
+
+                mAuth.signInWithEmailAndPassword(email, password).addOnCompleteListener(LoginActivity.this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        if (task.isSuccessful()) {
+                            Log.d(Constants.TAG, "signInWithEmailAndPassword: success");
+
+                            mSigningIn = false;
+                            animateSucces(mLoginButton);
+
+                        } else {
+                            Log.w(Constants.TAG, "signInWithEmailAndPassword: failure", task.getException());
+
+                            if (task.getException() instanceof FirebaseAuthInvalidUserException) {
+                                showError(AuthError.USER_NOT_FOUND);
+                            } else {
+                                showError(AuthError.OTHER);
+                            }
+
+                            mSigningIn = false;
+                        }
+                    }
+                });
+            }
+        }
+    }
+
+    /**
+     * Starts the success animation with a circular reveal where the user can advance
+     * to the next screen.
+     */
+    private void animateSucces(@NonNull View origin) {
+        int enterButtonX = (origin.getLeft()
+                + origin.getRight()) / 2;
+
+        int enterButtonY = (origin.getTop()
+                + origin.getBottom()) / 2;
+
+        View background = findViewById(R.id.login_background);
+
+        int radiusReveal = Math.max(background.getWidth(), background.getHeight());
+
+        background.setVisibility(View.VISIBLE);
+
+        Animator animator =
+                android.view.ViewAnimationUtils.createCircularReveal(background
+                        , enterButtonX
+                        , enterButtonY
+                        , 0
+                        , radiusReveal);
+
+        animator.setDuration(500);
+        animator.setInterpolator(
+                AnimationUtils.loadInterpolator(LoginActivity.this, R.anim.accelerator_interpolator));
+
+        animator.start();
+
+        background.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                // Move to the next screen
+                Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+
+                startActivity(intent);
+
+                finish();
+            }
+        });
+    }
+
+    /**
+     * Shows an error message when signing in.
+     */
+    private void showError(AuthError error) {
+        // Show the retry icon in the button
+        mLoginButton.revertAnimation();
+        mLoginButton.setBackground(getResources().getDrawable(R.drawable.rounded_button_fill, getTheme()));
+
+        // And show the snackbar
+        Snackbar snackbar;
+        if (error == AuthError.USER_NOT_FOUND) {
+            snackbar = Snackbar.make(mContainer, R.string.user_not_found, Snackbar.LENGTH_SHORT);
+
+        } else {
+            snackbar = Snackbar.make(mContainer, R.string.something_went_wrong, Snackbar.LENGTH_INDEFINITE).setAction("Reintentar", new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    signIn();
+                }
+            });
+        }
+
+        snackbar.setActionTextColor(getResources().getColor(R.color.colorAccent, getTheme()));
+        snackbar.getView().setBackgroundColor(getColor(R.color.colorPrimaryMedium));
+
+        snackbar.show();
+    }
+
+    /**
+     * Shows the initial animation when the activity is created.
+     */
     private void runEnterAnimation() {
         mTitle.setPivotX(0);
         mTitle.setPivotY(0);
@@ -272,6 +425,9 @@ public class LoginActivity extends AppCompatActivity {
                 .alpha(1.0f);
     }
 
+    /**
+     * Shows the exit animation when the activity is destroyed.
+     */
     private void runExitAnimation(final Runnable endAction) {
         mExiting = true;
 
@@ -336,5 +492,25 @@ public class LoginActivity extends AppCompatActivity {
         bgAnim.setDuration(EXIT_ANIM_DURATION - 225);
         bgAnim.setStartDelay(225);
         bgAnim.start();
+    }
+
+    /**
+     * Custom TextWatcher to validate the fields.
+     */
+    private class MyTextWatcher implements TextWatcher {
+
+        private Validator validator;
+
+        private MyTextWatcher(Validator validator) {
+            this.validator = validator;
+        }
+
+        public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
+
+        public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
+
+        public void afterTextChanged(Editable editable) {
+            validator.validate();
+        }
     }
 }

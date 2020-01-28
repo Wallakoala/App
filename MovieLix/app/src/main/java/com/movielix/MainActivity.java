@@ -36,26 +36,13 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int SWIPE_TRIGGER_DISTANCE = 750;
 
-    private static final int ENTER_ANIM_DURATION = 350;
-
     /* Views */
     private Toolbar mToolbar;
     private ActionBarDrawerToggle mDrawerToggle;
     private FloatingActionButton mFAB;
-    private View mTitle;
 
     /* Container */
     private DrawerLayout mDrawerLayout;
-
-    /* Data */
-    private int mTitleTop;
-    private int mTitleLeft;
-    private int mTitleWidth;
-    private int mTitleHeight;
-    private int mLeftDeltaTitle;
-    private int mTopDeltaTitle;
-    private float mWidthScaleTitle;
-    private float mHeightScaleTitle;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,7 +50,6 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_main);
 
-        initData();
         initializeToolbar();
         initializeDrawer();
         initializedFAB();
@@ -71,41 +57,7 @@ public class MainActivity extends AppCompatActivity {
         SwipeRefreshLayout swipeRefreshLayout = findViewById(R.id.swipe_refresh_layout);
         swipeRefreshLayout.setDistanceToTriggerSync(SWIPE_TRIGGER_DISTANCE);
 
-        if (savedInstanceState == null) {
-            // Global listener
-            final ViewTreeObserver observer = mDrawerLayout.getViewTreeObserver();
-            observer.addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
-                @Override
-                public boolean onPreDraw() {
-                    mDrawerLayout.getViewTreeObserver().removeOnPreDrawListener(this);
-
-                    // Get the title location and the distance to the target
-                    int[] titleScreenLocation = new int[2];
-                    mTitle.getLocationOnScreen(titleScreenLocation);
-                    mLeftDeltaTitle = mTitleLeft - titleScreenLocation[0];
-                    mTopDeltaTitle  = mTitleTop - titleScreenLocation[1];
-
-                    // Calculate the scale factors
-                    mWidthScaleTitle = (float)mTitleWidth / (float)mTitle.getWidth();
-                    mHeightScaleTitle = (float)mTitleHeight / (float)mTitle.getHeight();
-
-                    runEnterAnimation();
-
-                    return true;
-                }
-            });
-        }
-
         new GetReviewsTask(this).execute();
-    }
-
-    private void initData() {
-        Bundle bundle = getIntent().getExtras();
-
-        mTitleTop    = Objects.requireNonNull(bundle).getInt(Constants.PACKAGE + ".topTitle");
-        mTitleLeft   = bundle.getInt(Constants.PACKAGE + ".leftTitle");
-        mTitleWidth  = bundle.getInt(Constants.PACKAGE + ".widthTitle");
-        mTitleHeight = bundle.getInt(Constants.PACKAGE + ".heightTitle");
     }
 
     @Override
@@ -122,6 +74,16 @@ public class MainActivity extends AppCompatActivity {
 
         // Pass any configuration change to the drawer toggle
         mDrawerToggle.onConfigurationChanged(newConfig);
+    }
+
+    @Override
+    public void onEnterAnimationComplete() {
+        mToolbar.findViewById(R.id.toolbar_title).setTransitionName(null);
+    }
+
+    @Override
+    public void finishAfterTransition() {
+        finish();
     }
 
     /**
@@ -151,12 +113,9 @@ public class MainActivity extends AppCompatActivity {
     private void initializeToolbar() {
         mToolbar = findViewById(R.id.toolbar);
         setSupportActionBar(mToolbar);
-        if (getSupportActionBar() != null)
-        {
+        if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayShowTitleEnabled(false);
         }
-
-        mTitle = mToolbar.findViewById(R.id.toolbar_title);
     }
 
     /**
@@ -238,7 +197,7 @@ public class MainActivity extends AppCompatActivity {
 
                 movies.add(movie);
 
-                Thread.sleep(1000);
+                Thread.sleep(2000);
 
             } catch (InterruptedException | MalformedURLException e) {
                 e.printStackTrace();
@@ -251,25 +210,5 @@ public class MainActivity extends AppCompatActivity {
         protected void onPostExecute(Void unused) {
             initializeRecyclerView(movies);
         }
-    }
-
-    /**
-     * Runs the enter animation.
-     */
-    private void runEnterAnimation() {
-        mTitle.setPivotX(0);
-        mTitle.setPivotY(0);
-        mTitle.setScaleX(mWidthScaleTitle);
-        mTitle.setScaleY(mHeightScaleTitle);
-        mTitle.setTranslationX(mLeftDeltaTitle);
-        mTitle.setTranslationY(mTopDeltaTitle);
-
-
-        mTitle.animate()
-                .withLayer()
-                .setDuration(ENTER_ANIM_DURATION)
-                .scaleX(1).scaleY(1)
-                .translationX(0).translationY(0)
-                .setInterpolator(new AccelerateDecelerateInterpolator());
     }
 }
