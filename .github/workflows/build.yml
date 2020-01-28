@@ -10,9 +10,7 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v1
     - name: set up JDK 1.8
@@ -24,3 +22,14 @@ jobs:
         cd MovieLix/
         chmod a+x gradlew
         ./gradlew build
+        cp src/build/outputs/apk/debug/app-debug.apk ../Binaries/Debug/app-debug.apk
+
+    - name: Commit file
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git commit -m "ci: updated debug APK" -a
+    - name: Push changes
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
