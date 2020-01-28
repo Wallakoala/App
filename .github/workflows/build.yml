@@ -2,11 +2,11 @@ name: Build
 
 on:
   # Trigger the workflow on push,
-  # but only for the develop and master branch
+  # but only for the release and master branch
   push:
     branches:
       - master
-      - develop
+      - release
 
 jobs:
   build:
