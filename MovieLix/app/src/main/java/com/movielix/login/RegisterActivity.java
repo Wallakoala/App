@@ -50,6 +50,13 @@ import br.com.simplepass.loadingbutton.customViews.CircularProgressButton;
 
 public class RegisterActivity extends AppCompatActivity {
 
+    private enum AuthType {
+        EMAIL_AND_PASSWORD,
+        TWITTER,
+        FACEBOOK,
+        GOOGLE
+    }
+
     private enum AuthError {
         EMAIL_ALREADY_REGISTERED,
         OTHER
@@ -210,7 +217,7 @@ public class RegisterActivity extends AppCompatActivity {
         mRegisterButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                register();
+                register(AuthType.EMAIL_AND_PASSWORD);
             }
         });
     }
@@ -228,7 +235,7 @@ public class RegisterActivity extends AppCompatActivity {
     /**
      * Registers the user.
      */
-    private void register() {
+    private void register(AuthType authType) {
         if (!mRegistering) {
             if (!new NameValidator(this, mNameEditText, mNameInputLayout).validate()) {
                 YoYo.with(Techniques.Shake)
@@ -249,64 +256,78 @@ public class RegisterActivity extends AppCompatActivity {
                 Log.d(Constants.TAG, "validateFields: success");
 
                 mRegistering = true;
-                mRegisterButton.startAnimation();
-
-                final String name = Objects.requireNonNull(mNameEditText.getText()).toString();
-                final String email = Objects.requireNonNull(mEmailEditText.getText()).toString();
-                final String password = Objects.requireNonNull(mPasswordEditText.getText()).toString();
-
-                mAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(RegisterActivity.this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        if (task.isSuccessful()) {
-                            Log.d(Constants.TAG, "createUserWithEmail: success");
-                            FirebaseUser user = mAuth.getCurrentUser();
-
-                            if (user != null) {
-                                UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
-                                        .setDisplayName(name)
-                                        .build();
-
-                                user.updateProfile(profileUpdates)
-                                        .addOnCompleteListener(new OnCompleteListener<Void>() {
-                                            @Override
-                                            public void onComplete(@NonNull Task<Void> task) {
-                                                if (task.isSuccessful()) {
-                                                    Log.d(Constants.TAG, "updateProfileName: success");
-
-                                                    mRegistering = false;
-                                                    animateSucces(mRegisterButton);
-                                                }
-                                            }
-                                        });
-
-                            } else {
-                                Log.wtf(Constants.TAG, "createUserWithEmail: user is null after creation");
-
-                                mRegistering = false;
-                                showError(AuthError.OTHER);
-                            }
-
-                        } else {
-                            Log.w(Constants.TAG, "createUserWithEmail: failure", task.getException());
-                            if (task.getException() instanceof FirebaseAuthUserCollisionException) {
-                                showError(AuthError.EMAIL_ALREADY_REGISTERED);
-                            } else {
-                                showError(AuthError.OTHER);
-                            }
-
-                            mRegistering = false;
-                        }
-                    }
-                });
+                switch (authType) {
+                    case EMAIL_AND_PASSWORD:
+                        registerWithEmailAndPassword();
+                        break;
+                }
             }
         }
     }
 
     /**
+     * Registers the user using the email and password using Firebase.
+     */
+    private void registerWithEmailAndPassword() {
+        // Start the animation of the register button
+        mRegisterButton.startAnimation();
+
+        // Get all the fields
+        final String name = Objects.requireNonNull(mNameEditText.getText()).toString();
+        final String email = Objects.requireNonNull(mEmailEditText.getText()).toString();
+        final String password = Objects.requireNonNull(mPasswordEditText.getText()).toString();
+
+        // Let Firebase do its thing
+        mAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(RegisterActivity.this, new OnCompleteListener<AuthResult>() {
+            @Override
+            public void onComplete(@NonNull Task<AuthResult> task) {
+                if (task.isSuccessful()) {
+                    Log.d(Constants.TAG, "createUserWithEmail: success");
+                    FirebaseUser user = mAuth.getCurrentUser();
+
+                    if (user != null) {
+                        UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
+                                .setDisplayName(name)
+                                .build();
+
+                        user.updateProfile(profileUpdates)
+                                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                    @Override
+                                    public void onComplete(@NonNull Task<Void> task) {
+                                        if (task.isSuccessful()) {
+                                            Log.d(Constants.TAG, "updateProfileName: success");
+
+                                            mRegistering = false;
+                                            animateSuccess(mRegisterButton);
+                                        }
+                                    }
+                                });
+
+                    } else {
+                        Log.wtf(Constants.TAG, "createUserWithEmail: user is null after creation");
+
+                        mRegistering = false;
+                        showError(AuthType.EMAIL_AND_PASSWORD, AuthError.OTHER);
+                    }
+
+                } else {
+                    Log.w(Constants.TAG, "createUserWithEmail: failure", task.getException());
+
+                    mRegistering = false;
+                    if (task.getException() instanceof FirebaseAuthUserCollisionException) {
+                        showError(AuthType.EMAIL_AND_PASSWORD, AuthError.EMAIL_ALREADY_REGISTERED);
+                    } else {
+                        showError(AuthType.EMAIL_AND_PASSWORD, AuthError.OTHER);
+                    }
+                }
+            }
+        });
+    }
+
+    /**
      * Shows an error message when registering.
      */
-    private void showError(AuthError error) {
+    private void showError(final AuthType authType, AuthError error) {
         // Show the retry icon in the button
         mRegisterButton.revertAnimation();
         mRegisterButton.setBackground(getResources().getDrawable(R.drawable.rounded_button_fill, getTheme()));
@@ -320,7 +341,7 @@ public class RegisterActivity extends AppCompatActivity {
             snackbar = Snackbar.make(mContainer, R.string.something_went_wrong, Snackbar.LENGTH_INDEFINITE).setAction("Reintentar", new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    register();
+                    register(authType);
                 }
             });
         }
@@ -515,7 +536,7 @@ public class RegisterActivity extends AppCompatActivity {
      * Starts the success animation with a circular reveal where the user can advance
      * to the next screen.
      */
-    private void animateSucces(@NonNull View origin) {
+    private void animateSuccess(@NonNull View origin) {
         int enterButtonX = (origin.getLeft()
                 + origin.getRight()) / 2;
 
