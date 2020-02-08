@@ -22,13 +22,20 @@ import androidx.appcompat.widget.AppCompatEditText;
 
 import com.daimajia.androidanimations.library.Techniques;
 import com.daimajia.androidanimations.library.YoYo;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthUserCollisionException;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.auth.UserProfileChangeRequest;
 import com.movielix.MainActivity;
 import com.movielix.R;
@@ -49,6 +56,8 @@ import br.com.simplepass.loadingbutton.customViews.CircularProgressButton;
  */
 
 public class RegisterActivity extends AppCompatActivity {
+
+    private static final int RC_SIGN_IN = 0xA5;
 
     private enum AuthType {
         EMAIL_AND_PASSWORD,
@@ -178,6 +187,26 @@ public class RegisterActivity extends AppCompatActivity {
         overridePendingTransition(0, 0);
     }
 
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...);
+        if (requestCode == RC_SIGN_IN) {
+            Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
+
+            try {
+                // Google Sign In was successful, authenticate with Firebase
+                GoogleSignInAccount account = task.getResult(ApiException.class);
+                firebaseAuthWithGoogle(Objects.requireNonNull(account));
+
+            } catch (ApiException e) {
+                // Google Sign In failed, update UI appropriately
+                Log.w(Constants.TAG, "Google sign in failed", e);
+            }
+        }
+    }
+
     private void initData() {
         Bundle bundle = getIntent().getExtras();
 
@@ -220,6 +249,13 @@ public class RegisterActivity extends AppCompatActivity {
                 register(AuthType.EMAIL_AND_PASSWORD);
             }
         });
+
+        findViewById(R.id.google_auth_button).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                register(AuthType.GOOGLE);
+            }
+        });
     }
 
     private void initEditTexts() {
@@ -237,17 +273,17 @@ public class RegisterActivity extends AppCompatActivity {
      */
     private void register(AuthType authType) {
         if (!mRegistering) {
-            if (!new NameValidator(this, mNameEditText, mNameInputLayout).validate()) {
+            if ((authType == AuthType.EMAIL_AND_PASSWORD) && !new NameValidator(this, mNameEditText, mNameInputLayout).validate()) {
                 YoYo.with(Techniques.Shake)
                         .duration(SHAKE_ANIM_DURATION)
                         .playOn(mNameInputLayout);
 
-            } else if (!new EmailValidator(this, mEmailEditText, mEmailInputLayout).validate()) {
+            } else if ((authType == AuthType.EMAIL_AND_PASSWORD) && !new EmailValidator(this, mEmailEditText, mEmailInputLayout).validate()) {
                 YoYo.with(Techniques.Shake)
                         .duration(SHAKE_ANIM_DURATION)
                         .playOn(mEmailInputLayout);
 
-            } else if (!new PasswordValidator(this, mPasswordEditText, mPasswordInputLayout).validate()) {
+            } else if ((authType == AuthType.EMAIL_AND_PASSWORD) && !new PasswordValidator(this, mPasswordEditText, mPasswordInputLayout).validate()) {
                 YoYo.with(Techniques.Shake)
                         .duration(SHAKE_ANIM_DURATION)
                         .playOn(mPasswordInputLayout);
@@ -256,9 +292,16 @@ public class RegisterActivity extends AppCompatActivity {
                 Log.d(Constants.TAG, "validateFields: success");
 
                 mRegistering = true;
+
+                // Start the animation of the register button
+                mRegisterButton.startAnimation();
                 switch (authType) {
                     case EMAIL_AND_PASSWORD:
                         registerWithEmailAndPassword();
+                        break;
+
+                    case GOOGLE:
+                        registerWithGoogle();
                         break;
                 }
             }
@@ -269,9 +312,6 @@ public class RegisterActivity extends AppCompatActivity {
      * Registers the user using the email and password using Firebase.
      */
     private void registerWithEmailAndPassword() {
-        // Start the animation of the register button
-        mRegisterButton.startAnimation();
-
         // Get all the fields
         final String name = Objects.requireNonNull(mNameEditText.getText()).toString();
         final String email = Objects.requireNonNull(mEmailEditText.getText()).toString();
@@ -306,14 +346,12 @@ public class RegisterActivity extends AppCompatActivity {
                     } else {
                         Log.wtf(Constants.TAG, "createUserWithEmail: user is null after creation");
 
-                        mRegistering = false;
                         showError(AuthType.EMAIL_AND_PASSWORD, AuthError.OTHER);
                     }
 
                 } else {
                     Log.w(Constants.TAG, "createUserWithEmail: failure", task.getException());
 
-                    mRegistering = false;
                     if (task.getException() instanceof FirebaseAuthUserCollisionException) {
                         showError(AuthType.EMAIL_AND_PASSWORD, AuthError.EMAIL_ALREADY_REGISTERED);
                     } else {
@@ -325,9 +363,55 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     /**
+     * Registers the user using Google Auth.
+     */
+    private void registerWithGoogle() {
+        // Configure sign-in to request the user's ID, email address, and basic
+        // profile. ID and basic profile are included in DEFAULT_SIGN_IN.
+        // Configure Google Sign In
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(getString(R.string.default_web_client_id))
+                .requestEmail()
+                .build();
+
+        // Build a GoogleSignInClient with the options specified by gso.
+        GoogleSignInClient googleSignInClient = GoogleSignIn.getClient(this, gso);
+
+        Intent signInIntent = googleSignInClient.getSignInIntent();
+        startActivityForResult(signInIntent, RC_SIGN_IN);
+    }
+
+    private void firebaseAuthWithGoogle(final GoogleSignInAccount account) {
+        Log.d(Constants.TAG, "firebaseAuthWithGoogle: " + account.getId());
+
+        AuthCredential credential = GoogleAuthProvider.getCredential(account.getIdToken(), null);
+        mAuth.signInWithCredential(credential)
+                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        if (task.isSuccessful()) {
+                            // Sign in success, update UI with the signed-in user's information
+                            Log.d(Constants.TAG, "signInWithCredential: success");
+
+                            mRegistering = false;
+                            animateSuccess(mRegisterButton);
+
+                        } else {
+                            // If sign in fails, display a message to the user.
+                            Log.w(Constants.TAG, "signInWithCredential: failure", task.getException());
+
+                            showError(AuthType.GOOGLE, AuthError.OTHER);
+                        }
+                    }
+                });
+    }
+
+    /**
      * Shows an error message when registering.
      */
     private void showError(final AuthType authType, AuthError error) {
+        mRegistering = false;
+
         // Show the retry icon in the button
         mRegisterButton.revertAnimation();
         mRegisterButton.setBackground(getResources().getDrawable(R.drawable.rounded_button_fill, getTheme()));
