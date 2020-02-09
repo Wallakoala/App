@@ -34,6 +34,8 @@ public class SplashActivity extends AppCompatActivity {
     public void onStart() {
         super.onStart();
 
+        mAuth.signOut();
+
         // Check if user is signed in (non-null) and update UI accordingly.
         final FirebaseUser currentUser = mAuth.getCurrentUser();
         final Handler handler = new Handler();
@@ -62,7 +64,6 @@ public class SplashActivity extends AppCompatActivity {
                     makeSceneTransitionAnimation(this, title, Objects.requireNonNull(ViewCompat.getTransitionName(title)));
 
             Intent intent = new Intent(this, MainActivity.class);
-
             startActivity(intent, options.toBundle());
 
         } else {
@@ -72,7 +73,6 @@ public class SplashActivity extends AppCompatActivity {
                     makeSceneTransitionAnimation(this, title, Objects.requireNonNull(ViewCompat.getTransitionName(title)));
 
             Intent intent = new Intent(this, IntroActivity.class);
-
             startActivity(intent, options.toBundle());
         }
     }
