@@ -21,12 +21,19 @@ import androidx.appcompat.widget.AppCompatEditText;
 
 import com.daimajia.androidanimations.library.Techniques;
 import com.daimajia.androidanimations.library.YoYo;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthInvalidUserException;
+import com.google.firebase.auth.GoogleAuthProvider;
 import com.movielix.MainActivity;
 import com.movielix.R;
 import com.movielix.constants.Constants;
@@ -45,6 +52,15 @@ import br.com.simplepass.loadingbutton.customViews.CircularProgressButton;
  */
 
 public class LoginActivity extends AppCompatActivity {
+
+    private static final int RC_SIGN_IN = 0xA5;
+
+    private enum AuthType {
+        EMAIL_AND_PASSWORD,
+        TWITTER,
+        FACEBOOK,
+        GOOGLE
+    }
 
     private enum AuthError {
         USER_NOT_FOUND,
@@ -166,6 +182,26 @@ public class LoginActivity extends AppCompatActivity {
         overridePendingTransition(0, 0);
     }
 
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...);
+        if (requestCode == RC_SIGN_IN) {
+            Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
+
+            try {
+                // Google Sign In was successful, authenticate with Firebase
+                GoogleSignInAccount account = task.getResult(ApiException.class);
+                firebaseAuthWithGoogle(Objects.requireNonNull(account));
+
+            } catch (ApiException e) {
+                // Google Sign In failed, update UI appropriately
+                Log.w(Constants.TAG, "Google sign in failed", e);
+            }
+        }
+    }
+
     private void initData() {
         Bundle bundle = getIntent().getExtras();
 
@@ -205,7 +241,14 @@ public class LoginActivity extends AppCompatActivity {
         mLoginButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                signIn();
+                signIn(AuthType.EMAIL_AND_PASSWORD);
+            }
+        });
+
+        findViewById(R.id.google_auth_button).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                signIn(AuthType.GOOGLE);
             }
         });
     }
@@ -218,14 +261,14 @@ public class LoginActivity extends AppCompatActivity {
         mPasswordEditText.addTextChangedListener(new MyTextWatcher(new PasswordValidator(this, mPasswordEditText, mPasswordInputLayout)));
     }
 
-    private void signIn() {
+    private void signIn(AuthType authType) {
         if (!mSigningIn) {
-            if (!new EmailValidator(this, mEmailEditText, mEmailInputLayout).validate()) {
+            if ((authType == AuthType.EMAIL_AND_PASSWORD) && !new EmailValidator(this, mEmailEditText, mEmailInputLayout).validate()) {
                 YoYo.with(Techniques.Shake)
                         .duration(SHAKE_ANIM_DURATION)
                         .playOn(mEmailInputLayout);
 
-            } else if (!new PasswordValidator(this, mPasswordEditText, mPasswordInputLayout).validate()) {
+            } else if ((authType == AuthType.EMAIL_AND_PASSWORD) && !new PasswordValidator(this, mPasswordEditText, mPasswordInputLayout).validate()) {
                 YoYo.with(Techniques.Shake)
                         .duration(SHAKE_ANIM_DURATION)
                         .playOn(mPasswordInputLayout);
@@ -234,42 +277,102 @@ public class LoginActivity extends AppCompatActivity {
                 Log.d(Constants.TAG, "validateFields: success");
 
                 mSigningIn = true;
+                // Start the animation of the register button
                 mLoginButton.startAnimation();
 
-                final String email = Objects.requireNonNull(mEmailEditText.getText()).toString();
-                final String password = Objects.requireNonNull(mPasswordEditText.getText()).toString();
+                switch (authType) {
+                    case EMAIL_AND_PASSWORD:
+                        signInWithEmailAndPassword();
+                        break;
 
-                mAuth.signInWithEmailAndPassword(email, password).addOnCompleteListener(LoginActivity.this, new OnCompleteListener<AuthResult>() {
+                    case GOOGLE:
+                        signInWithGoogle();
+                        break;
+                }
+            }
+        }
+    }
+
+    /**
+     * Registers the user using the email and password using Firebase.
+     */
+    private void signInWithEmailAndPassword() {
+        final String email = Objects.requireNonNull(mEmailEditText.getText()).toString();
+        final String password = Objects.requireNonNull(mPasswordEditText.getText()).toString();
+
+        mAuth.signInWithEmailAndPassword(email, password).addOnCompleteListener(LoginActivity.this, new OnCompleteListener<AuthResult>() {
+            @Override
+            public void onComplete(@NonNull Task<AuthResult> task) {
+                if (task.isSuccessful()) {
+                    Log.d(Constants.TAG, "signInWithEmailAndPassword: success");
+
+                    mSigningIn = false;
+                    animateSuccess(mLoginButton);
+
+                } else {
+                    Log.w(Constants.TAG, "signInWithEmailAndPassword: failure", task.getException());
+
+                    if (task.getException() instanceof FirebaseAuthInvalidUserException) {
+                        showError(AuthType.EMAIL_AND_PASSWORD, AuthError.USER_NOT_FOUND);
+                    } else {
+                        showError(AuthType.EMAIL_AND_PASSWORD, AuthError.OTHER);
+                    }
+
+                    mSigningIn = false;
+                }
+            }
+        });
+    }
+
+    /**
+     * Registers the user using Google Auth.
+     */
+    private void signInWithGoogle() {
+        // Configure sign-in to request the user's ID, email address, and basic
+        // profile. ID and basic profile are included in DEFAULT_SIGN_IN.
+        // Configure Google Sign In
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(getString(R.string.default_web_client_id))
+                .requestEmail()
+                .build();
+
+        // Build a GoogleSignInClient with the options specified by gso.
+        GoogleSignInClient googleSignInClient = GoogleSignIn.getClient(this, gso);
+
+        Intent signInIntent = googleSignInClient.getSignInIntent();
+        startActivityForResult(signInIntent, RC_SIGN_IN);
+    }
+
+    private void firebaseAuthWithGoogle(final GoogleSignInAccount account) {
+        Log.d(Constants.TAG, "firebaseAuthWithGoogle: " + account.getId());
+
+        AuthCredential credential = GoogleAuthProvider.getCredential(account.getIdToken(), null);
+        mAuth.signInWithCredential(credential)
+                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
-                            Log.d(Constants.TAG, "signInWithEmailAndPassword: success");
+                            // Sign in success, update UI with the signed-in user's information
+                            Log.d(Constants.TAG, "signInWithCredential: success");
 
                             mSigningIn = false;
-                            animateSucces(mLoginButton);
+                            animateSuccess(mLoginButton);
 
                         } else {
-                            Log.w(Constants.TAG, "signInWithEmailAndPassword: failure", task.getException());
+                            // If sign in fails, display a message to the user.
+                            Log.w(Constants.TAG, "signInWithCredential: failure", task.getException());
 
-                            if (task.getException() instanceof FirebaseAuthInvalidUserException) {
-                                showError(AuthError.USER_NOT_FOUND);
-                            } else {
-                                showError(AuthError.OTHER);
-                            }
-
-                            mSigningIn = false;
+                            showError(AuthType.GOOGLE, AuthError.OTHER);
                         }
                     }
                 });
-            }
-        }
     }
 
     /**
      * Starts the success animation with a circular reveal where the user can advance
      * to the next screen.
      */
-    private void animateSucces(@NonNull View origin) {
+    private void animateSuccess(@NonNull View origin) {
         int enterButtonX = (origin.getLeft()
                 + origin.getRight()) / 2;
 
@@ -314,7 +417,7 @@ public class LoginActivity extends AppCompatActivity {
     /**
      * Shows an error message when signing in.
      */
-    private void showError(AuthError error) {
+    private void showError(final AuthType authType, final AuthError error) {
         // Show the retry icon in the button
         mLoginButton.revertAnimation();
         mLoginButton.setBackground(getResources().getDrawable(R.drawable.rounded_button_fill, getTheme()));
@@ -328,7 +431,7 @@ public class LoginActivity extends AppCompatActivity {
             snackbar = Snackbar.make(mContainer, R.string.something_went_wrong, Snackbar.LENGTH_INDEFINITE).setAction("Reintentar", new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    signIn();
+                    signIn(authType);
                 }
             });
         }

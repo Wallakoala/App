@@ -2,6 +2,7 @@ package com.movielix.login;
 
 import android.animation.Animator;
 import android.animation.ObjectAnimator;
+import android.app.Activity;
 import android.content.Intent;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.Drawable;
@@ -54,7 +55,6 @@ import br.com.simplepass.loadingbutton.customViews.CircularProgressButton;
 /**
  * Register activity.
  */
-
 public class RegisterActivity extends AppCompatActivity {
 
     private static final int RC_SIGN_IN = 0xA5;
@@ -193,16 +193,25 @@ public class RegisterActivity extends AppCompatActivity {
 
         // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...);
         if (requestCode == RC_SIGN_IN) {
-            Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
+            if (resultCode == Activity.RESULT_OK) {
+                Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
 
-            try {
-                // Google Sign In was successful, authenticate with Firebase
-                GoogleSignInAccount account = task.getResult(ApiException.class);
-                firebaseAuthWithGoogle(Objects.requireNonNull(account));
+                try {
+                    // Google Sign In was successful, authenticate with Firebase
+                    GoogleSignInAccount account = task.getResult(ApiException.class);
+                    firebaseAuthWithGoogle(Objects.requireNonNull(account));
 
-            } catch (ApiException e) {
-                // Google Sign In failed, update UI appropriately
-                Log.w(Constants.TAG, "Google sign in failed", e);
+                } catch (ApiException e) {
+                    // Google Sign In failed, update UI appropriately
+                    Log.w(Constants.TAG, "Google sign in failed", e);
+                    Log.e(Constants.TAG, " - Status code: " + e.getStatusCode());
+
+                    showError(AuthType.GOOGLE, AuthError.OTHER);
+                }
+
+            } else {
+                mRegistering = false;
+                mRegisterButton.revertAnimation();
             }
         }
     }
@@ -220,7 +229,7 @@ public class RegisterActivity extends AppCompatActivity {
         mButtonWidth  = bundle.getInt(Constants.PACKAGE + ".widthButton");
         mButtonHeight = bundle.getInt(Constants.PACKAGE + ".heightButton");
 
-        mExiting = false;
+        mExiting     = false;
         mRegistering = false;
 
         // Initialize Firebase Auth
@@ -292,9 +301,9 @@ public class RegisterActivity extends AppCompatActivity {
                 Log.d(Constants.TAG, "validateFields: success");
 
                 mRegistering = true;
-
                 // Start the animation of the register button
                 mRegisterButton.startAnimation();
+
                 switch (authType) {
                     case EMAIL_AND_PASSWORD:
                         registerWithEmailAndPassword();
@@ -409,7 +418,7 @@ public class RegisterActivity extends AppCompatActivity {
     /**
      * Shows an error message when registering.
      */
-    private void showError(final AuthType authType, AuthError error) {
+    private void showError(final AuthType authType, final AuthError error) {
         mRegistering = false;
 
         // Show the retry icon in the button
@@ -422,7 +431,7 @@ public class RegisterActivity extends AppCompatActivity {
             snackbar = Snackbar.make(mContainer, R.string.email_already_register, Snackbar.LENGTH_SHORT);
 
         } else {
-            snackbar = Snackbar.make(mContainer, R.string.something_went_wrong, Snackbar.LENGTH_INDEFINITE).setAction("Reintentar", new View.OnClickListener() {
+            snackbar = Snackbar.make(mContainer, R.string.something_went_wrong, Snackbar.LENGTH_LONG).setAction("Reintentar", new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     register(authType);
