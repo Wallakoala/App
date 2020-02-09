@@ -2,6 +2,7 @@ package com.movielix.login;
 
 import android.animation.Animator;
 import android.animation.ObjectAnimator;
+import android.app.Activity;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
@@ -188,16 +189,26 @@ public class LoginActivity extends AppCompatActivity {
 
         // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...);
         if (requestCode == RC_SIGN_IN) {
-            Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
+            if (resultCode == Activity.RESULT_OK) {
+                Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
 
-            try {
-                // Google Sign In was successful, authenticate with Firebase
-                GoogleSignInAccount account = task.getResult(ApiException.class);
-                firebaseAuthWithGoogle(Objects.requireNonNull(account));
+                try {
+                    // Google Sign In was successful, authenticate with Firebase
+                    GoogleSignInAccount account = task.getResult(ApiException.class);
+                    firebaseAuthWithGoogle(Objects.requireNonNull(account));
 
-            } catch (ApiException e) {
-                // Google Sign In failed, update UI appropriately
-                Log.w(Constants.TAG, "Google sign in failed", e);
+                } catch (ApiException e) {
+                    // Google Sign In failed, update UI appropriately
+                    Log.w(Constants.TAG, "Google sign in failed", e);
+                    Log.e(Constants.TAG, " - Status code: " + e.getStatusCode());
+
+                    showError(AuthType.GOOGLE, AuthError.OTHER);
+                }
+
+            } else {
+                mSigningIn = false;
+                mLoginButton.revertAnimation();
+                mLoginButton.setBackground(getResources().getDrawable(R.drawable.rounded_button_fill, getTheme()));
             }
         }
     }
@@ -428,7 +439,7 @@ public class LoginActivity extends AppCompatActivity {
             snackbar = Snackbar.make(mContainer, R.string.user_not_found, Snackbar.LENGTH_SHORT);
 
         } else {
-            snackbar = Snackbar.make(mContainer, R.string.something_went_wrong, Snackbar.LENGTH_INDEFINITE).setAction("Reintentar", new View.OnClickListener() {
+            snackbar = Snackbar.make(mContainer, R.string.something_went_wrong, Snackbar.LENGTH_LONG).setAction("Reintentar", new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     signIn(authType);

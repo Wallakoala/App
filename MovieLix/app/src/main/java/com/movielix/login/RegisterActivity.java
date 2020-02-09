@@ -212,6 +212,7 @@ public class RegisterActivity extends AppCompatActivity {
             } else {
                 mRegistering = false;
                 mRegisterButton.revertAnimation();
+                mRegisterButton.setBackground(getResources().getDrawable(R.drawable.rounded_button_fill, getTheme()));
             }
         }
     }
