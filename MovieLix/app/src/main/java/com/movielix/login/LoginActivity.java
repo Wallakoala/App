@@ -59,7 +59,6 @@ import br.com.simplepass.loadingbutton.customViews.CircularProgressButton;
 /**
  * Login screen
  */
-
 public class LoginActivity extends AppCompatActivity {
 
     private static final int RC_GOOGLE = 0xA5;
