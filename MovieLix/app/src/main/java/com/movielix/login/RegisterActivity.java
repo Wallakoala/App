@@ -226,6 +226,7 @@ public class RegisterActivity extends AppCompatActivity {
                 mRegisterButton.revertAnimation();
                 mRegisterButton.setBackground(getResources().getDrawable(R.drawable.rounded_button_fill, getTheme()));
             }
+
         } else if (requestCode == RC_FACEBOOK) {
             mCallbackManager.onActivityResult(requestCode, resultCode, data);
         }
@@ -478,7 +479,7 @@ public class RegisterActivity extends AppCompatActivity {
                 });
     }
 
-    private void handleFacebookAccessToken(AccessToken token) {
+    private void handleFacebookAccessToken(final AccessToken token) {
         Log.d(Constants.TAG, "handleFacebookAccessToken:" + token);
 
         AuthCredential credential = FacebookAuthProvider.getCredential(token.getToken());
