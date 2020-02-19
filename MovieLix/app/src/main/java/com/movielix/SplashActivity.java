@@ -16,6 +16,9 @@ import com.movielix.constants.Constants;
 
 import java.util.Objects;
 
+/**
+ * Splash screen that routes to the appropiate screen.
+ */
 public class SplashActivity extends AppCompatActivity {
 
     private FirebaseAuth mAuth;

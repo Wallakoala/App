@@ -9,56 +9,58 @@ import static org.junit.Assert.*;
 public class InputValidatorTest {
 
     @Test
-    public void isValidName() {
-        String input = "";
-        assertFalse(InputValidator.isValidName(input));
-
-        input = "Dani9";
-        assertFalse(InputValidator.isValidName(input));
-
-        input = "Dani_";
-        assertFalse(InputValidator.isValidName(input));
-
-        input = "9Dani";
-        assertFalse(InputValidator.isValidName(input));
-
-        input = "9Dani";
-        assertFalse(InputValidator.isValidName(input));
-
-        input = "Dani Mancebo";
-        assertTrue(InputValidator.isValidName(input));
-
-        input = "Dani";
-        assertTrue(InputValidator.isValidName(input));
+    public void validate_emptyName_falseReturned() {
+        assertFalse(InputValidator.isValidName(""));
     }
 
     @Test
-    public void isValidPassword() {
-        String input = "";
-        assertFalse(InputValidator.isValidPassword(input));
+    public void validate_nameWithNumber_falseReturned() {
+        assertFalse(InputValidator.isValidName("Dani9"));
+    }
 
-        input = "Dani9";
-        assertFalse(InputValidator.isValidPassword(input));
+    @Test
+    public void validate_nameWithSpecialChar_falseReturned() {
+        assertFalse(InputValidator.isValidName("Dani_"));
+    }
 
-        input = "Dani_;";
-        assertFalse(InputValidator.isValidPassword(input));
+    @Test
+    public void validate_longName_trueReturned() {
+        assertTrue(InputValidator.isValidName("Dani Mancebo"));
+    }
 
-        input = "SELECTDani";
-        assertFalse(InputValidator.isValidPassword(input));
+    @Test
+    public void validate_shortName_trueReturned() {
+        assertTrue(InputValidator.isValidName("Dani"));
+    }
 
-        input = "DaniUpdate";
-        assertFalse(InputValidator.isValidPassword(input));
+    @Test
+    public void validate_emptyPassword_falseReturned() {
+        assertFalse(InputValidator.isValidPassword(""));
+    }
 
-        input = "Dani|Mancebo";
-        assertFalse(InputValidator.isValidPassword(input));
+    @Test
+    public void validate_tooShortPassword_falseReturned() {
+        assertFalse(InputValidator.isValidPassword("Dani9"));
+    }
 
-        input = "Dani|SELECT";
-        assertFalse(InputValidator.isValidPassword(input));
+    @Test
+    public void validate_sqlInyectionPassword_falseReturned() {
+        assertFalse(InputValidator.isValidPassword("SELECTDani"));
+    }
 
-        input = "Dani';";
-        assertFalse(InputValidator.isValidPassword(input));
+    @Test
+    public void validate_passwordWithPipeChar_falseReturned() {
+        assertFalse(InputValidator.isValidPassword("Dani|Mancebo"));
+    }
 
-        input = "DaniMancebo";
-        assertTrue(InputValidator.isValidPassword(input));
+    @Test
+    public void validate_passwordWithQuotes_falseReturned() {
+        assertFalse(InputValidator.isValidPassword("Dani';"));
+    }
+
+    @Test
+    public void validate_correctPassword_trueReturned() {
+        assertTrue(InputValidator.isValidPassword("DaniMancebo"));
+
     }
 }

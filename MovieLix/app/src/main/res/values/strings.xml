@@ -49,4 +49,6 @@
     <string name="something_went_wrong">¡Oops! Algo ha ido mal</string>
     <string name="email_already_register">Este email ya ha sido registrado</string>
     <string name="user_not_found">Usuario no encontrado</string>
+
+    <string name="facebook_app_id">592176878302149</string> <string name="fb_login_protocol_scheme">fb592176878302149</string>
 </resources>
