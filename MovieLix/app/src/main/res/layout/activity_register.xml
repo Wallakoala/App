@@ -186,6 +186,7 @@
                     app:civ_border_width="4dp"/>
 
                 <de.hdodenhof.circleimageview.CircleImageView
+                    android:id="@+id/facebook_auth_button"
                     android:layout_width="56dp"
                     android:layout_height="56dp"
                     android:layout_marginStart="24dp"
