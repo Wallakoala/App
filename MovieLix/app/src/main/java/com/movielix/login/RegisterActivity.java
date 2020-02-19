@@ -23,6 +23,12 @@ import androidx.appcompat.widget.AppCompatEditText;
 
 import com.daimajia.androidanimations.library.Techniques;
 import com.daimajia.androidanimations.library.YoYo;
+import com.facebook.AccessToken;
+import com.facebook.CallbackManager;
+import com.facebook.FacebookCallback;
+import com.facebook.FacebookException;
+import com.facebook.login.LoginManager;
+import com.facebook.login.LoginResult;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
@@ -33,6 +39,7 @@ import com.google.android.gms.tasks.Task;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FacebookAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthUserCollisionException;
 import com.google.firebase.auth.FirebaseUser;
@@ -48,6 +55,7 @@ import com.movielix.validator.Validator;
 import com.movielix.view.TextInputLayout;
 import com.movielix.font.TypeFace;
 
+import java.util.Collections;
 import java.util.Objects;
 
 import br.com.simplepass.loadingbutton.customViews.CircularProgressButton;
@@ -57,7 +65,8 @@ import br.com.simplepass.loadingbutton.customViews.CircularProgressButton;
  */
 public class RegisterActivity extends AppCompatActivity {
 
-    private static final int RC_SIGN_IN = 0xA5;
+    private static final int RC_GOOGLE = 0xA5;
+    private static final int RC_FACEBOOK = 64206;
 
     private enum AuthType {
         EMAIL_AND_PASSWORD,
@@ -84,6 +93,9 @@ public class RegisterActivity extends AppCompatActivity {
 
     /* Firebase */
     private FirebaseAuth mAuth;
+
+    /* Facebook SDK */
+    private CallbackManager mCallbackManager;
 
     /* Views */
     private View mContainer;
@@ -192,7 +204,7 @@ public class RegisterActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
 
         // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...);
-        if (requestCode == RC_SIGN_IN) {
+        if (requestCode == RC_GOOGLE) {
             if (resultCode == Activity.RESULT_OK) {
                 Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
 
@@ -214,6 +226,8 @@ public class RegisterActivity extends AppCompatActivity {
                 mRegisterButton.revertAnimation();
                 mRegisterButton.setBackground(getResources().getDrawable(R.drawable.rounded_button_fill, getTheme()));
             }
+        } else if (requestCode == RC_FACEBOOK) {
+            mCallbackManager.onActivityResult(requestCode, resultCode, data);
         }
     }
 
@@ -266,6 +280,13 @@ public class RegisterActivity extends AppCompatActivity {
                 register(AuthType.GOOGLE);
             }
         });
+
+        findViewById(R.id.facebook_auth_button).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                register(AuthType.FACEBOOK);
+            }
+        });
     }
 
     private void initEditTexts() {
@@ -312,6 +333,10 @@ public class RegisterActivity extends AppCompatActivity {
 
                     case GOOGLE:
                         registerWithGoogle();
+                        break;
+
+                    case FACEBOOK:
+                        registerWithFacebook();
                         break;
                 }
             }
@@ -388,7 +413,44 @@ public class RegisterActivity extends AppCompatActivity {
         GoogleSignInClient googleSignInClient = GoogleSignIn.getClient(this, gso);
 
         Intent signInIntent = googleSignInClient.getSignInIntent();
-        startActivityForResult(signInIntent, RC_SIGN_IN);
+        startActivityForResult(signInIntent, RC_GOOGLE);
+    }
+
+    /**
+     * Registers the user using Facebook Auth.
+     */
+    private void registerWithFacebook() {
+        LoginManager.getInstance().logInWithReadPermissions(
+                RegisterActivity.this, Collections.singleton("email"));
+
+        mCallbackManager = CallbackManager.Factory.create();
+        LoginManager.getInstance().registerCallback(
+                mCallbackManager,
+                new FacebookCallback<LoginResult>() {
+                    @Override
+                    public void onSuccess(LoginResult loginResult) {
+                        Log.d(Constants.TAG, "facebook:onSuccess");
+
+                        handleFacebookAccessToken(loginResult.getAccessToken());
+                    }
+
+                    @Override
+                    public void onCancel() {
+                        Log.d(Constants.TAG, "facebook:onCancel");
+
+                        mRegistering = false;
+                        mRegisterButton.revertAnimation();
+                        mRegisterButton.setBackground(getResources().getDrawable(R.drawable.rounded_button_fill, getTheme()));
+                    }
+
+                    @Override
+                    public void onError(FacebookException exception) {
+                        Log.w(Constants.TAG, "facebook:onError", exception);
+
+                        showError(AuthType.FACEBOOK, AuthError.OTHER);
+                    }
+                }
+        );
     }
 
     private void firebaseAuthWithGoogle(final GoogleSignInAccount account) {
@@ -411,6 +473,31 @@ public class RegisterActivity extends AppCompatActivity {
                             Log.w(Constants.TAG, "signInWithCredential: failure", task.getException());
 
                             showError(AuthType.GOOGLE, AuthError.OTHER);
+                        }
+                    }
+                });
+    }
+
+    private void handleFacebookAccessToken(AccessToken token) {
+        Log.d(Constants.TAG, "handleFacebookAccessToken:" + token);
+
+        AuthCredential credential = FacebookAuthProvider.getCredential(token.getToken());
+        mAuth.signInWithCredential(credential)
+                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        if (task.isSuccessful()) {
+                            // Sign in success, update UI with the signed-in user's information
+                            Log.d(Constants.TAG, "signInWithCredential:success");
+
+                            mRegistering = false;
+                            animateSuccess(mRegisterButton);
+
+                        } else {
+                            // If sign in fails, display a message to the user.
+                            Log.w(Constants.TAG, "signInWithCredential:failure", task.getException());
+
+                            showError(AuthType.FACEBOOK, AuthError.OTHER);
                         }
                     }
                 });
