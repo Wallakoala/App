@@ -13,7 +13,11 @@ import androidx.core.view.ViewCompat;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.movielix.constants.Constants;
+import com.movielix.logging.Logger;
+import com.movielix.util.ExternalStorage;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Objects;
 
 /**
@@ -24,6 +28,7 @@ public class SplashActivity extends AppCompatActivity {
     private FirebaseAuth mAuth;
 
     @Override
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
@@ -31,6 +36,21 @@ public class SplashActivity extends AppCompatActivity {
 
         // Initialize Firebase Auth
         mAuth = FirebaseAuth.getInstance();
+
+        if (ExternalStorage.isWritable()) {
+            File logFile = new File(getExternalCacheDir(), Constants.LOG_FILE);
+
+            if (logFile.exists()) {
+                logFile.delete();
+            }
+
+            try {
+                Logger.init(logFile);
+
+            } catch (IOException e) {
+                Log.w(Constants.TAG, "loggerInit:failure " + e);
+            }
+        }
     }
 
     @Override
