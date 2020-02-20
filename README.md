@@ -16,7 +16,7 @@
 
 The splash screen is used to get the current user through `Firebase` and route to the appropiate screen:
 
-![Splash activity diagram](./Documentation/Diagrams/out/splash_screen.png)
+![Splash activity diagram](./Documentation/Diagrams/images/splash_screen.png)
 
 ## User Signup
 
