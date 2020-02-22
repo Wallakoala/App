@@ -35,6 +35,8 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.AuthCredential;
@@ -44,6 +46,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthUserCollisionException;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
+import com.google.firebase.auth.OAuthProvider;
 import com.google.firebase.auth.UserProfileChangeRequest;
 import com.movielix.MainActivity;
 import com.movielix.R;
@@ -92,7 +95,7 @@ public class RegisterActivity extends AppCompatActivity {
     private static final int EXIT_ANIM_TRANSLATION  = 200;
 
     /* Firebase */
-    private FirebaseAuth mAuth;
+    private FirebaseAuth mFirebaseAuth;
 
     /* Facebook SDK */
     private CallbackManager mCallbackManager;
@@ -249,7 +252,7 @@ public class RegisterActivity extends AppCompatActivity {
         mRegistering = false;
 
         // Initialize Firebase Auth
-        mAuth = FirebaseAuth.getInstance();
+        mFirebaseAuth = FirebaseAuth.getInstance();
     }
 
     private void initViews() {
@@ -286,6 +289,13 @@ public class RegisterActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 register(AuthType.FACEBOOK);
+            }
+        });
+
+        findViewById(R.id.twitter_auth_button).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                register(AuthType.TWITTER);
             }
         });
     }
@@ -339,6 +349,10 @@ public class RegisterActivity extends AppCompatActivity {
                     case FACEBOOK:
                         registerWithFacebook();
                         break;
+
+                    case TWITTER:
+                        registerWithTwitter();
+                        break;
                 }
             }
         }
@@ -354,12 +368,12 @@ public class RegisterActivity extends AppCompatActivity {
         final String password = Objects.requireNonNull(mPasswordEditText.getText()).toString();
 
         // Let Firebase do its thing
-        mAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(RegisterActivity.this, new OnCompleteListener<AuthResult>() {
+        mFirebaseAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(RegisterActivity.this, new OnCompleteListener<AuthResult>() {
             @Override
             public void onComplete(@NonNull Task<AuthResult> task) {
                 if (task.isSuccessful()) {
                     Log.d(Constants.TAG, "createUserWithEmail: success");
-                    FirebaseUser user = mAuth.getCurrentUser();
+                    FirebaseUser user = mFirebaseAuth.getCurrentUser();
 
                     if (user != null) {
                         UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
@@ -454,11 +468,62 @@ public class RegisterActivity extends AppCompatActivity {
         );
     }
 
+    /**
+     * Registers the user using Twitter Auth.
+     */
+    private void registerWithTwitter() {
+        OAuthProvider.Builder provider = OAuthProvider.newBuilder("twitter.com");
+
+        Task<AuthResult> pendingResultTask = mFirebaseAuth.getPendingAuthResult();
+        if (pendingResultTask != null) {
+            // There's something already here! Finish the sign-in for your user.
+            pendingResultTask
+                    .addOnSuccessListener(
+                            new OnSuccessListener<AuthResult>() {
+                                @Override
+                                public void onSuccess(AuthResult authResult) {
+                                    // User is signed in.
+                                    mRegistering = false;
+                                    animateSuccess(mRegisterButton);
+                                }
+                            })
+                    .addOnFailureListener(
+                            new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception e) {
+                                    // Handle failure.
+                                    showError(AuthType.TWITTER, AuthError.OTHER);
+                                }
+                            });
+        } else {
+            // There's no pending result so you need to start the sign-in flow.
+            mFirebaseAuth
+                    .startActivityForSignInWithProvider(this, provider.build())
+                    .addOnSuccessListener(
+                            new OnSuccessListener<AuthResult>() {
+                                @Override
+                                public void onSuccess(AuthResult authResult) {
+                                    // User is signed in.
+                                    mRegistering = false;
+                                    animateSuccess(mRegisterButton);
+                                }
+                            })
+                    .addOnFailureListener(
+                            new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception e) {
+                                    // Handle failure.
+                                    showError(AuthType.TWITTER, AuthError.OTHER);
+                                }
+                            });
+        }
+    }
+
     private void firebaseAuthWithGoogle(final GoogleSignInAccount account) {
         Log.d(Constants.TAG, "firebaseAuthWithGoogle: " + account.getId());
 
         AuthCredential credential = GoogleAuthProvider.getCredential(account.getIdToken(), null);
-        mAuth.signInWithCredential(credential)
+        mFirebaseAuth.signInWithCredential(credential)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
@@ -483,7 +548,7 @@ public class RegisterActivity extends AppCompatActivity {
         Log.d(Constants.TAG, "handleFacebookAccessToken:" + token);
 
         AuthCredential credential = FacebookAuthProvider.getCredential(token.getToken());
-        mAuth.signInWithCredential(credential)
+        mFirebaseAuth.signInWithCredential(credential)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {

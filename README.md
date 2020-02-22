@@ -10,6 +10,7 @@
     - [Authentication](#authentication)
       - [Google](#google)
       - [Facebook](#facebook)
+      - [Twitter](#twitter)
     - [GUI](#gui)
 
 ## Splash screen
@@ -33,6 +34,10 @@ The splash screen is used to get the current user through `Firebase` and route t
 
 - [Authenticate Using Facebook Login on Android](https://firebase.google.com/docs/auth/android/facebook-login)
 - [Facebook for Developers](https://developers.facebook.com/apps/592176878302149/dashboard/)
+
+#### Twitter
+
+- [Authenticate Using Twitter on Android](https://firebase.google.com/docs/auth/android/twitter-login)
 
 ### GUI
 

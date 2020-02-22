@@ -61,6 +61,5 @@ public class InputValidatorTest {
     @Test
     public void validate_correctPassword_trueReturned() {
         assertTrue(InputValidator.isValidPassword("DaniMancebo"));
-
     }
 }
