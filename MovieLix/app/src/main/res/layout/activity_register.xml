@@ -175,7 +175,7 @@
                 android:clipToPadding="false">
 
                 <de.hdodenhof.circleimageview.CircleImageView
-                    android:id="@+id/register_twitter_button"
+                    android:id="@+id/twitter_auth_button"
                     android:layout_width="56dp"
                     android:layout_height="56dp"
                     android:src="@drawable/ic_twitter_96"
