@@ -34,6 +34,8 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.AuthCredential;
@@ -41,7 +43,9 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FacebookAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthInvalidUserException;
+import com.google.firebase.auth.FirebaseAuthUserCollisionException;
 import com.google.firebase.auth.GoogleAuthProvider;
+import com.google.firebase.auth.OAuthProvider;
 import com.movielix.MainActivity;
 import com.movielix.R;
 import com.movielix.constants.Constants;
@@ -73,6 +77,7 @@ public class LoginActivity extends AppCompatActivity {
 
     private enum AuthError {
         USER_NOT_FOUND,
+        EMAIL_REGISTER_WITH_DIFFERENT_PROVIDER,
         OTHER
     }
 
@@ -88,7 +93,7 @@ public class LoginActivity extends AppCompatActivity {
     private static final int EXIT_ANIM_TRANSLATION  = 200;
 
     /* Firebase */
-    private FirebaseAuth mAuth;
+    private FirebaseAuth mFirebaseAuth;
 
     /* Facebook SDK */
     private CallbackManager mCallbackManager;
@@ -244,7 +249,7 @@ public class LoginActivity extends AppCompatActivity {
         mSigningIn = false;
 
         // Initialize Firebase Auth
-        mAuth = FirebaseAuth.getInstance();
+        mFirebaseAuth = FirebaseAuth.getInstance();
     }
 
     private void initViews() {
@@ -281,6 +286,13 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 signIn(AuthType.FACEBOOK);
+            }
+        });
+
+        findViewById(R.id.twitter_auth_button).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                signIn(AuthType.TWITTER);
             }
         });
     }
@@ -324,6 +336,10 @@ public class LoginActivity extends AppCompatActivity {
                     case FACEBOOK:
                         signInWithFacebook();
                         break;
+
+                    case TWITTER:
+                        signInWithTwitter();
+                        break;
                 }
             }
         }
@@ -336,7 +352,7 @@ public class LoginActivity extends AppCompatActivity {
         final String email = Objects.requireNonNull(mEmailEditText.getText()).toString();
         final String password = Objects.requireNonNull(mPasswordEditText.getText()).toString();
 
-        mAuth.signInWithEmailAndPassword(email, password).addOnCompleteListener(LoginActivity.this, new OnCompleteListener<AuthResult>() {
+        mFirebaseAuth.signInWithEmailAndPassword(email, password).addOnCompleteListener(LoginActivity.this, new OnCompleteListener<AuthResult>() {
             @Override
             public void onComplete(@NonNull Task<AuthResult> task) {
                 if (task.isSuccessful()) {
@@ -380,7 +396,7 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     /**
-     * Signs in the user using Google Auth.
+     * Signs in the user using Facebook Auth.
      */
     private void signInWithFacebook() {
         LoginManager.getInstance().logInWithReadPermissions(
@@ -416,11 +432,72 @@ public class LoginActivity extends AppCompatActivity {
         );
     }
 
+    /**
+     * Signs in the user using Twitter Auth.
+     */
+    private void signInWithTwitter() {
+        OAuthProvider.Builder provider = OAuthProvider.newBuilder("twitter.com");
+
+        Task<AuthResult> pendingResultTask = mFirebaseAuth.getPendingAuthResult();
+        if (pendingResultTask != null) {
+            // There's something already here! Finish the sign-in for your user.
+            pendingResultTask
+                    .addOnSuccessListener(
+                            new OnSuccessListener<AuthResult>() {
+                                @Override
+                                public void onSuccess(AuthResult authResult) {
+                                    // User is signed in.
+                                    mSigningIn = false;
+                                    animateSuccess(mLoginButton);
+                                }
+                            })
+                    .addOnFailureListener(
+                            new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception e) {
+                                    Log.w(Constants.TAG, "twitterAuth:failure " + e);
+                                    // Handle failure.
+                                    if (e instanceof FirebaseAuthUserCollisionException) {
+                                        showError(AuthType.TWITTER, AuthError.EMAIL_REGISTER_WITH_DIFFERENT_PROVIDER);
+                                    } else {
+                                        showError(AuthType.TWITTER, AuthError.OTHER);
+                                    }
+                                }
+                            });
+        } else {
+            // There's no pending result so you need to start the sign-in flow.
+            mFirebaseAuth
+                    .startActivityForSignInWithProvider(this, provider.build())
+                    .addOnSuccessListener(
+                            new OnSuccessListener<AuthResult>() {
+                                @Override
+                                public void onSuccess(AuthResult authResult) {
+                                    // User is signed in.
+                                    mSigningIn = false;
+                                    animateSuccess(mLoginButton);
+                                }
+                            })
+                    .addOnFailureListener(
+                            new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception e) {
+                                    Log.w(Constants.TAG, "twitterAuth:failure " + e);
+                                    // Handle failure.
+                                    if (e instanceof FirebaseAuthUserCollisionException) {
+                                        showError(AuthType.TWITTER, AuthError.EMAIL_REGISTER_WITH_DIFFERENT_PROVIDER);
+                                    } else {
+                                        showError(AuthType.TWITTER, AuthError.OTHER);
+                                    }
+                                }
+                            });
+        }
+    }
+
     private void firebaseAuthWithGoogle(final GoogleSignInAccount account) {
         Log.d(Constants.TAG, "firebaseAuthWithGoogle: " + account.getId());
 
         AuthCredential credential = GoogleAuthProvider.getCredential(account.getIdToken(), null);
-        mAuth.signInWithCredential(credential)
+        mFirebaseAuth.signInWithCredential(credential)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
@@ -435,7 +512,11 @@ public class LoginActivity extends AppCompatActivity {
                             // If sign in fails, display a message to the user.
                             Log.w(Constants.TAG, "signInWithCredential: failure", task.getException());
 
-                            showError(AuthType.GOOGLE, AuthError.OTHER);
+                            if (task.getException() instanceof FirebaseAuthUserCollisionException) {
+                                showError(AuthType.GOOGLE, AuthError.EMAIL_REGISTER_WITH_DIFFERENT_PROVIDER);
+                            } else {
+                                showError(AuthType.GOOGLE, AuthError.OTHER);
+                            }
                         }
                     }
                 });
@@ -445,7 +526,7 @@ public class LoginActivity extends AppCompatActivity {
         Log.d(Constants.TAG, "handleFacebookAccessToken:" + token);
 
         AuthCredential credential = FacebookAuthProvider.getCredential(token.getToken());
-        mAuth.signInWithCredential(credential)
+        mFirebaseAuth.signInWithCredential(credential)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
@@ -460,7 +541,11 @@ public class LoginActivity extends AppCompatActivity {
                             // If sign in fails, display a message to the user.
                             Log.w(Constants.TAG, "signInWithCredential:failure", task.getException());
 
-                            showError(AuthType.FACEBOOK, AuthError.OTHER);
+                            if (task.getException() instanceof FirebaseAuthUserCollisionException) {
+                                showError(AuthType.FACEBOOK, AuthError.EMAIL_REGISTER_WITH_DIFFERENT_PROVIDER);
+                            } else {
+                                showError(AuthType.FACEBOOK, AuthError.OTHER);
+                            }
                         }
                     }
                 });
@@ -516,6 +601,8 @@ public class LoginActivity extends AppCompatActivity {
      * Shows an error message when signing in.
      */
     private void showError(final AuthType authType, final AuthError error) {
+        mSigningIn = false;
+
         // Show the retry icon in the button
         mLoginButton.revertAnimation();
         mLoginButton.setBackground(getResources().getDrawable(R.drawable.rounded_button_fill, getTheme()));
@@ -524,6 +611,9 @@ public class LoginActivity extends AppCompatActivity {
         Snackbar snackbar;
         if (error == AuthError.USER_NOT_FOUND) {
             snackbar = Snackbar.make(mContainer, R.string.user_not_found, Snackbar.LENGTH_SHORT);
+
+        } else if (error == AuthError.EMAIL_REGISTER_WITH_DIFFERENT_PROVIDER) {
+            snackbar = Snackbar.make(mContainer, R.string.email_used_with_different_provider, Snackbar.LENGTH_SHORT);
 
         } else {
             snackbar = Snackbar.make(mContainer, R.string.something_went_wrong, Snackbar.LENGTH_LONG).setAction("Reintentar", new View.OnClickListener() {
