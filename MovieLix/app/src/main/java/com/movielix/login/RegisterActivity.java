@@ -491,8 +491,13 @@ public class RegisterActivity extends AppCompatActivity {
                             new OnFailureListener() {
                                 @Override
                                 public void onFailure(@NonNull Exception e) {
+                                    Log.w(Constants.TAG, "twitterAuth:failure " + e);
                                     // Handle failure.
-                                    showError(AuthType.TWITTER, AuthError.OTHER);
+                                    if (e instanceof FirebaseAuthUserCollisionException) {
+                                        showError(AuthType.TWITTER, AuthError.EMAIL_ALREADY_REGISTERED);
+                                    } else {
+                                        showError(AuthType.TWITTER, AuthError.OTHER);
+                                    }
                                 }
                             });
         } else {
@@ -512,8 +517,13 @@ public class RegisterActivity extends AppCompatActivity {
                             new OnFailureListener() {
                                 @Override
                                 public void onFailure(@NonNull Exception e) {
+                                    Log.w(Constants.TAG, "twitterAuth:failure " + e);
                                     // Handle failure.
-                                    showError(AuthType.TWITTER, AuthError.OTHER);
+                                    if (e instanceof FirebaseAuthUserCollisionException) {
+                                        showError(AuthType.TWITTER, AuthError.EMAIL_ALREADY_REGISTERED);
+                                    } else {
+                                        showError(AuthType.TWITTER, AuthError.OTHER);
+                                    }
                                 }
                             });
         }
