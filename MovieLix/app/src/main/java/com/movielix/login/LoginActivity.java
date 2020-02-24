@@ -512,7 +512,11 @@ public class LoginActivity extends AppCompatActivity {
                             // If sign in fails, display a message to the user.
                             Log.w(Constants.TAG, "signInWithCredential: failure", task.getException());
 
-                            showError(AuthType.GOOGLE, AuthError.OTHER);
+                            if (task.getException() instanceof FirebaseAuthUserCollisionException) {
+                                showError(AuthType.GOOGLE, AuthError.EMAIL_REGISTER_WITH_DIFFERENT_PROVIDER);
+                            } else {
+                                showError(AuthType.GOOGLE, AuthError.OTHER);
+                            }
                         }
                     }
                 });
@@ -537,7 +541,11 @@ public class LoginActivity extends AppCompatActivity {
                             // If sign in fails, display a message to the user.
                             Log.w(Constants.TAG, "signInWithCredential:failure", task.getException());
 
-                            showError(AuthType.FACEBOOK, AuthError.OTHER);
+                            if (task.getException() instanceof FirebaseAuthUserCollisionException) {
+                                showError(AuthType.FACEBOOK, AuthError.EMAIL_REGISTER_WITH_DIFFERENT_PROVIDER);
+                            } else {
+                                showError(AuthType.FACEBOOK, AuthError.OTHER);
+                            }
                         }
                     }
                 });
@@ -593,6 +601,8 @@ public class LoginActivity extends AppCompatActivity {
      * Shows an error message when signing in.
      */
     private void showError(final AuthType authType, final AuthError error) {
+        mSigningIn = false;
+
         // Show the retry icon in the button
         mLoginButton.revertAnimation();
         mLoginButton.setBackground(getResources().getDrawable(R.drawable.rounded_button_fill, getTheme()));

@@ -548,7 +548,11 @@ public class RegisterActivity extends AppCompatActivity {
                             // If sign in fails, display a message to the user.
                             Log.w(Constants.TAG, "signInWithCredential: failure", task.getException());
 
-                            showError(AuthType.GOOGLE, AuthError.OTHER);
+                            if (task.getException() instanceof FirebaseAuthUserCollisionException) {
+                                showError(AuthType.GOOGLE, AuthError.EMAIL_ALREADY_REGISTERED);
+                            } else {
+                                showError(AuthType.GOOGLE, AuthError.OTHER);
+                            }
                         }
                     }
                 });
@@ -573,7 +577,11 @@ public class RegisterActivity extends AppCompatActivity {
                             // If sign in fails, display a message to the user.
                             Log.w(Constants.TAG, "signInWithCredential:failure", task.getException());
 
-                            showError(AuthType.FACEBOOK, AuthError.OTHER);
+                            if (task.getException() instanceof FirebaseAuthUserCollisionException) {
+                                showError(AuthType.FACEBOOK, AuthError.EMAIL_ALREADY_REGISTERED);
+                            } else {
+                                showError(AuthType.FACEBOOK, AuthError.OTHER);
+                            }
                         }
                     }
                 });
