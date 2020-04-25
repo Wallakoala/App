@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical">
+
+    <de.hdodenhof.circleimageview.CircleImageView
+        android:id="@+id/review_profile_pic"
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        android:src="@drawable/girl_profile"
+        android:scaleType="centerCrop"/>
+
+    <com.movielix.font.MovieLixTextView
+        android:id="@+id/review_profile_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:textColor="@color/textLight"
+        android:textSize="14sp"
+        android:text="@string/reviews_item_name"
+        app:customFont="Raleway-SemiBold.ttf" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:gravity="center_vertical|end">
+
+        <ImageView
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:src="@drawable/ic_star"
+            android:contentDescription="@string/rating_image" />
+
+        <com.movielix.font.MovieLixTextView
+            android:id="@+id/review_rating_var"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:gravity="center"
+            android:text="@string/reviews_item_movie_rating_1"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/textLight"
+            app:customFont="Raleway-SemiBold.ttf" />
+
+        <com.movielix.font.MovieLixTextView
+            android:id="@+id/review_rating_fixed"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="2dp"
+            android:gravity="center"
+            android:text="@string/reviews_item_movie_rating_2"
+            android:textColor="@color/textIdle"
+            android:textSize="12sp"
+            tools:ignore="SmallSp"
+            app:customFont="Raleway-SemiBold.ttf" />
+
+    </LinearLayout>
+
+</LinearLayout>

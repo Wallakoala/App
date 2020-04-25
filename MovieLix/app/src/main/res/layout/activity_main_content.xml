@@ -54,19 +54,7 @@
         android:layout_margin="@dimen/fab_margin"
         app:layout_behavior=".behavior.ScrollAwareFABBehavior"
         app:layout_anchor="@id/review_recyclerview"
-        app:layout_anchorGravity="bottom|center"
+        app:layout_anchorGravity="bottom|right"
         app:srcCompat="@drawable/fab_background"/>
-
-    <com.movielix.view.CurvedBottomNavigationView
-        android:id="@+id/bottom_navigation"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:elevation="4dp"
-        app:menu="@menu/activity_main_bottom_navigation_menu"
-        app:itemTextColor="@color/textLight"
-        app:itemIconTint="@color/textLight"
-        app:layout_anchor="@id/review_recyclerview"
-        app:layout_anchorGravity="bottom|center"
-        app:layout_behavior="com.google.android.material.behavior.HideBottomViewOnScrollBehavior"/>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -13,9 +13,15 @@
     <string name="navigation_profile_name">Dani Mancebo</string>
     <string name="navigation_profile_email">daniel.m.aldea@hotmail.com</string>
 
+    <string name="movie_summary_header">Sinopsis</string>
+    <string name="movie_summary">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam varius orci at imperdiet accumsan. Sed sagittis turpis ut turpis ullamcorper luctus. Praesent arcu lorem, congue tempus auctor a, cursus at est. Nullam ullamcorper, tellus et porttitor trist…</string>
+    <string name="movie_friends_reviews_header">Tus amigos opinan esto</string>
+
     <string name="reviews_item_name">Rebecca la ha valorado con:</string>
     <string name="reviews_item_movie">La La Land</string>
     <string name="reviews_item_movie_info">(2016) - Comedia, Romance</string>
+    <string name="reviews_item_movie_genre">Comedia, Romance</string>
+    <string name="reviews_item_movie_date">(2016)</string>
     <string name="reviews_item_movie_overview">Mia (Emma Stone), una joven aspirante a actriz que trabaja como camarera mientras acude a castings, y Sebastian (Ryan Gosling), un …</string>
     <string name="reviews_item_movie_duration">2h 8m</string>
     <string name="reviews_item_movie_rating_1">9.1 /</string>

@@ -1,11 +1,14 @@
 package com.movielix.bean;
 
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * User class.
  */
-
 public class User {
 
     private int mId;
@@ -13,7 +16,8 @@ public class User {
     private String mEmail;
     private String mName;
 
-    private List<User> mFriends;
+    private List<Integer> mFriends;
+    private List<Integer> mReviews;
 
     private User() {}
 
@@ -27,7 +31,8 @@ public class User {
         private String email;
         private String name;
 
-        private List<User> friends;
+        private List<Integer> friends = new ArrayList<>();
+        private List<Integer> reviews = new ArrayList<>();
 
         public Builder(int id) {
             this.id = id;
@@ -45,8 +50,14 @@ public class User {
             return this;
         }
 
-        public Builder withFriends(final List<User> friends) {
+        public Builder withFriends(final List<Integer> friends) {
             this.friends = friends;
+
+            return this;
+        }
+
+        public Builder hasReviewed(final List<Integer> reviews) {
+            this.reviews = reviews;
 
             return this;
         }
@@ -58,8 +69,20 @@ public class User {
             user.mEmail = this.email;
             user.mName = this.name;
             user.mFriends = this.friends;
+            user.mReviews = this.reviews;
 
             return user;
         }
+    }
+
+    public Map<String, Object> asMap() {
+        Map<String, Object> map = new HashMap<>();
+
+        map.put("name", mName);
+        map.put("name", mName);
+        map.put("name", mName);
+        map.put("name", mName);
+
+        return map;
     }
 }
