@@ -1,6 +1,7 @@
 package com.movielix;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -91,18 +92,11 @@ public class MainActivity extends AppCompatActivity {
      */
     private void initializedFAB() {
         mFAB = findViewById(R.id.fab);
-        mFAB.setOnClickListener(new View.OnClickListener()
-        {
+        mFAB.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view)
-            {
-                /*Snackbar snack = Snackbar.make(findViewById(R.id.coordinator_layout),
-                        "Your message", Snackbar.LENGTH_LONG);
-                CoordinatorLayout.LayoutParams params = (CoordinatorLayout.LayoutParams)
-                        snack.getView().getLayoutParams();
-                params.setMargins(4, 4, 4, findViewById(R.id.bottom_navigation).getHeight());
-                snack.getView().setLayoutParams(params);
-                snack.show();*/
+            public void onClick(View view) {
+                Intent intent = new Intent(MainActivity.this, MoviesActivity.class);
+                startActivity(intent);
             }
         });
     }
