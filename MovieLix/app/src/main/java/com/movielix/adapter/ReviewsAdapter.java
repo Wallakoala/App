@@ -21,46 +21,41 @@ import de.hdodenhof.circleimageview.CircleImageView;
 /**
  * RecyclerView adapter to display reviews.
  */
-public class ReviewsAdapter extends RecyclerView.Adapter<ReviewsAdapter.ReviewHolder>
-{
+public class ReviewsAdapter extends RecyclerView.Adapter<ReviewsAdapter.ReviewHolder> {
     private final Context mContext;
     private final List<Movie> mMovies;
 
-    public ReviewsAdapter(final List<Movie> movies, final Context context)
-    {
+    public ReviewsAdapter(final List<Movie> movies, final Context context) {
         mMovies = movies;
         mContext = context;
     }
 
     @NonNull
     @Override
-    public ReviewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType)
-    {
+    public ReviewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View itemView = LayoutInflater.from(parent.getContext())
-            .inflate(R.layout.review_item
-                , parent
-                , false );
+                .inflate(R.layout.review_item
+                        , parent
+                        , false);
 
         return new ReviewHolder(itemView);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ReviewHolder holder, int position)
-    {
+    public void onBindViewHolder(@NonNull ReviewHolder holder, int position) {
         holder.bindReviewItem(mMovies.get(position), (mMovies.size() - 1) == position);
     }
 
     @Override
-    public int getItemCount()
-    {
+    public int getItemCount() {
         return mMovies.size();
     }
 
     /**
      * Holder responsible to set all the attributes of this specific review.
      */
-    class ReviewHolder extends RecyclerView.ViewHolder
-    {
+    class ReviewHolder extends RecyclerView.ViewHolder {
+
         private static final int EXTRA_PADDING = 32;
 
         private View mContainer;
@@ -76,51 +71,36 @@ public class ReviewsAdapter extends RecyclerView.Adapter<ReviewsAdapter.ReviewHo
         private RoundedImageView mCover;
         private CircleImageView mProfilePic;
 
-        ReviewHolder(@NonNull View itemView)
-        {
+        ReviewHolder(@NonNull View itemView) {
             super(itemView);
 
-            mContainer   = itemView.findViewById(R.id.review_container);
-            mTitle       = itemView.findViewById(R.id.review_title);
-            mInfo        = itemView.findViewById(R.id.review_release_year);
-            mOverview    = itemView.findViewById(R.id.review_overview);
-            mDuration    = itemView.findViewById(R.id.review_duration);
-            mRatingVar   = itemView.findViewById(R.id.review_rating_var);
+            mContainer = itemView.findViewById(R.id.review_container);
+            mTitle = itemView.findViewById(R.id.review_title);
+            mInfo = itemView.findViewById(R.id.review_release_year);
+            mOverview = itemView.findViewById(R.id.review_overview);
+            mDuration = itemView.findViewById(R.id.review_duration);
+            mRatingVar = itemView.findViewById(R.id.review_rating_var);
             mRatingFixed = itemView.findViewById(R.id.review_rating_fixed);
             mProfileName = itemView.findViewById(R.id.review_profile_name);
-            mCover       = itemView.findViewById(R.id.review_cover);
-            mProfilePic  = itemView.findViewById(R.id.review_profile_pic);
+            mCover = itemView.findViewById(R.id.review_cover);
+            mProfilePic = itemView.findViewById(R.id.review_profile_pic);
         }
 
-        void bindReviewItem(final Movie movie, boolean last)
-        {
-            if (last)
-            {
+        void bindReviewItem(final Movie movie, boolean last) {
+            if (last) {
                 float scale = mContext.getResources().getDisplayMetrics().density;
                 int dpAsPixels = (int) (EXTRA_PADDING * scale + 0.5f);
 
                 mContainer.setPadding(0, 0, 0, dpAsPixels);
             }
 
-            mTitle.setText(movie.getTitle());
-            mTitle.setBackground(null);
-
             String info = "(" + movie.getmReleaseYear() + ") - " + movie.getGenres()[0] + ", " + movie.getGenres()[1];
-            mInfo.setText(info);
-            mInfo.setBackground(null);
-
-            mOverview.setText(movie.getOverview());
-            mOverview.setBackground(null);
-
-            mDuration.setText(movie.getDuration());
 
             mTitle.setText(movie.getTitle());
-            mTitle.setBackground(null);
-
-            mRatingVar.setBackground(null);
-            mRatingFixed.setBackground(null);
-            mProfileName.setBackground(null);
-
+            mInfo.setText(info);
+            mOverview.setText(movie.getOverview());
+            mDuration.setText(movie.getDuration());
+            mTitle.setText(movie.getTitle());
             mProfilePic.setImageResource(R.drawable.girl_profile);
 
             Picasso.get()
