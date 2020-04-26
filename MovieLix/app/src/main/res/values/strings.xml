@@ -58,4 +58,7 @@
     <string name="email_used_with_different_provider">Este email ya se ha registado con otro proveedor</string>
 
     <string name="facebook_app_id">592176878302149</string> <string name="fb_login_protocol_scheme">fb592176878302149</string>
+
+    <string name="search_bar_placeholder">Buscar</string>
+    <string name="search_bar_hint">Introduce una película o serie</string>
 </resources>

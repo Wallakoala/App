@@ -48,17 +48,16 @@
     </style>
 
     <style name="SearchBarTheme" parent="MaterialSearchBarDark">
-        <item name="mt_searchBarColor">@color/searchBarPrimaryColor</item>
-        <item name="mt_dividerColor">@color/searchBarDividerColor</item>
-        <item name="mt_navIconTint">@color/searchBarNavIconTintColor</item>
-        <item name="mt_searchIconTint">@color/searchBarSearchIconTintColor</item>
-        <item name="mt_clearIconTint">@color/searchBarClearIconTintColor</item>
-        <item name="mt_menuIconTint">@color/searchBarMenuIconTintColor</item>
-        <item name="mt_backIconTint">@color/searchBarBackIconTintColor</item>
-        <item name="mt_textCursorTint">@color/searchBarCursorColor</item>
-        <item name="mt_textColor">@color/searchBarTextColor</item>
-        <item name="mt_hintColor">@color/searchBarHintColor</item>
-        <item name="mt_placeholderColor">@color/searchBarPlaceholderColor</item>
-        <item name="mt_highlightedTextColor">@color/searchBarTextHighlightColor</item>
+        <item name="mt_dividerColor">@color/colorAccent</item>
+        <item name="mt_navIconTint">@color/colorAccent</item>
+        <item name="mt_searchIconTint">@color/colorAccent</item>
+        <item name="mt_clearIconTint">@color/colorAccent</item>
+        <item name="mt_menuIconTint">@color/colorAccent</item>
+        <item name="mt_backIconTint">@color/colorAccent</item>
+        <item name="mt_textCursorTint">@color/colorAccent</item>
+        <item name="mt_textColor">@color/textLight</item>
+        <item name="mt_hintColor">@color/textIdle</item>
+        <item name="mt_placeholderColor">@color/textIdle</item>
+        <item name="mt_highlightedTextColor">@color/colorAccent</item>
     </style>
 </resources>

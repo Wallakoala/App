@@ -10,7 +10,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
-        app:mt_hint="Custom hint"
+        app:mt_hint="@string/search_bar_hint"
+        app:mt_placeholder="@string/search_bar_placeholder"
+        app:mt_placeholderColor="@color/textIdle"
         style="@style/SearchBarTheme"/>
 
     <androidx.recyclerview.widget.RecyclerView
