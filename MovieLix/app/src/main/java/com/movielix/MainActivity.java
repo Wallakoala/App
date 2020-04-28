@@ -6,6 +6,8 @@ import android.content.res.Configuration;
 import android.os.AsyncTask;
 import android.os.Bundle;
 
+import com.daimajia.androidanimations.library.Techniques;
+import com.daimajia.androidanimations.library.YoYo;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.movielix.adapter.ReviewsAdapter;
@@ -25,6 +27,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.view.animation.AccelerateDecelerateInterpolator;
+import android.widget.ProgressBar;
 
 import java.lang.ref.WeakReference;
 import java.net.MalformedURLException;
@@ -37,12 +40,13 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int SWIPE_TRIGGER_DISTANCE = 750;
 
-    /* Views */
+    // Views
     private Toolbar mToolbar;
     private ActionBarDrawerToggle mDrawerToggle;
     private FloatingActionButton mFAB;
+    private ProgressBar mProgressBar;
 
-    /* Container */
+    // Container
     private DrawerLayout mDrawerLayout;
 
     @Override
@@ -57,6 +61,8 @@ public class MainActivity extends AppCompatActivity {
 
         SwipeRefreshLayout swipeRefreshLayout = findViewById(R.id.swipe_refresh_layout);
         swipeRefreshLayout.setDistanceToTriggerSync(SWIPE_TRIGGER_DISTANCE);
+
+        mProgressBar = findViewById(R.id.reviews_progress_bar);
 
         new GetReviewsTask(this).execute();
     }
@@ -145,6 +151,13 @@ public class MainActivity extends AppCompatActivity {
         mDrawerToggle.syncState();
     }
 
+    /**
+     * Hides the progress bar with an animation.
+     */
+    private void hideProgressBar() {
+        YoYo.with(Techniques.ZoomOut).playOn(mProgressBar);
+    }
+
     @SuppressWarnings("StaticFieldLeak")
     private class GetReviewsTask extends AsyncTask<Void, Void, Void> {
 
@@ -202,6 +215,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(Void unused) {
+            hideProgressBar();
             initializeRecyclerView(movies);
         }
     }

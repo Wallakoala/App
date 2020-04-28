@@ -56,7 +56,7 @@ public class ReviewsAdapter extends RecyclerView.Adapter<ReviewsAdapter.ReviewHo
      */
     class ReviewHolder extends RecyclerView.ViewHolder {
 
-        private static final int EXTRA_PADDING = 32;
+        private static final int EXTRA_PADDING = 72;
 
         private View mContainer;
 

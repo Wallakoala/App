@@ -60,6 +60,8 @@
 
     <string name="facebook_app_id">592176878302149</string> <string name="fb_login_protocol_scheme">fb592176878302149</string>
 
-    <string name="search_bar_placeholder">Buscar</string>
-    <string name="search_bar_hint">Introduce una película o serie</string>
+    <string name="search_bar_placeholder">Buscar película o serie</string>
+    <string name="search_bar_hint">Buscar</string>
+
+    <string name="no_movies_found">No se ha encontrado ninguna película o serie con los términos\n\"$\"</string>
 </resources>

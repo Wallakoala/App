@@ -9,17 +9,51 @@
         android:id="@+id/movies_search_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
         app:mt_hint="@string/search_bar_hint"
         app:mt_placeholder="@string/search_bar_placeholder"
         style="@style/SearchBarTheme"/>
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/movies_recycler_view"
+    <ProgressBar
+        android:id="@+id/movies_progress_bar"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layoutAnimation="@anim/layout_animation_slide_from_bottom"
-        android:overScrollMode="always"
-        app:fastScrollEnabled="false"/>
+        android:layout_height="wrap_content"
+        android:indeterminate="true"
+        android:layout_gravity="center"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        style="?android:attr/progressBarStyleHorizontal"/>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <com.movielix.font.MovieLixTextView
+            android:id="@+id/movies_message_textview"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top|center"
+            android:layout_marginTop="128dp"
+            android:layout_marginEnd="32dp"
+            android:layout_marginStart="32dp"
+            android:textSize="20sp"
+            android:textColor="@color/textIdle"
+            android:textStyle="bold"
+            android:gravity="center"
+            app:customFont="Raleway-Regular.ttf" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/movies_recycler_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layoutAnimation="@anim/layout_animation_slide_from_bottom"
+            android:overScrollMode="always"
+            app:fastScrollEnabled="false"/>
+
+    </FrameLayout>
+
+
 
 </LinearLayout>
