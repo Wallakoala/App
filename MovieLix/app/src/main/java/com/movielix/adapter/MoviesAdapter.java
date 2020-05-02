@@ -97,7 +97,7 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieHolde
             mTitle.setText(movie.getTitle());
 
             Picasso.get()
-                   .load(movie.getImageUrl().toString())
+                   .load(movie.getImageUrl())
                    .into(mCover);
         }
     }

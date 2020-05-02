@@ -104,7 +104,7 @@ public class ReviewsAdapter extends RecyclerView.Adapter<ReviewsAdapter.ReviewHo
             mProfilePic.setImageResource(R.drawable.girl_profile);
 
             Picasso.get()
-                   .load(movie.getImageUrl().toString())
+                   .load(movie.getImageUrl())
                    .into(mCover);
         }
     }

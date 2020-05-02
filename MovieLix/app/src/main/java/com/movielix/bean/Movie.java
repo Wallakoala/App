@@ -1,7 +1,5 @@
 package com.movielix.bean;
 
-import java.net.URL;
-
 /**
  * Class that represents a movie.
  */
@@ -15,11 +13,9 @@ public class Movie {
 
     private String[] mGenres;
 
-    private URL mImageUrl;
+    private String mImageUrl;
 
-    public Movie() {}
-
-    public Movie(String title, String overview, int releaseYear, String duration, URL imageUrl, String[] genres) {
+    public Movie(String title, String overview, int releaseYear, String duration, String imageUrl, String[] genres) {
         this.mTitle = title;
         this.mOverview = overview;
         this.mReleaseYear = releaseYear;
@@ -32,36 +28,6 @@ public class Movie {
     public String getOverview() { return mOverview; }
     public int getmReleaseYear() { return mReleaseYear; }
     public String getDuration() { return mDuration; }
-    public URL getImageUrl() { return mImageUrl; }
+    public String getImageUrl() { return mImageUrl; }
     public String[] getGenres() { return mGenres; }
-
-    public Movie setTitle(String title) {
-        this.mTitle = title;
-        return this;
-    }
-
-    public Movie setOverview(String overview) {
-        this.mOverview = overview;
-        return this;
-    }
-
-    public Movie setmReleaseYear(int mReleaseYear) {
-        this.mReleaseYear = mReleaseYear;
-        return this;
-    }
-
-    public Movie setDuration(String duration) {
-        this.mDuration = duration;
-        return this;
-    }
-
-    public Movie setImageUrl(URL imageUrl) {
-        this.mImageUrl = imageUrl;
-        return this;
-    }
-
-    public Movie setGenres(String[] genres) {
-        this.mGenres = genres;
-        return this;
-    }
 }

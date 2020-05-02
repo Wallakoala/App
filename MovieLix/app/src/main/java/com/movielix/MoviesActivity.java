@@ -3,6 +3,7 @@ package com.movielix;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -20,6 +21,7 @@ import com.daimajia.androidanimations.library.YoYo;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.mancj.materialsearchbar.MaterialSearchBar;
 import com.movielix.adapter.MoviesAdapter;
+import com.movielix.adapter.MoviesSuggestionAdapter;
 import com.movielix.bean.Movie;
 import com.movielix.constants.Constants;
 import com.movielix.firestore.FirestoreConnector;
@@ -39,11 +41,16 @@ public class MoviesActivity extends AppCompatActivity implements MaterialSearchB
     // RecyclerView
     private RecyclerView mMoviesRecyclerView;
 
+    private FirestoreConnector firestoreConnector;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_movies);
+
+        firestoreConnector = FirestoreConnector.newInstance();
+
         initializeSearchView();
 
         mProgressBar = findViewById(R.id.movies_progress_bar);
@@ -51,15 +58,17 @@ public class MoviesActivity extends AppCompatActivity implements MaterialSearchB
         mMoviesRecyclerView = findViewById(R.id.movies_recycler_view);
 
         hideMessage();
-
-        FirestoreConnector fc = FirestoreConnector.newInstance();
-        fc.getMovies(this);
     }
 
     private void initializeSearchView() {
         MaterialSearchBar searchBar = findViewById(R.id.movies_search_bar);
 
         searchBar.setOnSearchActionListener(this);
+        MoviesSuggestionAdapter suggestionAdapter =
+                new MoviesSuggestionAdapter((LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE));
+
+        suggestionAdapter.setSuggestions(firestoreConnector.getDummyMovies(this));
+        searchBar.setCustomSuggestionAdapter(suggestionAdapter);
 
         // Set the font
         try {
