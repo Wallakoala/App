@@ -85,11 +85,11 @@ public class FirestoreConnector {
         return movies;
     }
 
-    public void getMoviesSuggestionsByTitle(final FirestoreMoviesListener listener, final String search) {
+    public void getMoviesSuggestionsByTitle(final String search, final FirestoreListener listener) {
         String[] searchTerms = search.split(" ");
 
         // If only one word has been typed...
-        // \todo some mechaism has to be implemented to prevent calling too many times at the same time (countdownlatch?)
+        // \todo some mechanism has to be implemented to prevent calling too many times at the same time (countdownlatch?)
         if (searchTerms.length == 1) {
             mDb.collection(MOVIES_SEARCH_COLLECTION)
                     .whereGreaterThanOrEqualTo(MOVIE_TITLE, search)

@@ -26,12 +26,12 @@ import com.movielix.adapter.MoviesSuggestionAdapter;
 import com.movielix.bean.Movie;
 import com.movielix.constants.Constants;
 import com.movielix.firestore.FirestoreConnector;
-import com.movielix.firestore.FirestoreMoviesListener;
+import com.movielix.firestore.FirestoreListener;
 import com.movielix.font.TypeFace;
 
 import java.util.List;
 
-public class MoviesActivity extends AppCompatActivity implements MaterialSearchBar.OnSearchActionListener, FirestoreMoviesListener {
+public class MoviesActivity extends AppCompatActivity implements MaterialSearchBar.OnSearchActionListener {
 
     // ProgressBar
     private ProgressBar mProgressBar;
@@ -100,7 +100,21 @@ public class MoviesActivity extends AppCompatActivity implements MaterialSearchB
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
                 if (charSequence.length() > 1) {
                     showProgressBar();
-                    firestoreConnector.getMoviesSuggestionsByTitle(MoviesActivity.this, charSequence.toString());
+                    firestoreConnector.getMoviesSuggestionsByTitle(charSequence.toString(), new FirestoreListener<Movie>() {
+                        @Override
+                        public void onSuccess(List<Movie> movies) {
+                            hideProgressBar(true);
+
+                            MoviesSuggestionAdapter adapter = new MoviesSuggestionAdapter(MoviesActivity.this, movies);
+                            mSuggestionsRecyclerView.setAdapter(adapter);
+                            mSuggestionsContainer.setVisibility(View.VISIBLE);
+                        }
+
+                        @Override
+                        public void onError() {
+                            hideProgressBar(true);
+                        }
+                    });
                 }
             }
 
@@ -161,18 +175,4 @@ public class MoviesActivity extends AppCompatActivity implements MaterialSearchB
 
     @Override
     public void onButtonClicked(int buttonCode) {}
-
-    @Override
-    public void onSuccess(List<Movie> movies) {
-        hideProgressBar(true);
-
-        MoviesSuggestionAdapter adapter = new MoviesSuggestionAdapter(this, movies);
-        mSuggestionsRecyclerView.setAdapter(adapter);
-        mSuggestionsContainer.setVisibility(View.VISIBLE);
-    }
-
-    @Override
-    public void onError() {
-        hideProgressBar(true);
-    }
 }
