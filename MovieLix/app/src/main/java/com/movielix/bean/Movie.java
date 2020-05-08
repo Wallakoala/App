@@ -1,11 +1,13 @@
 package com.movielix.bean;
 
+import com.movielix.firestore.FirestoreItem;
+
 import java.util.List;
 
 /**
  * Class that represents a movie.
  */
-public class Movie {
+public class Movie extends FirestoreItem {
 
     private String mTitle;
     private String mOverview;
@@ -14,9 +16,12 @@ public class Movie {
     private List<String> mGenres;
     private String mImageUrl;
 
-    private Movie() {}
+    private Movie() {
+        super();
+    }
 
-    public Movie(String title, String overview, int releaseYear, int duration, String imageUrl, List<String> genres) {
+    public Movie(String id, String title, String overview, int releaseYear, int duration, String imageUrl, List<String> genres) {
+        super(id);
         this.mTitle = title;
         this.mOverview = overview;
         this.mReleaseYear = releaseYear;
@@ -27,6 +32,7 @@ public class Movie {
 
     public static class Builder {
 
+        private String id;
         private String title;
         private String overview;
         private int year;
@@ -35,6 +41,12 @@ public class Movie {
         private List<String> genres;
 
         public Builder() {}
+
+        public Builder withId(String id) {
+            this.id = id;
+
+            return this;
+        }
 
         public Builder titled(String title) {
             this.title = title;
@@ -73,10 +85,11 @@ public class Movie {
         }
 
         public Movie build() {
-            return new Movie(title, overview, year, duration, imageUrl, genres);
+            return new Movie(id, title, overview, year, duration, imageUrl, genres);
         }
     }
 
+    public String getId() { return super.mId; }
     public String getTitle() { return mTitle; }
     public String getOverview() { return mOverview; }
     public int getReleaseYear() { return mReleaseYear; }
