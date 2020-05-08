@@ -103,11 +103,17 @@ public class FirestoreConnector {
                                 // Everything went well, let's get the ids of all the documents
                                 if (task.getResult() != null) {
                                     for (QueryDocumentSnapshot document : task.getResult()) {
-                                        ids.add(document.getId());
+                                        // Firestore compares strings lexicographically, and that's not exactly what we want, so
+                                        // let's filter the movies retrieved.
+                                        // \todo lowercased
+                                        if (Objects.requireNonNull(document.getString(MOVIE_TITLE)).startsWith(search) && (ids.size() < 10)) {
+                                            ids.add(document.getId());
+                                        }
                                     }
                                 }
 
                                 if (!ids.isEmpty()) {
+                                    // Now let's search for those ids
                                     mDb.collection(MOVIES_SUGGESTIONS_COLLECTION)
                                             .whereIn(FieldPath.documentId(), ids)
                                             .get()
@@ -118,20 +124,16 @@ public class FirestoreConnector {
                                                         if (task.getResult() != null) {
                                                             for (QueryDocumentSnapshot document : task.getResult()) {
                                                                 String title = document.getString(MOVIE_TITLE);
+                                                                int year = Objects.requireNonNull(document.getLong(MOVIES_RELEASE_YEAR)).intValue();
+                                                                String imageUrl = document.getString(MOVIE_IMAGE_URL);
+                                                                List<String> genres = (ArrayList<String>) document.get(MOVIES_GENRES);
 
-                                                                assert title != null;
-                                                                if (title.startsWith(search)) {
-                                                                    int year = Objects.requireNonNull(document.getLong(MOVIES_RELEASE_YEAR)).intValue();
-                                                                    String imageUrl = document.getString(MOVIE_IMAGE_URL);
-                                                                    List<String> genres = (ArrayList<String>) document.get(MOVIES_GENRES);
-
-                                                                    movies.add(new Movie.Builder()
-                                                                            .titled(title)
-                                                                            .releasedIn(year)
-                                                                            .withImage(imageUrl)
-                                                                            .categorizedAs(genres)
-                                                                            .build());
-                                                                }
+                                                                movies.add(new Movie.Builder()
+                                                                        .titled(title)
+                                                                        .releasedIn(year)
+                                                                        .withImage(imageUrl)
+                                                                        .categorizedAs(genres)
+                                                                        .build());
                                                             }
                                                         }
 
