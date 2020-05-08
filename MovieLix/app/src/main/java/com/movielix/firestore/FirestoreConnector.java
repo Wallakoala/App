@@ -7,6 +7,7 @@ import androidx.annotation.NonNull;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.firestore.FieldPath;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
@@ -15,9 +16,20 @@ import com.movielix.bean.Movie;
 import com.movielix.constants.Constants;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class FirestoreConnector {
+
+    // Collections names
+    private static final String MOVIES_SEARCH_COLLECTION = "movies_search";
+    private static final String MOVIES_SUGGESTIONS_COLLECTION = "movies_suggestions";
+
+    // Document fields names
+    private static final String MOVIE_TITLE = "2";
+    private static final String MOVIES_DURATION = "3";
+    private static final String MOVIE_IMAGE_URL = "8";
+    private static final String MOVIES_GENRES = "9";
 
     private static FirestoreConnector sFirestoreConnector;
 
@@ -42,9 +54,9 @@ public class FirestoreConnector {
                 "La La Land"
                 , context.getString(R.string.reviews_item_movie_overview)
                 , 2016
-                , "2h 8m"
+                , 128
                 , "https://m.media-amazon.com/images/M/MV5BMzUzNDM2NzM2MV5BMl5BanBnXkFtZTgwNTM3NTg4OTE@._V1_SX300.jpg"
-                , new String[] { "Comedia", "Romance" });
+                , Arrays.asList("Comedia", "Romance"));
 
         movies.add(movie);
 
@@ -52,9 +64,9 @@ public class FirestoreConnector {
                 "Capitán América: El primer vengador"
                 , "Nacido durante la Gran Depresión, Steve Rogers creció como un chico enclenque en una familia pobre. Horrorizado por las noticias que llegaban de Europa sobre los nazis, decidió enrolarse en el ejército; sin embargo, debido a su precaria salud, fue rechazado una y otra vez. Enternecido por sus súplicas, el General Chester Phillips le ofrece la oportunidad de tomar parte en un experimento especial. la \\\"Operación Renacimiento\\\". Después de admi"
                 , 2014
-                , "2h 4m"
+                , 124
                 , "https://m.media-amazon.com/images/M/MV5BMTYzOTc2NzU3N15BMl5BanBnXkFtZTcwNjY3MDE3NQ@@._V1_SX300.jpg"
-                , new String[] { "Acción", "Aventura" });
+                , Arrays.asList("Acción", "Aventura"));
 
         movies.add(movie);
 
@@ -62,31 +74,68 @@ public class FirestoreConnector {
                 "Django desencadenado"
                 , "Dos años antes de estallar la Guerra Civil (1861-1865), Schultz, un cazarrecompensas alemán que le sigue la pista a unos asesinos, le promete al esclavo Django dejarlo en libertad si le ayuda a atraparlos. Terminado con éxito el trabajo, Django prefiere seguir al lado del alemán y ayudarle a capturar a los delincuentes más buscados del Sur. Se convierte así en un experto cazador de recompensas, pero su único objetivo es rescatar a su esposa Broomhilda, a la que perdió por culpa del tráfico de esclavos. La búsqueda llevará a Django y a Schultz hasta Calvin Candie, el malvado propietario"
                 , 2012
-                , "2h 45m"
+                , 165
                 , "https://m.media-amazon.com/images/M/MV5BMjIyNTQ5NjQ1OV5BMl5BanBnXkFtZTcwODg1MDU4OA@@._V1_SX300.jpg"
-                , new String[] { "Drama", "Western" });
+                , Arrays.asList("Drama", "Western"));
 
         movies.add(movie);
 
         return movies;
     }
 
-    public void getMoviesBySearch(final FirestoreMoviesObserver observer, String search) {
-        mDb.collection("movies").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                if (task.isSuccessful()) {
-                    for (QueryDocumentSnapshot document : task.getResult()) {
-                        Log.d(Constants.TAG, document.getId() + " => " + document.getData());
-                    }
+    public void getMoviesSuggestionsByTitle(final FirestoreMoviesObserver observer, String search) {
+        String[] searchTerms = search.split(" ");
 
-                    observer.onSuccess(null);
+        // If only one word has been typed...
+        // \todo some mechaism has to be implemented to prevent calling too many times at the same time (countdownlatch?)
+        if (searchTerms.length == 1) {
+            mDb.collection(MOVIES_SEARCH_COLLECTION)
+                    .whereGreaterThanOrEqualTo(MOVIE_TITLE, search)
+                    .get()
+                    .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                        @Override
+                        public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                            if (task.isSuccessful()) {
+                                List<String> ids = new ArrayList<>();
+                                for (QueryDocumentSnapshot document : task.getResult()) {
+                                    Log.d(Constants.TAG, document.getId() + " => " + document.getData());
+                                    ids.add(document.getId());
+                                }
 
-                } else {
-                    Log.w(Constants.TAG, "Error getting documents.", task.getException());
-                    observer.onError();
-                }
-            }
-        });
+                                mDb.collection(MOVIES_SUGGESTIONS_COLLECTION)
+                                        .whereIn(FieldPath.documentId(), ids)
+                                        .get()
+                                        .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                                            @Override
+                                            public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                                                if (task.isSuccessful()) {
+                                                    List<Movie> movies = new ArrayList<>();
+                                                    for (QueryDocumentSnapshot document : task.getResult()) {
+                                                        Log.d(Constants.TAG, document.getId() + " => " + document.getData());
+                                                        movies.add(new Movie.Builder()
+                                                                .titled(document.getString(MOVIE_TITLE))
+                                                                .lasts(document.getLong(MOVIES_DURATION).intValue())
+                                                                .withImage(document.getString(MOVIE_IMAGE_URL))
+                                                                .categorizedAs((ArrayList<String>) document.get(MOVIES_GENRES))
+                                                                .build());
+                                                    }
+
+                                                    observer.onSuccess(movies);
+
+                                                } else {
+                                                    Log.w(Constants.TAG, "Error getting movies suggestions.", task.getException());
+                                                    observer.onError();
+                                                }
+                                            }
+                                        });
+
+
+                            } else {
+                                Log.w(Constants.TAG, "Error searching movies.", task.getException());
+                                observer.onError();
+                            }
+                        }
+                    });
+        }
     }
 }

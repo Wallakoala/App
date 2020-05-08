@@ -94,12 +94,12 @@ public class ReviewsAdapter extends RecyclerView.Adapter<ReviewsAdapter.ReviewHo
                 mContainer.setPadding(0, 0, 0, dpAsPixels);
             }
 
-            String info = "(" + movie.getmReleaseYear() + ") - " + movie.getGenres()[0] + ", " + movie.getGenres()[1];
+            String info = "(" + movie.getReleaseYear() + ") - " + movie.getGenres().get(0) + ", " + movie.getGenres().get(1);
 
             mTitle.setText(movie.getTitle());
             mInfo.setText(info);
             mOverview.setText(movie.getOverview());
-            mDuration.setText(movie.getDuration());
+            mDuration.setText(Integer.toString(movie.getDuration()));
             mTitle.setText(movie.getTitle());
             mProfilePic.setImageResource(R.drawable.girl_profile);
 

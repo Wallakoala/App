@@ -1,9 +1,11 @@
 package com.movielix;
 
+import android.animation.Animator;
 import android.graphics.Typeface;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -18,7 +20,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.daimajia.androidanimations.library.Techniques;
 import com.daimajia.androidanimations.library.YoYo;
-import com.google.firebase.firestore.FirebaseFirestore;
 import com.mancj.materialsearchbar.MaterialSearchBar;
 import com.movielix.adapter.MoviesAdapter;
 import com.movielix.adapter.MoviesSuggestionAdapter;
@@ -40,6 +41,10 @@ public class MoviesActivity extends AppCompatActivity implements MaterialSearchB
 
     // RecyclerView
     private RecyclerView mMoviesRecyclerView;
+    private RecyclerView mSuggestionsRecyclerView;
+
+    // Containers
+    private View mSuggestionsContainer;
 
     private FirestoreConnector firestoreConnector;
 
@@ -49,26 +54,28 @@ public class MoviesActivity extends AppCompatActivity implements MaterialSearchB
 
         setContentView(R.layout.activity_movies);
 
-        firestoreConnector = FirestoreConnector.newInstance();
-
-        initializeSearchView();
-
         mProgressBar = findViewById(R.id.movies_progress_bar);
         mMessageTextview = findViewById(R.id.movies_message_textview);
         mMoviesRecyclerView = findViewById(R.id.movies_recycler_view);
+        mSuggestionsRecyclerView = findViewById(R.id.movies_suggestions_recycler_view);
+        mSuggestionsContainer = findViewById(R.id.movies_suggestions_container);
 
+        mSuggestionsContainer.setVisibility(View.GONE);
+        mSuggestionsRecyclerView.setLayoutManager(
+                new LinearLayoutManager(this, RecyclerView.VERTICAL, false));
+
+        firestoreConnector = FirestoreConnector.newInstance();
+
+        initializeSearchView();
         hideMessage();
+        hideProgressBar(false);
     }
 
     private void initializeSearchView() {
         MaterialSearchBar searchBar = findViewById(R.id.movies_search_bar);
 
         searchBar.setOnSearchActionListener(this);
-        MoviesSuggestionAdapter suggestionAdapter =
-                new MoviesSuggestionAdapter((LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE));
-
-        suggestionAdapter.setSuggestions(firestoreConnector.getDummyMovies(this));
-        searchBar.setCustomSuggestionAdapter(suggestionAdapter);
+        searchBar.setSuggestionsEnabled(false);
 
         // Set the font
         try {
@@ -83,6 +90,23 @@ public class MoviesActivity extends AppCompatActivity implements MaterialSearchB
         } catch (Exception e) {
             Log.e(Constants.TAG, "Error setting the font to the search_bar", e);
         }
+
+        // Listen to text changes to retrieve the suggestions.
+        searchBar.addTextChangeListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                if (charSequence.length() > 1) {
+                    showProgressBar();
+                    firestoreConnector.getMoviesSuggestionsByTitle(MoviesActivity.this, charSequence.toString());
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {}
+        });
     }
 
     /**
@@ -98,11 +122,20 @@ public class MoviesActivity extends AppCompatActivity implements MaterialSearchB
     }
 
     private void showProgressBar() {
-        YoYo.with(Techniques.ZoomIn).playOn(mProgressBar);
+        YoYo.with(Techniques.ZoomIn).onStart(new YoYo.AnimatorCallback() {
+            @Override
+            public void call(Animator animator) {
+                mProgressBar.setVisibility(View.VISIBLE);
+            }
+        }).playOn(mProgressBar);
     }
 
-    private void hideProgressBar() {
-        YoYo.with(Techniques.ZoomOut).playOn(mProgressBar);
+    private void hideProgressBar(boolean animated) {
+        if (animated) {
+            YoYo.with(Techniques.ZoomOut).playOn(mProgressBar);
+        } else {
+            mProgressBar.setVisibility(View.INVISIBLE);
+        }
     }
 
     private void showMessage(String message) {
@@ -116,7 +149,9 @@ public class MoviesActivity extends AppCompatActivity implements MaterialSearchB
 
     @Override
     public void onSearchStateChanged(boolean enabled) {
-
+        if (!enabled) {
+            mSuggestionsContainer.setVisibility(View.GONE);
+        }
     }
 
     @Override
@@ -125,19 +160,19 @@ public class MoviesActivity extends AppCompatActivity implements MaterialSearchB
     }
 
     @Override
-    public void onButtonClicked(int buttonCode) {
-
-    }
+    public void onButtonClicked(int buttonCode) {}
 
     @Override
     public void onSuccess(List<Movie> movies) {
-        hideProgressBar();
-        //initializeRecyclerView(movies);
-        showMessage(getResources().getString(R.string.no_movies_found));
+        hideProgressBar(true);
+
+        MoviesSuggestionAdapter adapter = new MoviesSuggestionAdapter(movies);
+        mSuggestionsRecyclerView.setAdapter(adapter);
+        mSuggestionsContainer.setVisibility(View.VISIBLE);
     }
 
     @Override
     public void onError() {
-        hideProgressBar();
+        hideProgressBar(true);
     }
 }

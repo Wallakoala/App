@@ -9,18 +9,21 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.makeramen.roundedimageview.RoundedImageView;
-import com.mancj.materialsearchbar.adapter.SuggestionsAdapter;
 import com.movielix.R;
 import com.movielix.bean.Movie;
 import com.squareup.picasso.Picasso;
 
-/**
- * RecyclerView adapter to display movies.
- */
-public class MoviesSuggestionAdapter extends SuggestionsAdapter<Movie, MoviesSuggestionAdapter.MovieHolder> {
+import java.util.List;
 
-    public MoviesSuggestionAdapter(LayoutInflater inflater) {
-        super(inflater);
+/**
+ * RecyclerView adapter to display movies suggestions.
+ */
+public class MoviesSuggestionAdapter extends RecyclerView.Adapter<MoviesSuggestionAdapter.MovieHolder> {
+
+    private List<Movie> movies;
+
+    public MoviesSuggestionAdapter(List<Movie> movies) {
+        this.movies = movies;
     }
 
     @NonNull
@@ -35,13 +38,13 @@ public class MoviesSuggestionAdapter extends SuggestionsAdapter<Movie, MoviesSug
     }
 
     @Override
-    public void onBindSuggestionHolder(Movie suggestion, MovieHolder holder, int position) {
-        holder.bindMovieItem(suggestion);
+    public void onBindViewHolder(@NonNull MovieHolder holder, int position) {
+        holder.bindMovieItem(movies.get(position));
     }
 
     @Override
-    public int getSingleViewHeight() {
-        return 80;
+    public int getItemCount() {
+        return movies.size();
     }
 
     /**
@@ -62,7 +65,7 @@ public class MoviesSuggestionAdapter extends SuggestionsAdapter<Movie, MoviesSug
             mExtraInfo = itemView.findViewById(R.id.movie_extra_info);
         }
 
-        void bindMovieItem(final Movie movie) {
+        void bindMovieItem(Movie movie) {
             mTitle.setText(movie.getTitle());
 
             Picasso.get()
