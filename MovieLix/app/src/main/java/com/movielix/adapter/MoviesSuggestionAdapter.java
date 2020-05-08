@@ -1,5 +1,6 @@
 package com.movielix.adapter;
 
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,9 +21,11 @@ import java.util.List;
  */
 public class MoviesSuggestionAdapter extends RecyclerView.Adapter<MoviesSuggestionAdapter.MovieHolder> {
 
+    private Context context;
     private List<Movie> movies;
 
-    public MoviesSuggestionAdapter(List<Movie> movies) {
+    public MoviesSuggestionAdapter(Context context, List<Movie> movies) {
+        this.context = context;
         this.movies = movies;
     }
 
@@ -67,6 +70,11 @@ public class MoviesSuggestionAdapter extends RecyclerView.Adapter<MoviesSuggesti
 
         void bindMovieItem(Movie movie) {
             mTitle.setText(movie.getTitle());
+            mExtraInfo.setText(
+                    context.getText(R.string.movie_suggestion_extra_info)
+                            .toString()
+                            .replace("%1", Integer.toString(movie.getReleaseYear()))
+                            .replace("%2", movie.getGenresAsString()));
 
             Picasso.get()
                    .load(movie.getImageUrl())

@@ -29,7 +29,7 @@ public class FirestoreConnector {
 
     // Document fields names
     private static final String MOVIE_TITLE = "2";
-    private static final String MOVIES_DURATION = "3";
+    private static final String MOVIES_RELEASE_YEAR = "3";
     private static final String MOVIE_IMAGE_URL = "8";
     private static final String MOVIES_GENRES = "9";
 
@@ -121,13 +121,13 @@ public class FirestoreConnector {
 
                                                                 assert title != null;
                                                                 if (title.startsWith(search)) {
-                                                                    int duration = Objects.requireNonNull(document.getLong(MOVIES_DURATION)).intValue();
+                                                                    int year = Objects.requireNonNull(document.getLong(MOVIES_RELEASE_YEAR)).intValue();
                                                                     String imageUrl = document.getString(MOVIE_IMAGE_URL);
                                                                     List<String> genres = (ArrayList<String>) document.get(MOVIES_GENRES);
 
                                                                     movies.add(new Movie.Builder()
                                                                             .titled(title)
-                                                                            .lasts(duration)
+                                                                            .releasedIn(year)
                                                                             .withImage(imageUrl)
                                                                             .categorizedAs(genres)
                                                                             .build());

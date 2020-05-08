@@ -83,4 +83,23 @@ public class Movie {
     public int getDuration() { return mDuration; }
     public String getImageUrl() { return mImageUrl; }
     public List<String> getGenres() { return mGenres; }
+
+    public String getDurationAsStr() {
+        int hours = mDuration / 60;
+        int minutes = mDuration % 60;
+
+        return hours + "h " + minutes + "min";
+    }
+
+    public String getGenresAsString() {
+        StringBuilder genres = new StringBuilder();
+        for (int i = 0; i < mGenres.size(); ++i) {
+            genres.append(mGenres.get(i));
+            if (i < mGenres.size() - 1) {
+                genres.append(", ");
+            }
+        }
+
+        return genres.toString();
+    }
 }
