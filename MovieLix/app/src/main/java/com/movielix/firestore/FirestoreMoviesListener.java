@@ -4,7 +4,7 @@ import com.movielix.bean.Movie;
 
 import java.util.List;
 
-public interface FirestoreMoviesObserver {
+public interface FirestoreMoviesListener {
 
     void onSuccess(List<Movie> movies);
     void onError();

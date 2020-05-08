@@ -26,12 +26,12 @@ import com.movielix.adapter.MoviesSuggestionAdapter;
 import com.movielix.bean.Movie;
 import com.movielix.constants.Constants;
 import com.movielix.firestore.FirestoreConnector;
-import com.movielix.firestore.FirestoreMoviesObserver;
+import com.movielix.firestore.FirestoreMoviesListener;
 import com.movielix.font.TypeFace;
 
 import java.util.List;
 
-public class MoviesActivity extends AppCompatActivity implements MaterialSearchBar.OnSearchActionListener, FirestoreMoviesObserver {
+public class MoviesActivity extends AppCompatActivity implements MaterialSearchBar.OnSearchActionListener, FirestoreMoviesListener {
 
     // ProgressBar
     private ProgressBar mProgressBar;

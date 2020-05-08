@@ -18,7 +18,9 @@ import com.movielix.constants.Constants;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
+@SuppressWarnings("unchecked")
 public class FirestoreConnector {
 
     // Collections names
@@ -83,7 +85,7 @@ public class FirestoreConnector {
         return movies;
     }
 
-    public void getMoviesSuggestionsByTitle(final FirestoreMoviesObserver observer, String search) {
+    public void getMoviesSuggestionsByTitle(final FirestoreMoviesListener listener, final String search) {
         String[] searchTerms = search.split(" ");
 
         // If only one word has been typed...
@@ -96,43 +98,58 @@ public class FirestoreConnector {
                         @Override
                         public void onComplete(@NonNull Task<QuerySnapshot> task) {
                             if (task.isSuccessful()) {
-                                List<String> ids = new ArrayList<>();
-                                for (QueryDocumentSnapshot document : task.getResult()) {
-                                    Log.d(Constants.TAG, document.getId() + " => " + document.getData());
-                                    ids.add(document.getId());
+                                final List<String> ids = new ArrayList<>();
+                                final List<Movie> movies = new ArrayList<>();
+                                // Everything went well, let's get the ids of all the documents
+                                if (task.getResult() != null) {
+                                    for (QueryDocumentSnapshot document : task.getResult()) {
+                                        ids.add(document.getId());
+                                    }
                                 }
 
-                                mDb.collection(MOVIES_SUGGESTIONS_COLLECTION)
-                                        .whereIn(FieldPath.documentId(), ids)
-                                        .get()
-                                        .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                                            @Override
-                                            public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                                                if (task.isSuccessful()) {
-                                                    List<Movie> movies = new ArrayList<>();
-                                                    for (QueryDocumentSnapshot document : task.getResult()) {
-                                                        Log.d(Constants.TAG, document.getId() + " => " + document.getData());
-                                                        movies.add(new Movie.Builder()
-                                                                .titled(document.getString(MOVIE_TITLE))
-                                                                .lasts(document.getLong(MOVIES_DURATION).intValue())
-                                                                .withImage(document.getString(MOVIE_IMAGE_URL))
-                                                                .categorizedAs((ArrayList<String>) document.get(MOVIES_GENRES))
-                                                                .build());
+                                if (!ids.isEmpty()) {
+                                    mDb.collection(MOVIES_SUGGESTIONS_COLLECTION)
+                                            .whereIn(FieldPath.documentId(), ids)
+                                            .get()
+                                            .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                                                @Override
+                                                public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                                                    if (task.isSuccessful()) {
+                                                        if (task.getResult() != null) {
+                                                            for (QueryDocumentSnapshot document : task.getResult()) {
+                                                                String title = document.getString(MOVIE_TITLE);
+
+                                                                assert title != null;
+                                                                if (title.startsWith(search)) {
+                                                                    int duration = Objects.requireNonNull(document.getLong(MOVIES_DURATION)).intValue();
+                                                                    String imageUrl = document.getString(MOVIE_IMAGE_URL);
+                                                                    List<String> genres = (ArrayList<String>) document.get(MOVIES_GENRES);
+
+                                                                    movies.add(new Movie.Builder()
+                                                                            .titled(title)
+                                                                            .lasts(duration)
+                                                                            .withImage(imageUrl)
+                                                                            .categorizedAs(genres)
+                                                                            .build());
+                                                                }
+                                                            }
+                                                        }
+
+                                                        listener.onSuccess(movies);
+
+                                                    } else {
+                                                        Log.w(Constants.TAG, "Error getting movies suggestions.", task.getException());
+                                                        listener.onError();
                                                     }
-
-                                                    observer.onSuccess(movies);
-
-                                                } else {
-                                                    Log.w(Constants.TAG, "Error getting movies suggestions.", task.getException());
-                                                    observer.onError();
                                                 }
-                                            }
-                                        });
-
+                                            });
+                                } else {
+                                    listener.onSuccess(movies);
+                                }
 
                             } else {
                                 Log.w(Constants.TAG, "Error searching movies.", task.getException());
-                                observer.onError();
+                                listener.onError();
                             }
                         }
                     });
