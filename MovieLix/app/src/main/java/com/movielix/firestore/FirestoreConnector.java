@@ -25,6 +25,7 @@ public class FirestoreConnector {
 
     // Collections names
     private static final String MOVIES_SEARCH_COLLECTION = "movies_search";
+    private static final String MOVIES_LITE_COLLECTION = "movies_lite";
     private static final String MOVIES_SUGGESTIONS_COLLECTION = "movies_suggestions";
 
     // Document fields names
@@ -33,13 +34,20 @@ public class FirestoreConnector {
     private static final String MOVIE_IMAGE_URL = "8";
     private static final String MOVIES_GENRES = "9";
 
+    public static final int MAX_SUGGESTIONS = 7;
+
     private static FirestoreConnector sFirestoreConnector;
 
     // Access a Cloud Firestore instance from your Activity
     private FirebaseFirestore mDb;
+    // Cache
+    private FirestoreMoviesCache mMoviesCache;
+    private FirestoreSuggestionsCache mSuggestionsCache;
 
     private FirestoreConnector() {
         mDb = FirebaseFirestore.getInstance();
+        mMoviesCache = FirestoreMoviesCache.newInstance();
+        mSuggestionsCache = FirestoreSuggestionsCache.newInstance();
     }
 
     public static FirestoreConnector newInstance() {
@@ -88,8 +96,17 @@ public class FirestoreConnector {
         return movies;
     }
 
-    public void getMoviesSuggestionsByTitle(final String search, final FirestoreListener listener) {
+    public void getMoviesSuggestionsByTitle(String search, final FirestoreListener listener) {
         // \todo some mechanism has to be implemented to prevent calling too many times at the same time (countdownlatch?)
+
+        final String search_term = search.toLowerCase();
+        List<Movie> suggestionsCached = mSuggestionsCache.get(search_term);
+        if (suggestionsCached != null) {
+            Log.d(Constants.TAG, "[suggestions_cache] cache hit (" + search_term + ")");
+            listener.onSuccess(suggestionsCached);
+            return;
+        }
+
         mDb.collection(MOVIES_SEARCH_COLLECTION)
                 .whereGreaterThanOrEqualTo(MOVIE_TITLE, search)
                 .get()
@@ -104,10 +121,9 @@ public class FirestoreConnector {
                                 for (QueryDocumentSnapshot document : task.getResult()) {
                                     // Firestore compares strings lexicographically, and that's not exactly what we want, so
                                     // let's filter the movies retrieved.
-                                    // \todo lowercased
-                                    if (ids.size() < 10) {
+                                    if (ids.size() < MAX_SUGGESTIONS) {
                                         //noinspection ConstantConditions
-                                        if (document.getString(MOVIE_TITLE).startsWith(search) || document.getString(MOVIE_TITLE).contains(search)) {
+                                        if (document.getString(MOVIE_TITLE).startsWith(search_term) || document.getString(MOVIE_TITLE).contains(search_term)) {
                                             ids.add(document.getId());
                                         }
 
@@ -141,6 +157,8 @@ public class FirestoreConnector {
                                                                     .build());
                                                         }
                                                     }
+
+                                                    mSuggestionsCache.add(search_term, movies);
 
                                                     listener.onSuccess(movies);
 
