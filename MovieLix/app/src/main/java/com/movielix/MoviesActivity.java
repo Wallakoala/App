@@ -1,12 +1,14 @@
 package com.movielix;
 
 import android.animation.Animator;
+import android.graphics.PorterDuff;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
+import android.view.animation.AlphaAnimation;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 
@@ -20,7 +22,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.daimajia.androidanimations.library.Techniques;
 import com.daimajia.androidanimations.library.YoYo;
-import com.google.android.material.snackbar.Snackbar;
 import com.mancj.materialsearchbar.MaterialSearchBar;
 import com.movielix.adapter.MoviesAdapter;
 import com.movielix.adapter.MoviesSuggestionAdapter;
@@ -46,6 +47,7 @@ public class MoviesActivity extends AppCompatActivity implements MaterialSearchB
 
     // Containers
     private View mSuggestionsContainer;
+    private View mMoviesContainer;
 
     private FirestoreConnector firestoreConnector;
 
@@ -60,6 +62,7 @@ public class MoviesActivity extends AppCompatActivity implements MaterialSearchB
         mMoviesRecyclerView = findViewById(R.id.movies_recycler_view);
         mSuggestionsRecyclerView = findViewById(R.id.movies_suggestions_recycler_view);
         mSuggestionsContainer = findViewById(R.id.movies_suggestions_container);
+        mMoviesContainer = findViewById(R.id.movies_container);
 
         mSuggestionsContainer.setVisibility(View.GONE);
         mSuggestionsRecyclerView.setLayoutManager(
@@ -124,18 +127,6 @@ public class MoviesActivity extends AppCompatActivity implements MaterialSearchB
         });
     }
 
-    /**
-     * Initializes the RecyclerView
-     */
-    private void initializeRecyclerView(final List<Movie> movies) {
-        MoviesAdapter moviesAdapter = new MoviesAdapter(movies, this);
-
-        mMoviesRecyclerView.setLayoutManager(
-                new LinearLayoutManager(this, RecyclerView.VERTICAL, false));
-        mMoviesRecyclerView.setAdapter(moviesAdapter);
-        mMoviesRecyclerView.scheduleLayoutAnimation();
-    }
-
     private void showProgressBar() {
         YoYo.with(Techniques.ZoomIn).onStart(new YoYo.AnimatorCallback() {
             @Override
@@ -162,6 +153,10 @@ public class MoviesActivity extends AppCompatActivity implements MaterialSearchB
         mMessageTextview.setVisibility(View.GONE);
     }
 
+    private void hideSuggestions() {
+        mSuggestionsContainer.setVisibility(View.GONE);
+    }
+
     @Override
     public void onSearchStateChanged(boolean enabled) {
         if (!enabled) {
@@ -171,7 +166,29 @@ public class MoviesActivity extends AppCompatActivity implements MaterialSearchB
 
     @Override
     public void onSearchConfirmed(CharSequence text) {
+        if (text.length() > 1) {
+            showProgressBar();
+            hideSuggestions();
 
+            mMoviesRecyclerView.setVisibility(View.GONE);
+            firestoreConnector.getMoviesByTitle(text.toString(), new FirestoreListener<Movie>() {
+                @Override
+                public void onSuccess(List<Movie> movies) {
+                    hideProgressBar(true);
+                    MoviesAdapter moviesAdapter = new MoviesAdapter(movies, MoviesActivity.this);
+
+                    mMoviesRecyclerView.setLayoutManager(
+                            new LinearLayoutManager(MoviesActivity.this, RecyclerView.VERTICAL, false));
+                    mMoviesRecyclerView.setAdapter(moviesAdapter);
+                    mMoviesRecyclerView.setVisibility(View.VISIBLE);
+                }
+
+                @Override
+                public void onError() {
+
+                }
+            });
+        }
     }
 
     @Override

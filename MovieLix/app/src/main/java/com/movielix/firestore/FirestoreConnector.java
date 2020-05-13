@@ -30,11 +30,14 @@ public class FirestoreConnector {
 
     // Document fields names
     private static final String MOVIE_TITLE = "2";
-    private static final String MOVIES_RELEASE_YEAR = "3";
+    private static final String MOVIE_RELEASE_YEAR = "3";
+    private static final String MOVIE_DURATION = "5";
+    private static final String MOVIE_IMDB_RATING = "6";
     private static final String MOVIE_IMAGE_URL = "8";
-    private static final String MOVIES_GENRES = "9";
+    private static final String MOVIE_GENRES = "9";
+    private static final String MOVIE_PG_RATING = "10";
 
-    public static final int MAX_SUGGESTIONS = 7;
+    private static final int MAX_SUGGESTIONS = 10;
 
     private static FirestoreConnector sFirestoreConnector;
 
@@ -67,7 +70,9 @@ public class FirestoreConnector {
                 , 2016
                 , 128
                 , "https://m.media-amazon.com/images/M/MV5BMzUzNDM2NzM2MV5BMl5BanBnXkFtZTgwNTM3NTg4OTE@._V1_SX300.jpg"
-                , Arrays.asList("Comedia", "Romance"));
+                , Arrays.asList("Comedia", "Romance")
+                , Movie.PG_RATING.NOT_RATED
+                , 0);
 
         movies.add(movie);
 
@@ -78,7 +83,9 @@ public class FirestoreConnector {
                 , 2014
                 , 124
                 , "https://m.media-amazon.com/images/M/MV5BMTYzOTc2NzU3N15BMl5BanBnXkFtZTcwNjY3MDE3NQ@@._V1_SX300.jpg"
-                , Arrays.asList("Acción", "Aventura"));
+                , Arrays.asList("Acción", "Aventura")
+                , Movie.PG_RATING.NOT_RATED
+                , 0);
 
         movies.add(movie);
 
@@ -89,7 +96,9 @@ public class FirestoreConnector {
                 , 2012
                 , 165
                 , "https://m.media-amazon.com/images/M/MV5BMjIyNTQ5NjQ1OV5BMl5BanBnXkFtZTcwODg1MDU4OA@@._V1_SX300.jpg"
-                , Arrays.asList("Drama", "Western"));
+                , Arrays.asList("Drama", "Western")
+                , Movie.PG_RATING.NOT_RATED
+                , 0);
 
         movies.add(movie);
 
@@ -145,11 +154,12 @@ public class FirestoreConnector {
                                                     if (task.getResult() != null) {
                                                         for (QueryDocumentSnapshot document : task.getResult()) {
                                                             String title = document.getString(MOVIE_TITLE);
-                                                            int year = Objects.requireNonNull(document.getLong(MOVIES_RELEASE_YEAR)).intValue();
                                                             String imageUrl = document.getString(MOVIE_IMAGE_URL);
-                                                            List<String> genres = (ArrayList<String>) document.get(MOVIES_GENRES);
+                                                            List<String> genres = (ArrayList<String>) document.get(MOVIE_GENRES);
+                                                            int year = Objects.requireNonNull(document.getLong(MOVIE_RELEASE_YEAR)).intValue();
 
                                                             movies.add(new Movie.Builder()
+                                                                    .withId(document.getId())
                                                                     .titled(title)
                                                                     .releasedIn(year)
                                                                     .withImage(imageUrl)
@@ -170,6 +180,97 @@ public class FirestoreConnector {
                                         });
                             } else {
                                 listener.onSuccess(movies);
+                            }
+
+                        } else {
+                            Log.w(Constants.TAG, "Error searching movies.", task.getException());
+                            listener.onError();
+                        }
+                    }
+                });
+    }
+
+    public void getMoviesByTitle(String search, final FirestoreListener listener) {
+        final String search_term = search.toLowerCase();
+        mDb.collection(MOVIES_SEARCH_COLLECTION)
+                .whereGreaterThanOrEqualTo(MOVIE_TITLE, search)
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful()) {
+                            final List<String> ids = new ArrayList<>();
+                            final List<Movie> movies = new ArrayList<>();
+                            // Everything went well, let's get the ids of all the documents
+                            if (task.getResult() != null) {
+                                for (QueryDocumentSnapshot document : task.getResult()) {
+                                    // Firestore compares strings lexicographically, and that's not exactly what we want, so
+                                    // let's filter the movies retrieved.
+                                    if (ids.size() < MAX_SUGGESTIONS) {
+                                        //noinspection ConstantConditions
+                                        if (document.getString(MOVIE_TITLE).startsWith(search_term) || document.getString(MOVIE_TITLE).contains(search_term)) {
+                                            ids.add(document.getId());
+                                        }
+
+                                    } else {
+                                        break;
+                                    }
+                                }
+                            }
+
+                            if (!ids.isEmpty()) {
+                                // Now let's search for those ids
+                                mDb.collection(MOVIES_LITE_COLLECTION)
+                                        .whereIn(FieldPath.documentId(), ids)
+                                        .get()
+                                        .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                                            @Override
+                                            public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                                                if (task.isSuccessful()) {
+                                                    if (task.getResult() != null) {
+                                                        for (QueryDocumentSnapshot document : task.getResult()) {
+                                                            String title = document.getString(MOVIE_TITLE);
+                                                            String imageUrl = document.getString(MOVIE_IMAGE_URL);
+                                                            String pgRatingStr = document.getString(MOVIE_PG_RATING);
+                                                            List<String> genres = (ArrayList<String>) document.get(MOVIE_GENRES);
+                                                            int releaseYear = Objects.requireNonNull(document.getLong(MOVIE_RELEASE_YEAR)).intValue();
+                                                            int duration = Objects.requireNonNull(document.getLong(MOVIE_DURATION)).intValue();
+                                                            int imdbRating = (int)((Objects.requireNonNull(document.getDouble(MOVIE_IMDB_RATING))) * 10);
+
+                                                            Movie.PG_RATING pgRating = Movie.PG_RATING.NOT_RATED;
+                                                            if (pgRatingStr != null) {
+                                                                if (pgRatingStr.equalsIgnoreCase("R")) {
+                                                                    pgRating = Movie.PG_RATING.R;
+                                                                } else if (pgRatingStr.equalsIgnoreCase("PG-13")) {
+                                                                    pgRating = Movie.PG_RATING.PG_13;
+                                                                } else if (pgRatingStr.equalsIgnoreCase("TV-14")) {
+                                                                    pgRating = Movie.PG_RATING.TV_14;
+                                                                } else if (pgRatingStr.equalsIgnoreCase("PG-MA")) {
+                                                                    pgRating = Movie.PG_RATING.TV_MA;
+                                                                }
+                                                            }
+
+                                                            movies.add(new Movie.Builder()
+                                                                    .withId(document.getId())
+                                                                    .titled(title)
+                                                                    .withImage(imageUrl)
+                                                                    .releasedIn(releaseYear)
+                                                                    .lasts(duration)
+                                                                    .categorizedAs(genres)
+                                                                    .classifiedAs(pgRating)
+                                                                    .rated(imdbRating)
+                                                                    .build());
+                                                        }
+
+                                                        listener.onSuccess(movies);
+                                                    }
+
+                                                } else {
+                                                    Log.w(Constants.TAG, "Error getting movies.", task.getException());
+                                                    listener.onError();
+                                                }
+                                            }
+                                        });
                             }
 
                         } else {
