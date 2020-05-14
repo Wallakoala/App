@@ -48,6 +48,7 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.auth.OAuthProvider;
 import com.google.firebase.auth.UserProfileChangeRequest;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.movielix.MainActivity;
 import com.movielix.R;
 import com.movielix.constants.Constants;
@@ -96,6 +97,8 @@ public class RegisterActivity extends AppCompatActivity {
 
     /* Firebase */
     private FirebaseAuth mFirebaseAuth;
+    /* Firestore */
+    private FirebaseFirestore mFirestore;
 
     /* Facebook SDK */
     private CallbackManager mCallbackManager;
@@ -846,7 +849,7 @@ public class RegisterActivity extends AppCompatActivity {
     /**
      * Custom TextWatcher to validate the fields.
      */
-    private class MyTextWatcher implements TextWatcher {
+    private static class MyTextWatcher implements TextWatcher {
 
         private Validator validator;
 

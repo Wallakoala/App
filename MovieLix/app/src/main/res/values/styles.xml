@@ -46,4 +46,18 @@
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowBackground">@android:color/transparent</item>
     </style>
+
+    <style name="SearchBarTheme" parent="MaterialSearchBarDark">
+        <item name="mt_dividerColor">@color/colorAccent</item>
+        <item name="mt_navIconTint">@color/colorAccent</item>
+        <item name="mt_searchIconTint">@color/colorAccent</item>
+        <item name="mt_clearIconTint">@color/colorAccent</item>
+        <item name="mt_menuIconTint">@color/colorAccent</item>
+        <item name="mt_backIconTint">@color/colorAccent</item>
+        <item name="mt_textCursorTint">@color/colorAccent</item>
+        <item name="mt_textColor">@color/textLight</item>
+        <item name="mt_hintColor">@color/textIdle</item>
+        <item name="mt_placeholderColor">@color/textIdle</item>
+        <item name="mt_highlightedTextColor">@color/colorAccent</item>
+    </style>
 </resources>

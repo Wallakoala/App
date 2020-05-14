@@ -14,6 +14,8 @@
     <color name="textLight">#EEEEEE</color>
     <color name="textDark">#888888</color>
 
-    <color name="dark_divider">#999999</color>
+    <color name="darkDivider">#999999</color>
     <color name="divider">#DDDDDD</color>
+
+    <color name="yellow">#E3D800</color>
 </resources>
