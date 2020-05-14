@@ -1,14 +1,12 @@
 package com.movielix;
 
 import android.animation.Animator;
-import android.graphics.PorterDuff;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
-import android.view.animation.AlphaAnimation;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 
@@ -22,6 +20,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.daimajia.androidanimations.library.Techniques;
 import com.daimajia.androidanimations.library.YoYo;
+import com.google.android.material.snackbar.Snackbar;
 import com.mancj.materialsearchbar.MaterialSearchBar;
 import com.movielix.adapter.MoviesAdapter;
 import com.movielix.adapter.MoviesSuggestionAdapter;
@@ -145,8 +144,8 @@ public class MoviesActivity extends AppCompatActivity implements MaterialSearchB
     }
 
     private void showMessage(String message) {
-        mMessageTextview.setVisibility(View.VISIBLE);
         mMessageTextview.setText(message);
+        mMessageTextview.setVisibility(View.VISIBLE);
     }
 
     private void hideMessage() {
@@ -165,27 +164,38 @@ public class MoviesActivity extends AppCompatActivity implements MaterialSearchB
     }
 
     @Override
-    public void onSearchConfirmed(CharSequence text) {
+    public void onSearchConfirmed(final CharSequence text) {
         if (text.length() > 1) {
             showProgressBar();
             hideSuggestions();
+            hideMessage();
 
+            mMessageTextview.setVisibility(View.GONE);
             mMoviesRecyclerView.setVisibility(View.GONE);
             firestoreConnector.getMoviesByTitle(text.toString(), new FirestoreListener<Movie>() {
                 @Override
                 public void onSuccess(List<Movie> movies) {
                     hideProgressBar(true);
-                    MoviesAdapter moviesAdapter = new MoviesAdapter(movies, MoviesActivity.this);
 
-                    mMoviesRecyclerView.setLayoutManager(
-                            new LinearLayoutManager(MoviesActivity.this, RecyclerView.VERTICAL, false));
-                    mMoviesRecyclerView.setAdapter(moviesAdapter);
-                    mMoviesRecyclerView.setVisibility(View.VISIBLE);
+                    if (!movies.isEmpty()) {
+                        MoviesAdapter moviesAdapter = new MoviesAdapter(movies, MoviesActivity.this);
+                        mMoviesRecyclerView.setLayoutManager(
+                                new LinearLayoutManager(MoviesActivity.this, RecyclerView.VERTICAL, false));
+                        mMoviesRecyclerView.setAdapter(moviesAdapter);
+                        mMoviesRecyclerView.setVisibility(View.VISIBLE);
+
+                    } else {
+                        String search = text.toString();
+                        String message = MoviesActivity.this.getString(R.string.no_movies_found);
+                        message = message.replace("%1", search);
+
+                        showMessage(message);
+                    }
                 }
 
                 @Override
                 public void onError() {
-
+                    Snackbar.make(mMoviesContainer, "Ops, algo ha ido mal", Snackbar.LENGTH_SHORT).show();
                 }
             });
         }

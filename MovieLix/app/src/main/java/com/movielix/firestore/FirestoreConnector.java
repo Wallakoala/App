@@ -271,6 +271,8 @@ public class FirestoreConnector {
                                                 }
                                             }
                                         });
+                            } else {
+                                listener.onSuccess(movies);
                             }
 
                         } else {
