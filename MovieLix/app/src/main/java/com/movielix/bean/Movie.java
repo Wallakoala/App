@@ -11,10 +11,17 @@ import java.util.List;
 public class Movie extends FirestoreItem {
 
     public enum PG_RATING {
-        R,
-        TV_MA,
+        G,
+        PG,
         PG_13,
+        R,
+        NC_17,
+        TV_Y,
+        TV_Y7,
+        TV_G,
+        TV_PG,
         TV_14,
+        TV_MA,
         NOT_RATED
     }
 
@@ -152,6 +159,10 @@ public class Movie extends FirestoreItem {
     }
 
     public String getGenresAsString() {
+        if (mGenres.isEmpty()) {
+            return "Sin especificar";
+        }
+
         StringBuilder genres = new StringBuilder();
         for (int i = 0; i < mGenres.size(); ++i) {
             genres.append(mGenres.get(i));

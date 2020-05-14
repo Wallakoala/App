@@ -101,14 +101,16 @@
                             android:textColor="@color/textIdle"
                             app:customFont="Raleway-Regular.ttf"/>
 
-                        <com.movielix.font.MovieLixTextView
+                        <androidx.appcompat.widget.AppCompatImageView
                             android:id="@+id/review_pg_rating"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
+                            android:layout_height="16dp"
+                            android:layout_gravity="bottom"
                             android:layout_marginStart="8dp"
-                            android:text="@string/movie_pg_rating"
-                            android:textColor="@color/textIdle"
-                            app:customFont="Raleway-Regular.ttf"/>
+                            android:layout_marginBottom="2dp"
+                            android:scaleType="fitCenter"
+                            android:adjustViewBounds="true"
+                            android:src="@drawable/ic_tv_14"/>
 
                         <com.movielix.font.MovieLixTextView
                             android:layout_width="wrap_content"

@@ -71,8 +71,8 @@ public class FirestoreConnector {
                 , 128
                 , "https://m.media-amazon.com/images/M/MV5BMzUzNDM2NzM2MV5BMl5BanBnXkFtZTgwNTM3NTg4OTE@._V1_SX300.jpg"
                 , Arrays.asList("Comedia", "Romance")
-                , Movie.PG_RATING.NOT_RATED
-                , 0);
+                , Movie.PG_RATING.G
+                , 83);
 
         movies.add(movie);
 
@@ -84,8 +84,8 @@ public class FirestoreConnector {
                 , 124
                 , "https://m.media-amazon.com/images/M/MV5BMTYzOTc2NzU3N15BMl5BanBnXkFtZTcwNjY3MDE3NQ@@._V1_SX300.jpg"
                 , Arrays.asList("Acción", "Aventura")
-                , Movie.PG_RATING.NOT_RATED
-                , 0);
+                , Movie.PG_RATING.PG_13
+                , 72);
 
         movies.add(movie);
 
@@ -97,8 +97,8 @@ public class FirestoreConnector {
                 , 165
                 , "https://m.media-amazon.com/images/M/MV5BMjIyNTQ5NjQ1OV5BMl5BanBnXkFtZTcwODg1MDU4OA@@._V1_SX300.jpg"
                 , Arrays.asList("Drama", "Western")
-                , Movie.PG_RATING.NOT_RATED
-                , 0);
+                , Movie.PG_RATING.R
+                , 90);
 
         movies.add(movie);
 
@@ -239,10 +239,24 @@ public class FirestoreConnector {
 
                                                             Movie.PG_RATING pgRating = Movie.PG_RATING.NOT_RATED;
                                                             if (pgRatingStr != null) {
-                                                                if (pgRatingStr.equalsIgnoreCase("R")) {
-                                                                    pgRating = Movie.PG_RATING.R;
+                                                                if (pgRatingStr.equalsIgnoreCase("G")) {
+                                                                    pgRating = Movie.PG_RATING.G;
+                                                                } else if (pgRatingStr.equalsIgnoreCase("PG")) {
+                                                                    pgRating = Movie.PG_RATING.PG;
                                                                 } else if (pgRatingStr.equalsIgnoreCase("PG-13")) {
                                                                     pgRating = Movie.PG_RATING.PG_13;
+                                                                } else if (pgRatingStr.equalsIgnoreCase("R")) {
+                                                                    pgRating = Movie.PG_RATING.R;
+                                                                } else if (pgRatingStr.equalsIgnoreCase("NC-17")) {
+                                                                    pgRating = Movie.PG_RATING.NC_17;
+                                                                } else if (pgRatingStr.equalsIgnoreCase("TV-Y")) {
+                                                                    pgRating = Movie.PG_RATING.TV_Y;
+                                                                } else if (pgRatingStr.equalsIgnoreCase("TV-Y7")) {
+                                                                    pgRating = Movie.PG_RATING.TV_Y7;
+                                                                } else if (pgRatingStr.equalsIgnoreCase("TV-G")) {
+                                                                    pgRating = Movie.PG_RATING.TV_G;
+                                                                } else if (pgRatingStr.equalsIgnoreCase("TV-PG")) {
+                                                                    pgRating = Movie.PG_RATING.TV_PG;
                                                                 } else if (pgRatingStr.equalsIgnoreCase("TV-14")) {
                                                                     pgRating = Movie.PG_RATING.TV_14;
                                                                 } else if (pgRatingStr.equalsIgnoreCase("PG-MA")) {

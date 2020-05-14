@@ -1,9 +1,11 @@
 package com.movielix.adapter;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -12,6 +14,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.makeramen.roundedimageview.RoundedImageView;
 import com.movielix.R;
 import com.movielix.bean.Movie;
+import com.movielix.util.Util;
 import com.squareup.picasso.Picasso;
 
 import java.util.List;
@@ -67,6 +70,8 @@ public class ReviewsAdapter extends RecyclerView.Adapter<ReviewsAdapter.ReviewHo
         private TextView mRatingVar;
         private TextView mRatingFixed;
         private TextView mProfileName;
+        private TextView mIMDBRating;
+        private ImageView mPGRating;
 
         private RoundedImageView mCover;
         private CircleImageView mProfilePic;
@@ -84,8 +89,11 @@ public class ReviewsAdapter extends RecyclerView.Adapter<ReviewsAdapter.ReviewHo
             mProfileName = itemView.findViewById(R.id.review_profile_name);
             mCover = itemView.findViewById(R.id.review_cover);
             mProfilePic = itemView.findViewById(R.id.review_profile_pic);
+            mIMDBRating = itemView.findViewById(R.id.review_imdb_rating);
+            mPGRating = itemView.findViewById(R.id.review_pg_rating);
         }
 
+        @SuppressLint("SetTextI18n")
         void bindReviewItem(final Movie movie, boolean last) {
             if (last) {
                 float scale = mContext.getResources().getDisplayMetrics().density;
@@ -94,18 +102,24 @@ public class ReviewsAdapter extends RecyclerView.Adapter<ReviewsAdapter.ReviewHo
                 mContainer.setPadding(0, 0, 0, dpAsPixels);
             }
 
-            String info = "(" + movie.getReleaseYear() + ") - " + movie.getGenres().get(0) + ", " + movie.getGenres().get(1);
-
-            mTitle.setText(movie.getTitle());
-            mInfo.setText(info);
+            mInfo.setText("(" + movie.getReleaseYear() + ") - " + movie.getGenresAsString());
             mOverview.setText(movie.getOverview());
-            mDuration.setText(Integer.toString(movie.getDuration()));
             mTitle.setText(movie.getTitle());
+            mDuration.setText(movie.getDurationAsStr());
+            mIMDBRating.setText(Integer.toString(movie.getIMDBRating()));
+            mIMDBRating.setTextColor(mContext.getColor(Util.getRatingColor(movie.getIMDBRating())));
             mProfilePic.setImageResource(R.drawable.girl_profile);
 
+            int pgRatingImage = Util.getRatingImage(movie.getPGRating());
+            if (pgRatingImage == -1) {
+                mPGRating.setVisibility(View.GONE);
+            } else {
+                mPGRating.setImageResource(pgRatingImage);
+            }
+
             Picasso.get()
-                   .load(movie.getImageUrl())
-                   .into(mCover);
+                    .load(movie.getImageUrl())
+                    .into(mCover);
         }
     }
 }

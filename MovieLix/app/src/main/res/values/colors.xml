@@ -16,4 +16,6 @@
 
     <color name="darkDivider">#999999</color>
     <color name="divider">#DDDDDD</color>
+
+    <color name="yellow">#E3D800</color>
 </resources>

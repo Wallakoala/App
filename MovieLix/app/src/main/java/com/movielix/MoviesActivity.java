@@ -160,12 +160,25 @@ public class MoviesActivity extends AppCompatActivity implements MaterialSearchB
     public void onSearchStateChanged(boolean enabled) {
         if (!enabled) {
             mSuggestionsContainer.setVisibility(View.GONE);
+
+            mMoviesContainer.animate()
+                    .alpha(1.f)
+                    .setDuration(250)
+                    .start();
+        } else {
+            mMoviesContainer.animate()
+                    .alpha(.25f)
+                    .setDuration(250)
+                    .start();
         }
     }
 
     @Override
     public void onSearchConfirmed(final CharSequence text) {
         if (text.length() > 1) {
+            MaterialSearchBar searchBar = findViewById(R.id.movies_search_bar);
+            searchBar.closeSearch();
+
             showProgressBar();
             hideSuggestions();
             hideMessage();

@@ -6,6 +6,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -15,6 +16,7 @@ import com.makeramen.roundedimageview.RoundedImageView;
 import com.movielix.R;
 import com.movielix.bean.Movie;
 import com.movielix.constants.Constants;
+import com.movielix.util.Util;
 import com.squareup.picasso.Picasso;
 
 import java.util.List;
@@ -65,7 +67,7 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieHolde
         private TextView mTitle;
         private TextView mInfo;
         private TextView mDuration;
-        private TextView mPGRating;
+        private ImageView mPGRating;
         private TextView mIMDBRating;
 
         private RoundedImageView mCover;
@@ -93,10 +95,16 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieHolde
 
             mTitle.setText(movie.getTitle());
             mInfo.setText("(" + movie.getReleaseYear() + ") - " + movie.getGenresAsString());
-            mDuration.setText(Integer.toString(movie.getDuration()));
-            mTitle.setText(movie.getTitle());
             mDuration.setText(movie.getDurationAsStr());
             mIMDBRating.setText(Integer.toString(movie.getIMDBRating()));
+            mIMDBRating.setTextColor(mContext.getColor(Util.getRatingColor(movie.getIMDBRating())));
+
+            int pgRatingImage = Util.getRatingImage(movie.getPGRating());
+            if (pgRatingImage == -1) {
+                mPGRating.setVisibility(View.GONE);
+            } else {
+                mPGRating.setImageResource(pgRatingImage);
+            }
 
             Picasso.get()
                    .load(movie.getImageUrl())
