@@ -16,6 +16,7 @@
     <string name="movie_summary_header">Sinopsis</string>
     <string name="movie_summary">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam varius orci at imperdiet accumsan. Sed sagittis turpis ut turpis ullamcorper luctus. Praesent arcu lorem, congue tempus auctor a, cursus at est. Nullam ullamcorper, tellus et porttitor trist…</string>
     <string name="movie_friends_reviews_header">Tus amigos opinan esto</string>
+    <string name="movie_pg_rating">PG13</string>
 
     <string name="reviews_item_name">Rebecca la ha valorado con:</string>
     <string name="reviews_item_movie">La La Land</string>
@@ -58,4 +59,10 @@
     <string name="email_used_with_different_provider">Este email ya se ha registado con otro proveedor</string>
 
     <string name="facebook_app_id">592176878302149</string> <string name="fb_login_protocol_scheme">fb592176878302149</string>
+
+    <string name="search_bar_placeholder">Buscar película o serie</string>
+    <string name="search_bar_hint">Buscar</string>
+
+    <string name="no_movies_found">No se ha encontrado ninguna película o serie con los términos\n\"%1\"</string>
+    <string name="movie_suggestion_extra_info">(%1) - %2</string>
 </resources>
