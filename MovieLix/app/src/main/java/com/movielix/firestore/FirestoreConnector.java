@@ -84,7 +84,7 @@ public class FirestoreConnector {
                 , 124
                 , "https://m.media-amazon.com/images/M/MV5BMTYzOTc2NzU3N15BMl5BanBnXkFtZTcwNjY3MDE3NQ@@._V1_SX300.jpg"
                 , Arrays.asList("Acción", "Aventura")
-                , Movie.PG_RATING.PG_13
+                , Movie.PG_RATING.PG
                 , 72);
 
         movies.add(movie);
