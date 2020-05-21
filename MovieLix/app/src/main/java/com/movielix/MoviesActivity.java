@@ -100,7 +100,7 @@ public class MoviesActivity extends AppCompatActivity implements MaterialSearchB
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
 
             @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+            public void onTextChanged(final CharSequence charSequence, int i, int i1, int i2) {
                 if (charSequence.length() > 1) {
                     showProgressBar();
                     firestoreConnector.getMoviesSuggestionsByTitle(charSequence.toString(), new FirestoreListener<Movie>() {
@@ -108,7 +108,7 @@ public class MoviesActivity extends AppCompatActivity implements MaterialSearchB
                         public void onSuccess(List<Movie> movies) {
                             hideProgressBar(true);
 
-                            MoviesSuggestionAdapter adapter = new MoviesSuggestionAdapter(MoviesActivity.this, movies);
+                            MoviesSuggestionAdapter adapter = new MoviesSuggestionAdapter(MoviesActivity.this, movies, charSequence.toString());
                             mSuggestionsRecyclerView.setAdapter(adapter);
                             mSuggestionsContainer.setVisibility(View.VISIBLE);
                         }

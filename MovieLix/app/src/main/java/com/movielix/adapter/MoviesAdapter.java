@@ -2,7 +2,6 @@ package com.movielix.adapter;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,7 +14,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.makeramen.roundedimageview.RoundedImageView;
 import com.movielix.R;
 import com.movielix.bean.Movie;
-import com.movielix.constants.Constants;
 import com.movielix.util.Util;
 import com.squareup.picasso.Picasso;
 

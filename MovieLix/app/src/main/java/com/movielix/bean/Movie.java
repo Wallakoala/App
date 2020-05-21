@@ -1,5 +1,8 @@
 package com.movielix.bean;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import com.movielix.firestore.FirestoreItem;
 
 import java.util.ArrayList;
@@ -8,7 +11,7 @@ import java.util.List;
 /**
  * Class that represents a movie.
  */
-public class Movie extends FirestoreItem {
+public class Movie extends FirestoreItem implements Parcelable {
 
     public enum PG_RATING {
         G,
@@ -141,14 +144,22 @@ public class Movie extends FirestoreItem {
         }
     }
 
+    protected Movie(Parcel in) {
+        mTitle = in.readString();
+        mOverview = in.readString();
+        mImageUrl = in.readString();
+        mGenres = in.createStringArrayList();
+        mDuration = in.readInt();
+        mReleaseYear = in.readInt();
+        mIMDBRating = in.readInt();
+    }
+
     public String getId() { return super.mId; }
     public String getTitle() { return mTitle; }
     public String getOverview() { return mOverview; }
     public String getImageUrl() { return mImageUrl; }
     public PG_RATING getPGRating() { return mPGRating; }
-    public List<String> getGenres() { return mGenres; }
     public int getReleaseYear() { return mReleaseYear; }
-    public int getDuration() { return mDuration; }
     public int getIMDBRating() { return mIMDBRating; }
 
     public String getDurationAsStr() {
@@ -172,5 +183,33 @@ public class Movie extends FirestoreItem {
         }
 
         return genres.toString();
+    }
+
+    public static final Creator<Movie> CREATOR = new Creator<Movie>() {
+        @Override
+        public Movie createFromParcel(Parcel in) {
+            return new Movie(in);
+        }
+
+        @Override
+        public Movie[] newArray(int size) {
+            return new Movie[size];
+        }
+    };
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(mTitle);
+        dest.writeString(mOverview);
+        dest.writeString(mImageUrl);
+        dest.writeStringList(mGenres);
+        dest.writeInt(mDuration);
+        dest.writeInt(mReleaseYear);
+        dest.writeInt(mIMDBRating);
     }
 }
