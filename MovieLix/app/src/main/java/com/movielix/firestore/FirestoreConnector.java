@@ -17,8 +17,10 @@ import com.movielix.constants.Constants;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Deque;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
 @SuppressWarnings("unchecked")
 public class FirestoreConnector {
@@ -41,16 +43,21 @@ public class FirestoreConnector {
 
     private static FirestoreConnector sFirestoreConnector;
 
+    final private Deque<String> mRequestStack = new ConcurrentLinkedDeque<>();
+
     // Access a Cloud Firestore instance from your Activity
     private FirebaseFirestore mDb;
-    // Cache
-    private FirestoreMoviesCache mMoviesCache;
-    private FirestoreSuggestionsCache mSuggestionsCache;
+
+    // Caches
+    private FirestorePersistentCache mPersistentCache;
+    private FirestoreVolatileCache mVolatileCache;
 
     private FirestoreConnector() {
         mDb = FirebaseFirestore.getInstance();
-        mMoviesCache = FirestoreMoviesCache.newInstance();
-        mSuggestionsCache = FirestoreSuggestionsCache.newInstance();
+        mVolatileCache = FirestoreVolatileCache.newInstance();
+        mPersistentCache = FirestorePersistentCache.newInstance();
+
+        Log.d(Constants.TAG, "[FirestoreConnector] succesfully initialized");
     }
 
     public static FirestoreConnector newInstance() {
@@ -105,53 +112,58 @@ public class FirestoreConnector {
         return movies;
     }
 
-    public void getMoviesSuggestionsByTitle(String search, final FirestoreListener listener) {
-        // \todo some mechanism has to be implemented to prevent calling too many times at the same time (countdownlatch?)
+    /**
+     * Method to retrieve a list of movie suggestions based on the search.
+     *
+     * @param search: search terms.
+     * @param listener: object of type FirestoreListener.
+     */
+    public void getMoviesSuggestionsByTitle(final Context context, final String search, final FirestoreListener listener) {
+        Log.d(Constants.TAG, "[FirestoreConnector]::getMoviesSuggestionsByTitle: request to get suggestions by searching: " + search);
 
         final String search_term = search.toLowerCase();
-        List<Movie> suggestionsCached = mSuggestionsCache.get(search_term);
-        if (suggestionsCached != null) {
-            Log.d(Constants.TAG, "[suggestions_cache] cache hit (" + search_term + ")");
-            listener.onSuccess(suggestionsCached);
+
+        // See if the same search has been done in this session.
+        final List<Movie> volatileSuggestions = mVolatileCache.getSearch(search_term);
+        if (volatileSuggestions != null) {
+            Log.d(Constants.TAG, "[FirestoreConnector]::getMoviesSuggestionsByTitle: volatile cache hit");
+            listener.onSuccess(volatileSuggestions);
             return;
         }
 
+        mRequestStack.push(search_term);
         mDb.collection(MOVIES_SEARCH_COLLECTION)
-                .whereGreaterThanOrEqualTo(MOVIE_TITLE, search)
+                .whereGreaterThanOrEqualTo(MOVIE_TITLE, search_term)
                 .get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                     @Override
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        Log.d(Constants.TAG, "[FirestoreConnector]::getMoviesSuggestionsByTitle: found ids");
                         if (task.isSuccessful()) {
-                            final List<String> ids = new ArrayList<>();
-                            final List<Movie> movies = new ArrayList<>();
+                            List<String> ids = new ArrayList<>();
                             // Everything went well, let's get the ids of all the documents
                             if (task.getResult() != null) {
-                                for (QueryDocumentSnapshot document : task.getResult()) {
-                                    // Firestore compares strings lexicographically, and that's not exactly what we want, so
-                                    // let's filter the movies retrieved.
-                                    if (ids.size() < MAX_SUGGESTIONS) {
-                                        //noinspection ConstantConditions
-                                        if (document.getString(MOVIE_TITLE).startsWith(search_term) || document.getString(MOVIE_TITLE).contains(search_term)) {
-                                            ids.add(document.getId());
-                                        }
-
-                                    } else {
-                                        break;
-                                    }
-                                }
+                                ids = filterIds(task.getResult(), search_term);
                             }
 
+                            final List<Movie> movies = new ArrayList<>();
                             if (!ids.isEmpty()) {
                                 // Now let's search for those ids
-                                mDb.collection(MOVIES_SUGGESTIONS_COLLECTION)
-                                        .whereIn(FieldPath.documentId(), ids)
-                                        .get()
-                                        .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                                            @Override
-                                            public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                                                if (task.isSuccessful()) {
-                                                    if (task.getResult() != null) {
+
+                                // First, see if there are cached movies
+                                final List<Movie> persistentSuggestions = mPersistentCache.getSuggestions(context, ids);
+                                for (Movie suggestion : persistentSuggestions) {
+                                    ids.remove(suggestion.getId());
+                                }
+
+                                if (!ids.isEmpty()) {
+                                    mDb.collection(MOVIES_SUGGESTIONS_COLLECTION)
+                                            .whereIn(FieldPath.documentId(), ids)
+                                            .get()
+                                            .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                                                @Override
+                                                public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                                                    if (task.isSuccessful() && (task.getResult() != null)) {
                                                         for (QueryDocumentSnapshot document : task.getResult()) {
                                                             String title = document.getString(MOVIE_TITLE);
                                                             String imageUrl = document.getString(MOVIE_IMAGE_URL);
@@ -166,24 +178,29 @@ public class FirestoreConnector {
                                                                     .categorizedAs(genres)
                                                                     .build());
                                                         }
+
+                                                        mVolatileCache.addSearch(search_term, movies);
+                                                        mPersistentCache.putSuggestions(context, movies);
+
+                                                        movies.addAll(persistentSuggestions);
+                                                        listener.onSuccess(movies);
+
+                                                    } else {
+                                                        Log.w(Constants.TAG, "[FirestoreConnector] error getting movies suggestions.", task.getException());
+                                                        listener.onError();
                                                     }
-
-                                                    mSuggestionsCache.add(search_term, movies);
-
-                                                    listener.onSuccess(movies);
-
-                                                } else {
-                                                    Log.w(Constants.TAG, "Error getting movies suggestions.", task.getException());
-                                                    listener.onError();
                                                 }
-                                            }
-                                        });
-                            } else {
-                                listener.onSuccess(movies);
+                                            });
+                                } else {
+                                    movies.addAll(persistentSuggestions);
+                                    mVolatileCache.addSearch(search_term, movies);
+                                }
                             }
 
+                            listener.onSuccess(movies);
+
                         } else {
-                            Log.w(Constants.TAG, "Error searching movies.", task.getException());
+                            Log.w(Constants.TAG, "[FirestoreConnector] error searching movies.", task.getException());
                             listener.onError();
                         }
                     }
@@ -199,23 +216,11 @@ public class FirestoreConnector {
                     @Override
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
                         if (task.isSuccessful()) {
-                            final List<String> ids = new ArrayList<>();
+                            List<String> ids = new ArrayList<>();
                             final List<Movie> movies = new ArrayList<>();
                             // Everything went well, let's get the ids of all the documents
                             if (task.getResult() != null) {
-                                for (QueryDocumentSnapshot document : task.getResult()) {
-                                    // Firestore compares strings lexicographically, and that's not exactly what we want, so
-                                    // let's filter the movies retrieved.
-                                    if (ids.size() < MAX_SUGGESTIONS) {
-                                        //noinspection ConstantConditions
-                                        if (document.getString(MOVIE_TITLE).startsWith(search_term) || document.getString(MOVIE_TITLE).contains(search_term)) {
-                                            ids.add(document.getId());
-                                        }
-
-                                    } else {
-                                        break;
-                                    }
-                                }
+                                ids = filterIds(task.getResult(), search_term);
                             }
 
                             if (!ids.isEmpty()) {
@@ -295,5 +300,36 @@ public class FirestoreConnector {
                         }
                     }
                 });
+    }
+
+    private List<String> filterIds(QuerySnapshot task, String search_term) {
+        List<String> ids = new ArrayList<>();
+        for (QueryDocumentSnapshot document : task) {
+            // Firestore compares strings lexicographically, and that's not exactly what we want, so
+            // let's filter the movies retrieved.
+            if (ids.size() < MAX_SUGGESTIONS) {
+                //noinspection ConstantConditions
+                if (document.getString(MOVIE_TITLE).startsWith(search_term)) {
+                    ids.add(document.getId());
+                }
+
+            } else {
+                break;
+            }
+        }
+
+        for (QueryDocumentSnapshot document : task) {
+            if (ids.size() < MAX_SUGGESTIONS) {
+                //noinspection ConstantConditions
+                if (document.getString(MOVIE_TITLE).contains(search_term) && !ids.contains(document.getId())) {
+                    ids.add(document.getId());
+                }
+
+            } else {
+                break;
+            }
+        }
+
+        return ids;
     }
 }
