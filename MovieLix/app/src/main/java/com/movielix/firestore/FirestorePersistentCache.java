@@ -17,12 +17,14 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 /**
- * Implementation of a persistent cache.
+ * Implementation of a persistent cache for Firestore items.
  */
 class FirestorePersistentCache {
 
+    // Constants
     private static final String SUGGESTIONS_PREFIX = "suggestions_";
 
+    // Singleton's reference.
     private static FirestorePersistentCache sFirestorePersistentCache;
 
     private FirestorePersistentCache() {}
@@ -49,41 +51,53 @@ class FirestorePersistentCache {
     /**
      * Adds a list of suggestions.
      *
-     * @param suggestions: list of suggestions.
+     * @param context context object.
+     * @param suggestions list of suggestions.
      */
     void putSuggestions(Context context, @NonNull List<Movie> suggestions) {
         Log.d(Constants.TAG, "[FirestorePersistentCache]::putSuggestions: adding new suggestions");
 
         // Add missing suggestions to the SharedPreferences
         PersistentCache<Movie> cache = new PersistentCache<>(context);
-        Map<String, Movie> newMovies = new HashMap<>();
+        Map<String, Movie> missingMovies = new HashMap<>();
         for (Movie suggestion : suggestions) {
             String key = SUGGESTIONS_PREFIX + suggestion.getId();
             if (cache.get(key, Movie.class) == null) {
-                Log.d(Constants.TAG, "[FirestorePersistentCache]::putSuggestions: suggestion misssing, adding movie (" + suggestion.getTitle() + ")");
-                newMovies.put(key, suggestion);
+                Log.d(Constants.TAG,
+                        "[FirestorePersistentCache]::putSuggestions: suggestion misssing, adding movie (" + suggestion.getTitle() + ")");
+                missingMovies.put(key, suggestion);
 
             } else {
-                Log.d(Constants.TAG, "[FirestorePersistentCache]::putSuggestions: suggestion already present, skipping movie (" + suggestion.getTitle() + ")");
+                Log.d(Constants.TAG,
+                        "[FirestorePersistentCache]::putSuggestions: suggestion already present, skipping movie (" + suggestion.getTitle() + ")");
             }
         }
 
-        cache.putObjects(newMovies);
+        cache.putObjects(missingMovies);
     }
 
+    /**
+     * Checks if the list of movies' ids are present in the cache. If they are, the movies are returned.
+     *
+     * @param context context object.
+     * @param ids list of movies' identifier.
+     * @return list of cached movies, emtpy list if none are found.
+     */
     List<Movie> getSuggestions(Context context, @NonNull List<String> ids) {
         Log.d(Constants.TAG, "[FirestorePersistentCache]::getSuggestions: getting suggestions");
 
         List<Movie> suggestions = new ArrayList<>();
         PersistentCache<Movie> cache = new PersistentCache<>(context);
-
         for (String id : ids) {
             Movie movie = cache.get(SUGGESTIONS_PREFIX + id, Movie.class);
             if (movie != null) {
-                Log.d(Constants.TAG, "[FirestorePersistentCache]::getSuggestions: cache hit, getting movie (" + movie.getTitle() + ")");
+                Log.d(Constants.TAG,
+                        "[FirestorePersistentCache]::getSuggestions: cache hit, getting movie (" + movie.getTitle() + ")");
                 suggestions.add(movie);
+
             } else {
-                Log.d(Constants.TAG, "[FirestorePersistentCache]::getSuggestions: cache miss, id (" + id + ") is not present");
+                Log.d(Constants.TAG,
+                        "[FirestorePersistentCache]::getSuggestions: cache miss, id (" + id + ") is not present");
             }
         }
 

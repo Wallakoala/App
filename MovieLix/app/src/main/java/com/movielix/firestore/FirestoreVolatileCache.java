@@ -47,7 +47,7 @@ class FirestoreVolatileCache {
      * @param search: search term.
      * @param movies: list of movies associated with the search.
      */
-    void addSearch(String search, List<Movie> movies) {
+    void putSearch(String search, List<Movie> movies) {
         mSearchCache.put(search, movies);
     }
 }

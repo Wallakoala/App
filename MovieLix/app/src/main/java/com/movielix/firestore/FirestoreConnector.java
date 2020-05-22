@@ -115,15 +115,18 @@ public class FirestoreConnector {
     /**
      * Method to retrieve a list of movie suggestions based on the search.
      *
-     * @param search: search terms.
-     * @param listener: object of type FirestoreListener.
+     * @param context context object.
+     * @param search search terms.
+     * @param listener object of type FirestoreListener to be notifed with the result.
      */
     public void getMoviesSuggestionsByTitle(final Context context, final String search, final FirestoreListener listener) {
         Log.d(Constants.TAG, "[FirestoreConnector]::getMoviesSuggestionsByTitle: request to get suggestions by searching: " + search);
 
         final String search_term = search.toLowerCase();
 
-        // See if the same search has been done in this session.
+        /* Step 1
+         * See if the same search has been done in this session.
+         */
         final List<Movie> volatileSuggestions = mVolatileCache.getSearch(search_term);
         if (volatileSuggestions != null) {
             Log.d(Constants.TAG, "[FirestoreConnector]::getMoviesSuggestionsByTitle: volatile cache hit");
@@ -131,7 +134,9 @@ public class FirestoreConnector {
             return;
         }
 
-        mRequestStack.push(search_term);
+        /* Step 2
+         * Search first in the `movies_search` collection to get the ids of the matching movies.
+         */
         mDb.collection(MOVIES_SEARCH_COLLECTION)
                 .whereGreaterThanOrEqualTo(MOVIE_TITLE, search_term)
                 .get()
@@ -140,22 +145,26 @@ public class FirestoreConnector {
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
                         Log.d(Constants.TAG, "[FirestoreConnector]::getMoviesSuggestionsByTitle: found ids");
                         if (task.isSuccessful()) {
-                            List<String> ids = new ArrayList<>();
-                            // Everything went well, let's get the ids of all the documents
-                            if (task.getResult() != null) {
-                                ids = filterIds(task.getResult(), search_term);
-                            }
-
+                            /* Step 3
+                             * Everything went well, let's filter the ids of all the documents received.
+                             */
+                            final List<String> ids = filterIds(Objects.requireNonNull(task.getResult()), search_term);
                             final List<Movie> movies = new ArrayList<>();
-                            if (!ids.isEmpty()) {
-                                // Now let's search for those ids
 
-                                // First, see if there are cached movies
+                            if (!ids.isEmpty()) {
+                                /* Step 4
+                                 * Now let's search for those ids.
+                                 *
+                                 * First, see if the ids received are present in the persistent cache.
+                                 */
                                 final List<Movie> persistentSuggestions = mPersistentCache.getSuggestions(context, ids);
                                 for (Movie suggestion : persistentSuggestions) {
                                     ids.remove(suggestion.getId());
                                 }
 
+                                /* Step 5
+                                 * Retrieve the movies that are not cached.
+                                 */
                                 if (!ids.isEmpty()) {
                                     mDb.collection(MOVIES_SUGGESTIONS_COLLECTION)
                                             .whereIn(FieldPath.documentId(), ids)
@@ -179,9 +188,15 @@ public class FirestoreConnector {
                                                                     .build());
                                                         }
 
-                                                        mVolatileCache.addSearch(search_term, movies);
+                                                        /* Step 6
+                                                         * Update the volatile and persistent caches.
+                                                         */
+                                                        mVolatileCache.putSearch(search_term, movies);
                                                         mPersistentCache.putSuggestions(context, movies);
 
+                                                        /* Step 7
+                                                         * Notify the listener.
+                                                         */
                                                         movies.addAll(persistentSuggestions);
                                                         listener.onSuccess(movies);
 
@@ -192,8 +207,9 @@ public class FirestoreConnector {
                                                 }
                                             });
                                 } else {
+                                    // All the movies are cached, no need to connect with Firestore.
                                     movies.addAll(persistentSuggestions);
-                                    mVolatileCache.addSearch(search_term, movies);
+                                    mVolatileCache.putSearch(search_term, movies);
                                 }
                             }
 
