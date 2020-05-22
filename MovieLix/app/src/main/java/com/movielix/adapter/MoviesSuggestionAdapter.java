@@ -14,7 +14,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.makeramen.roundedimageview.RoundedImageView;
 import com.movielix.MovieActivity;
 import com.movielix.R;
-import com.movielix.bean.Movie;
+import com.movielix.bean.BaseMovie;
 import com.movielix.constants.Constants;
 import com.squareup.picasso.Picasso;
 
@@ -27,10 +27,10 @@ import java.util.regex.Pattern;
 public class MoviesSuggestionAdapter extends RecyclerView.Adapter<MoviesSuggestionAdapter.MovieHolder> {
 
     private Context mContext;
-    private List<Movie> mMovies;
+    private List<BaseMovie> mMovies;
     private String mSearch;
 
-    public MoviesSuggestionAdapter(Context context, List<Movie> movies, String search) {
+    public MoviesSuggestionAdapter(Context context, List<BaseMovie> movies, String search) {
         this.mContext = context;
         this.mMovies = movies;
         this.mSearch = search;
@@ -62,7 +62,7 @@ public class MoviesSuggestionAdapter extends RecyclerView.Adapter<MoviesSuggesti
      */
     class MovieHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-        private Movie mMovie;
+        private BaseMovie mMovie;
 
         private TextView mTitle;
         private TextView mExtraInfo;
@@ -79,7 +79,7 @@ public class MoviesSuggestionAdapter extends RecyclerView.Adapter<MoviesSuggesti
             itemView.setOnClickListener(this);
         }
 
-        void bindMovieItem(Movie movie) {
+        void bindMovieItem(BaseMovie movie) {
             mMovie = movie;
 
             int colorAccent = mContext.getResources().getColor(R.color.colorAccent, mContext.getTheme());
@@ -104,7 +104,12 @@ public class MoviesSuggestionAdapter extends RecyclerView.Adapter<MoviesSuggesti
         @Override
         public void onClick(View v) {
             Intent intent = new Intent(mContext, MovieActivity.class);
-            intent.putExtra(Constants.MOVIE_INTENT, mMovie);
+
+            intent.putExtra(Constants.MOVIE_TITLE_INTENT, mMovie.getTitle());
+            intent.putExtra(Constants.MOVIE_GENRES_INTENT, mMovie.getGenresAsString());
+            intent.putExtra(Constants.MOVIE_RELEASE_YEAR_INTENT, mMovie.getReleaseYear());
+            intent.putExtra(Constants.MOVIE_IMAGE_INTENT, mMovie.getImageUrl());
+
             mContext.startActivity(intent);
         }
     }

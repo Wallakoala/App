@@ -12,6 +12,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.movielix.R;
+import com.movielix.bean.BaseMovie;
 import com.movielix.bean.Movie;
 import com.movielix.constants.Constants;
 
@@ -127,7 +128,7 @@ public class FirestoreConnector {
         /* Step 1
          * See if the same search has been done in this session.
          */
-        final List<Movie> volatileSuggestions = mVolatileCache.getSearch(search_term);
+        final List<BaseMovie> volatileSuggestions = mVolatileCache.getSearch(search_term);
         if (volatileSuggestions != null) {
             Log.d(Constants.TAG, "[FirestoreConnector]::getMoviesSuggestionsByTitle: volatile cache hit");
             listener.onSuccess(volatileSuggestions);
@@ -149,7 +150,7 @@ public class FirestoreConnector {
                              * Everything went well, let's filter the ids of all the documents received.
                              */
                             final List<String> ids = filterIds(Objects.requireNonNull(task.getResult()), search_term);
-                            final List<Movie> movies = new ArrayList<>();
+                            final List<BaseMovie> movies = new ArrayList<>();
 
                             if (!ids.isEmpty()) {
                                 /* Step 4
@@ -157,8 +158,8 @@ public class FirestoreConnector {
                                  *
                                  * First, see if the ids received are present in the persistent cache.
                                  */
-                                final List<Movie> persistentSuggestions = mPersistentCache.getSuggestions(context, ids);
-                                for (Movie suggestion : persistentSuggestions) {
+                                final List<BaseMovie> persistentSuggestions = mPersistentCache.getSuggestions(context, ids);
+                                for (BaseMovie suggestion : persistentSuggestions) {
                                     ids.remove(suggestion.getId());
                                 }
 
@@ -179,13 +180,7 @@ public class FirestoreConnector {
                                                             List<String> genres = (ArrayList<String>) document.get(MOVIE_GENRES);
                                                             int year = Objects.requireNonNull(document.getLong(MOVIE_RELEASE_YEAR)).intValue();
 
-                                                            movies.add(new Movie.Builder()
-                                                                    .withId(document.getId())
-                                                                    .titled(title)
-                                                                    .releasedIn(year)
-                                                                    .withImage(imageUrl)
-                                                                    .categorizedAs(genres)
-                                                                    .build());
+                                                            movies.add(new BaseMovie(document.getId(), title, imageUrl, genres, year));
                                                         }
 
                                                         /* Step 6

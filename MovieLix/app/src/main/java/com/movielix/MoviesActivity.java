@@ -25,6 +25,7 @@ import com.mancj.materialsearchbar.MaterialSearchBar;
 import com.movielix.adapter.MoviesAdapter;
 import com.movielix.adapter.MoviesSuggestionAdapter;
 import com.movielix.bean.Movie;
+import com.movielix.bean.BaseMovie;
 import com.movielix.constants.Constants;
 import com.movielix.firestore.FirestoreConnector;
 import com.movielix.firestore.FirestoreListener;
@@ -103,9 +104,9 @@ public class MoviesActivity extends AppCompatActivity implements MaterialSearchB
             public void onTextChanged(final CharSequence charSequence, int i, int i1, int i2) {
                 if (charSequence.length() > 1) {
                     showProgressBar();
-                    firestoreConnector.getMoviesSuggestionsByTitle(MoviesActivity.this, charSequence.toString(), new FirestoreListener<Movie>() {
+                    firestoreConnector.getMoviesSuggestionsByTitle(MoviesActivity.this, charSequence.toString(), new FirestoreListener<BaseMovie>() {
                         @Override
-                        public void onSuccess(List<Movie> movies) {
+                        public void onSuccess(List<BaseMovie> movies) {
                             hideProgressBar(true);
 
                             MoviesSuggestionAdapter adapter = new MoviesSuggestionAdapter(MoviesActivity.this, movies, charSequence.toString());

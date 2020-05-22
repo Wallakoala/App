@@ -5,6 +5,7 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
+import com.movielix.bean.BaseMovie;
 import com.movielix.bean.Movie;
 import com.movielix.constants.Constants;
 import com.movielix.util.PersistentCache;
@@ -54,15 +55,15 @@ class FirestorePersistentCache {
      * @param context context object.
      * @param suggestions list of suggestions.
      */
-    void putSuggestions(Context context, @NonNull List<Movie> suggestions) {
+    void putSuggestions(Context context, @NonNull List<BaseMovie> suggestions) {
         Log.d(Constants.TAG, "[FirestorePersistentCache]::putSuggestions: adding new suggestions");
 
         // Add missing suggestions to the SharedPreferences
-        PersistentCache<Movie> cache = new PersistentCache<>(context);
-        Map<String, Movie> missingMovies = new HashMap<>();
-        for (Movie suggestion : suggestions) {
+        PersistentCache<BaseMovie> cache = new PersistentCache<>(context);
+        Map<String, BaseMovie> missingMovies = new HashMap<>();
+        for (BaseMovie suggestion : suggestions) {
             String key = SUGGESTIONS_PREFIX + suggestion.getId();
-            if (cache.get(key, Movie.class) == null) {
+            if (cache.get(key, BaseMovie.class) == null) {
                 Log.d(Constants.TAG,
                         "[FirestorePersistentCache]::putSuggestions: suggestion misssing, adding movie (" + suggestion.getTitle() + ")");
                 missingMovies.put(key, suggestion);
@@ -83,13 +84,13 @@ class FirestorePersistentCache {
      * @param ids list of movies' identifier.
      * @return list of cached movies, emtpy list if none are found.
      */
-    List<Movie> getSuggestions(Context context, @NonNull List<String> ids) {
+    List<BaseMovie> getSuggestions(Context context, @NonNull List<String> ids) {
         Log.d(Constants.TAG, "[FirestorePersistentCache]::getSuggestions: getting suggestions");
 
-        List<Movie> suggestions = new ArrayList<>();
-        PersistentCache<Movie> cache = new PersistentCache<>(context);
+        List<BaseMovie> suggestions = new ArrayList<>();
+        PersistentCache<BaseMovie> cache = new PersistentCache<>(context);
         for (String id : ids) {
-            Movie movie = cache.get(SUGGESTIONS_PREFIX + id, Movie.class);
+            BaseMovie movie = cache.get(SUGGESTIONS_PREFIX + id, BaseMovie.class);
             if (movie != null) {
                 Log.d(Constants.TAG,
                         "[FirestorePersistentCache]::getSuggestions: cache hit, getting movie (" + movie.getTitle() + ")");

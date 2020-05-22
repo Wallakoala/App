@@ -12,6 +12,8 @@ public class FirestoreItem {
         this.mId = id;
     }
 
+    public String getId() { return mId; }
+
     @Override
     public boolean equals(@Nullable Object obj) {
         if (obj instanceof FirestoreItem) {

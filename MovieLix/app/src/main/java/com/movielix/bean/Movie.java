@@ -1,63 +1,27 @@
 package com.movielix.bean;
 
-import android.os.Parcel;
-import android.os.Parcelable;
-
-import com.movielix.firestore.FirestoreItem;
-
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Class that represents a movie.
  */
-public class Movie extends FirestoreItem implements Parcelable {
+public class Movie extends BaseMovie {
 
     public enum PG_RATING {
-        G,
-        PG,
-        PG_13,
-        R,
-        NC_17,
-        TV_Y,
-        TV_Y7,
-        TV_G,
-        TV_PG,
-        TV_14,
-        TV_MA,
-        NOT_RATED
+        G, PG, PG_13, R, NC_17, TV_Y, TV_Y7, TV_G, TV_PG, TV_14, TV_MA, NOT_RATED
     }
 
-    private String mTitle;
     private String mOverview;
-    private String mImageUrl;
     private PG_RATING mPGRating;
-    private List<String> mGenres;
     private int mDuration;
-    private int mReleaseYear;
     private int mIMDBRating;
 
-    private Movie() {
-        super();
-    }
+    public Movie(String id, String title, String overview, int releaseYear, int duration, String imageUrl, List<String> genres, PG_RATING pgRating, int imdbRating) {
+        super(id, title, imageUrl, genres, releaseYear);
 
-    public Movie(
-            String id
-            , String title
-            , String overview
-            , int releaseYear
-            , int duration
-            , String imageUrl
-            , List<String> genres
-            , PG_RATING pgRating
-            , int imdbRating) {
-        super(id);
-        this.mTitle = title;
         this.mOverview = overview;
-        this.mReleaseYear = releaseYear;
         this.mDuration = duration;
-        this.mImageUrl = imageUrl;
-        this.mGenres = genres;
         this.mIMDBRating = imdbRating;
         this.mPGRating = pgRating;
     }
@@ -131,35 +95,12 @@ public class Movie extends FirestoreItem implements Parcelable {
         }
 
         public Movie build() {
-            return new Movie(
-                      id
-                    , title
-                    , overview
-                    , year
-                    , duration
-                    , imageUrl
-                    , genres
-                    , pgRating
-                    , imdbRating);
+            return new Movie(id, title, overview, year, duration, imageUrl, genres, pgRating, imdbRating);
         }
     }
 
-    protected Movie(Parcel in) {
-        mTitle = in.readString();
-        mOverview = in.readString();
-        mImageUrl = in.readString();
-        mGenres = in.createStringArrayList();
-        mDuration = in.readInt();
-        mReleaseYear = in.readInt();
-        mIMDBRating = in.readInt();
-    }
-
-    public String getId() { return super.mId; }
-    public String getTitle() { return mTitle; }
     public String getOverview() { return mOverview; }
-    public String getImageUrl() { return mImageUrl; }
     public PG_RATING getPGRating() { return mPGRating; }
-    public int getReleaseYear() { return mReleaseYear; }
     public int getIMDBRating() { return mIMDBRating; }
 
     public String getDurationAsStr() {
@@ -167,49 +108,5 @@ public class Movie extends FirestoreItem implements Parcelable {
         int minutes = mDuration % 60;
 
         return hours + "h " + minutes + "min";
-    }
-
-    public String getGenresAsString() {
-        if (mGenres.isEmpty()) {
-            return "Sin especificar";
-        }
-
-        StringBuilder genres = new StringBuilder();
-        for (int i = 0; i < mGenres.size(); ++i) {
-            genres.append(mGenres.get(i));
-            if (i < mGenres.size() - 1) {
-                genres.append(", ");
-            }
-        }
-
-        return genres.toString();
-    }
-
-    public static final Creator<Movie> CREATOR = new Creator<Movie>() {
-        @Override
-        public Movie createFromParcel(Parcel in) {
-            return new Movie(in);
-        }
-
-        @Override
-        public Movie[] newArray(int size) {
-            return new Movie[size];
-        }
-    };
-
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(mTitle);
-        dest.writeString(mOverview);
-        dest.writeString(mImageUrl);
-        dest.writeStringList(mGenres);
-        dest.writeInt(mDuration);
-        dest.writeInt(mReleaseYear);
-        dest.writeInt(mIMDBRating);
     }
 }
