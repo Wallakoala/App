@@ -69,7 +69,8 @@
                                 android:text="@string/reviews_item_movie"
                                 android:textSize="24sp"
                                 android:textColor="@color/textLight"
-                                android:textStyle="bold"/>
+                                android:textStyle="bold"
+                                app:customFont="Raleway-Regular.ttf"/>
 
                             <com.movielix.font.MovieLixTextView
                                 android:layout_width="wrap_content"
@@ -96,7 +97,8 @@
                                 android:text="@string/reviews_item_movie_duration"
                                 android:textSize="16sp"
                                 android:textColor="@color/textIdle"
-                                android:textStyle="bold"/>
+                                android:textStyle="bold"
+                                app:customFont="Raleway-Regular.ttf"/>
 
                             <com.movielix.font.MovieLixTextView
                                 android:layout_width="wrap_content"
@@ -107,7 +109,8 @@
                                 android:textSize="16sp"
                                 android:textColor="@color/textIdle"
                                 android:textStyle="bold"
-                                tools:ignore="HardcodedText" />
+                                app:customFont="Raleway-Regular.ttf"
+                                tools:ignore="HardcodedText"/>
 
                             <com.movielix.font.MovieLixTextView
                                 android:layout_width="wrap_content"
@@ -115,7 +118,8 @@
                                 android:text="@string/reviews_item_movie_genre"
                                 android:textSize="16sp"
                                 android:textColor="@color/textIdle"
-                                android:textStyle="bold"/>
+                                android:textStyle="bold"
+                                app:customFont="Raleway-Regular.ttf"/>
 
                         </LinearLayout>
 
@@ -134,7 +138,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="2px"
                             android:background="@color/textIdle"
-                            tools:ignore="PxUsage" />
+                            tools:ignore="PxUsage"/>
 
                         <!-- Plot -->
                         <com.movielix.font.MovieLixTextView

@@ -12,6 +12,8 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.movielix.R;
+import com.movielix.bean.BaseMovie;
+import com.movielix.bean.LiteMovie;
 import com.movielix.bean.Movie;
 import com.movielix.constants.Constants;
 
@@ -41,16 +43,23 @@ public class FirestoreConnector {
 
     private static FirestoreConnector sFirestoreConnector;
 
+    private String mLastSearch;
+
     // Access a Cloud Firestore instance from your Activity
     private FirebaseFirestore mDb;
-    // Cache
-    private FirestoreMoviesCache mMoviesCache;
-    private FirestoreSuggestionsCache mSuggestionsCache;
+
+    // Caches
+    private FirestorePersistentCache mPersistentCache;
+    private FirestoreVolatileCache mVolatileCache;
 
     private FirestoreConnector() {
         mDb = FirebaseFirestore.getInstance();
-        mMoviesCache = FirestoreMoviesCache.newInstance();
-        mSuggestionsCache = FirestoreSuggestionsCache.newInstance();
+        mVolatileCache = FirestoreVolatileCache.newInstance();
+        mPersistentCache = FirestorePersistentCache.newInstance();
+
+        mLastSearch = "";
+
+        Log.d(Constants.TAG, "[FirestoreConnector] succesfully initialized");
     }
 
     public static FirestoreConnector newInstance() {
@@ -105,93 +114,178 @@ public class FirestoreConnector {
         return movies;
     }
 
-    public void getMoviesSuggestionsByTitle(String search, final FirestoreListener listener) {
-        // \todo some mechanism has to be implemented to prevent calling too many times at the same time (countdownlatch?)
+    /**
+     * Method to retrieve a list of movie suggestions based on the search.
+     *
+     * @param context context object.
+     * @param search search terms.
+     * @param listener object of type FirestoreListener to be notifed with the result.
+     */
+    public void getMoviesSuggestionsByTitle(final Context context, final String search, final FirestoreListener listener) {
+        Log.d(Constants.TAG, "[FirestoreConnector]::getMoviesSuggestionsByTitle: request to get suggestions by searching: " + search);
 
         final String search_term = search.toLowerCase();
-        List<Movie> suggestionsCached = mSuggestionsCache.get(search_term);
-        if (suggestionsCached != null) {
-            Log.d(Constants.TAG, "[suggestions_cache] cache hit (" + search_term + ")");
-            listener.onSuccess(suggestionsCached);
+
+        /* Step 1
+         * See if the same search has been done in this session.
+         */
+        final List<BaseMovie> volatileSuggestions = mVolatileCache.getSearch(search_term);
+        if (volatileSuggestions != null) {
+            Log.d(Constants.TAG, "[FirestoreConnector]::getMoviesSuggestionsByTitle: volatile cache hit");
+            listener.onSuccess(volatileSuggestions);
             return;
         }
 
+        /* Step 2
+         * Search first in the `movies_search` collection to get the ids of the matching movies.
+         *
+         * Set the request so that only the last one is processed.
+         */
+        setLastSearch(search_term);
         mDb.collection(MOVIES_SEARCH_COLLECTION)
-                .whereGreaterThanOrEqualTo(MOVIE_TITLE, search)
+                .whereGreaterThanOrEqualTo(MOVIE_TITLE, search_term)
                 .get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                     @Override
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
                         if (task.isSuccessful()) {
-                            final List<String> ids = new ArrayList<>();
-                            final List<Movie> movies = new ArrayList<>();
-                            // Everything went well, let's get the ids of all the documents
-                            if (task.getResult() != null) {
-                                for (QueryDocumentSnapshot document : task.getResult()) {
-                                    // Firestore compares strings lexicographically, and that's not exactly what we want, so
-                                    // let's filter the movies retrieved.
-                                    if (ids.size() < MAX_SUGGESTIONS) {
-                                        //noinspection ConstantConditions
-                                        if (document.getString(MOVIE_TITLE).startsWith(search_term) || document.getString(MOVIE_TITLE).contains(search_term)) {
-                                            ids.add(document.getId());
-                                        }
+                            /* Step 3
+                             * Everything went well, let's filter the ids of all the documents received.
+                             */
+                            final List<String> ids = filterIds(Objects.requireNonNull(task.getResult()), search_term);
+                            final List<BaseMovie> movies = new ArrayList<>();
+
+                            if (!ids.isEmpty()) {
+                                /* Step 4
+                                 * Now let's search for those ids.
+                                 *
+                                 * First, see if the ids received are present in the persistent cache.
+                                 */
+                                final List<BaseMovie> persistentSuggestions = mPersistentCache.getSuggestions(context, ids);
+                                for (BaseMovie suggestion : persistentSuggestions) {
+                                    ids.remove(suggestion.getId());
+                                }
+
+                                /* Step 5
+                                 * Retrieve the movies that are not cached.
+                                 */
+                                if (!ids.isEmpty()) {
+                                    mDb.collection(MOVIES_SUGGESTIONS_COLLECTION)
+                                            .whereIn(FieldPath.documentId(), ids)
+                                            .get()
+                                            .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                                                @Override
+                                                public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                                                    if (task.isSuccessful() && (task.getResult() != null)) {
+                                                        for (QueryDocumentSnapshot document : task.getResult()) {
+                                                            try {
+                                                                String title = document.getString(MOVIE_TITLE);
+                                                                String imageUrl = document.getString(MOVIE_IMAGE_URL);
+                                                                List<String> genres = (ArrayList<String>) document.get(MOVIE_GENRES);
+                                                                int year = Objects.requireNonNull(document.getLong(MOVIE_RELEASE_YEAR)).intValue();
+
+                                                                movies.add(new BaseMovie(document.getId(), title, imageUrl, genres, year));
+
+                                                            } catch (Exception e) {
+                                                                Log.e(Constants.TAG, "[FirestoreConnector]::getMoviesSuggestionsByTitle: error parsing movies.", e);
+                                                            }
+                                                        }
+
+                                                        /* Step 6
+                                                         * Update the volatile and persistent caches.
+                                                         */
+                                                        mVolatileCache.putSearch(search_term, movies);
+                                                        mPersistentCache.putSuggestions(context, movies);
+
+                                                        /* Step 7
+                                                         * Notify the listener if it's the last request.
+                                                         */
+                                                        if (isLastSearch(search_term)) {
+                                                            Log.d(Constants.TAG,
+                                                                    "[FirestoreConnector]::getMoviesSuggestionsByTitle: last request, notifying the listener");
+
+                                                            clearLastSearch();
+                                                            movies.addAll(persistentSuggestions);
+                                                            listener.onSuccess(movies);
+
+                                                        } else {
+                                                            Log.d(Constants.TAG,
+                                                                    "[FirestoreConnector]::getMoviesSuggestionsByTitle: not the last request, discarding results");
+                                                        }
+
+                                                    } else {
+                                                        Log.w(Constants.TAG,
+                                                                "[FirestoreConnector]::getMoviesSuggestionsByTitle: error getting movies suggestions.", task.getException());
+
+                                                        if (isLastSearch(search_term)) {
+                                                            clearLastSearch();
+                                                            listener.onError();
+                                                        }
+                                                    }
+                                                }
+                                            });
+
+                                } else {
+                                    // All the movies are cached, no need to connect with Firestore.
+                                    mVolatileCache.putSearch(search_term, persistentSuggestions);
+                                    if (isLastSearch(search_term)) {
+                                        Log.d(Constants.TAG,
+                                                "[FirestoreConnector]::getMoviesSuggestionsByTitle: last request, notifying the listener");
+
+                                        // This request is the last one, so we notify the listener.
+                                        clearLastSearch();
+                                        listener.onSuccess(persistentSuggestions);
 
                                     } else {
-                                        break;
+                                        Log.d(Constants.TAG,
+                                                "[FirestoreConnector]::getMoviesSuggestionsByTitle: not the last request, discarding results");
                                     }
+                                }
+
+                            } else {
+                                // No ids retrieved.
+                                if (isLastSearch(search_term)) {
+                                    Log.d(Constants.TAG,
+                                            "[FirestoreConnector]::getMoviesSuggestionsByTitle: last request, notifying the listener");
+
+                                    // This request is the last one, so we notify the listener.
+                                    clearLastSearch();
+                                    listener.onSuccess(movies);
+
+                                } else {
+                                    Log.d(Constants.TAG,
+                                            "[FirestoreConnector]::getMoviesSuggestionsByTitle: not the last request, discarding results");
                                 }
                             }
 
-                            if (!ids.isEmpty()) {
-                                // Now let's search for those ids
-                                mDb.collection(MOVIES_SUGGESTIONS_COLLECTION)
-                                        .whereIn(FieldPath.documentId(), ids)
-                                        .get()
-                                        .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                                            @Override
-                                            public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                                                if (task.isSuccessful()) {
-                                                    if (task.getResult() != null) {
-                                                        for (QueryDocumentSnapshot document : task.getResult()) {
-                                                            String title = document.getString(MOVIE_TITLE);
-                                                            String imageUrl = document.getString(MOVIE_IMAGE_URL);
-                                                            List<String> genres = (ArrayList<String>) document.get(MOVIE_GENRES);
-                                                            int year = Objects.requireNonNull(document.getLong(MOVIE_RELEASE_YEAR)).intValue();
-
-                                                            movies.add(new Movie.Builder()
-                                                                    .withId(document.getId())
-                                                                    .titled(title)
-                                                                    .releasedIn(year)
-                                                                    .withImage(imageUrl)
-                                                                    .categorizedAs(genres)
-                                                                    .build());
-                                                        }
-                                                    }
-
-                                                    mSuggestionsCache.add(search_term, movies);
-
-                                                    listener.onSuccess(movies);
-
-                                                } else {
-                                                    Log.w(Constants.TAG, "Error getting movies suggestions.", task.getException());
-                                                    listener.onError();
-                                                }
-                                            }
-                                        });
-                            } else {
-                                listener.onSuccess(movies);
-                            }
-
                         } else {
-                            Log.w(Constants.TAG, "Error searching movies.", task.getException());
-                            listener.onError();
+                            // Error retrieving the ids.
+                            Log.w(Constants.TAG,
+                                    "[FirestoreConnector]::getMoviesSuggestionsByTitle: error searching movies.", task.getException());
+
+                            if (isLastSearch(search_term)) {
+                                clearLastSearch();
+                                listener.onError();
+                            }
                         }
                     }
                 });
     }
 
+    /**
+     * Method to retrieve movies based on the search term.
+     *
+     * @param search search terms.
+     * @param listener FirestoreListener object to be notified once the operation is complete.
+     */
     public void getMoviesByTitle(String search, final FirestoreListener listener) {
+        Log.d(Constants.TAG, "[FirestoreConnector]::getMoviesByTitle: request to get movies by searching: " + search);
+
         final String search_term = search.toLowerCase();
+
+        /* Step 1
+         * Search first in the `movies_search` collection to get the ids of the matching movies.
+         */
         mDb.collection(MOVIES_SEARCH_COLLECTION)
                 .whereGreaterThanOrEqualTo(MOVIE_TITLE, search)
                 .get()
@@ -199,36 +293,25 @@ public class FirestoreConnector {
                     @Override
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
                         if (task.isSuccessful()) {
-                            final List<String> ids = new ArrayList<>();
-                            final List<Movie> movies = new ArrayList<>();
-                            // Everything went well, let's get the ids of all the documents
-                            if (task.getResult() != null) {
-                                for (QueryDocumentSnapshot document : task.getResult()) {
-                                    // Firestore compares strings lexicographically, and that's not exactly what we want, so
-                                    // let's filter the movies retrieved.
-                                    if (ids.size() < MAX_SUGGESTIONS) {
-                                        //noinspection ConstantConditions
-                                        if (document.getString(MOVIE_TITLE).startsWith(search_term) || document.getString(MOVIE_TITLE).contains(search_term)) {
-                                            ids.add(document.getId());
-                                        }
-
-                                    } else {
-                                        break;
-                                    }
-                                }
-                            }
+                            /* Step 2
+                             * Everything went well, let's filter the ids of all the documents received.
+                             */
+                            final List<String> ids = filterIds(Objects.requireNonNull(task.getResult()), search_term);
+                            final List<LiteMovie> movies = new ArrayList<>();
 
                             if (!ids.isEmpty()) {
-                                // Now let's search for those ids
+                                /* Step 3
+                                 * Now let's search for those ids.
+                                 */
                                 mDb.collection(MOVIES_LITE_COLLECTION)
                                         .whereIn(FieldPath.documentId(), ids)
                                         .get()
                                         .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                                             @Override
                                             public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                                                if (task.isSuccessful()) {
-                                                    if (task.getResult() != null) {
-                                                        for (QueryDocumentSnapshot document : task.getResult()) {
+                                                if (task.isSuccessful() && (task.getResult() != null)) {
+                                                    for (QueryDocumentSnapshot document : task.getResult()) {
+                                                        try {
                                                             String title = document.getString(MOVIE_TITLE);
                                                             String imageUrl = document.getString(MOVIE_IMAGE_URL);
                                                             String pgRatingStr = document.getString(MOVIE_PG_RATING);
@@ -237,34 +320,34 @@ public class FirestoreConnector {
                                                             int duration = Objects.requireNonNull(document.getLong(MOVIE_DURATION)).intValue();
                                                             int imdbRating = (int)((Objects.requireNonNull(document.getDouble(MOVIE_IMDB_RATING))) * 10);
 
-                                                            Movie.PG_RATING pgRating = Movie.PG_RATING.NOT_RATED;
+                                                            LiteMovie.PG_RATING pgRating = LiteMovie.PG_RATING.NOT_RATED;
                                                             if (pgRatingStr != null) {
                                                                 if (pgRatingStr.equalsIgnoreCase("G")) {
-                                                                    pgRating = Movie.PG_RATING.G;
+                                                                    pgRating = LiteMovie.PG_RATING.G;
                                                                 } else if (pgRatingStr.equalsIgnoreCase("PG")) {
-                                                                    pgRating = Movie.PG_RATING.PG;
+                                                                    pgRating = LiteMovie.PG_RATING.PG;
                                                                 } else if (pgRatingStr.equalsIgnoreCase("PG-13")) {
-                                                                    pgRating = Movie.PG_RATING.PG_13;
+                                                                    pgRating = LiteMovie.PG_RATING.PG_13;
                                                                 } else if (pgRatingStr.equalsIgnoreCase("R")) {
-                                                                    pgRating = Movie.PG_RATING.R;
+                                                                    pgRating = LiteMovie.PG_RATING.R;
                                                                 } else if (pgRatingStr.equalsIgnoreCase("NC-17")) {
-                                                                    pgRating = Movie.PG_RATING.NC_17;
+                                                                    pgRating = LiteMovie.PG_RATING.NC_17;
                                                                 } else if (pgRatingStr.equalsIgnoreCase("TV-Y")) {
-                                                                    pgRating = Movie.PG_RATING.TV_Y;
+                                                                    pgRating = LiteMovie.PG_RATING.TV_Y;
                                                                 } else if (pgRatingStr.equalsIgnoreCase("TV-Y7")) {
-                                                                    pgRating = Movie.PG_RATING.TV_Y7;
+                                                                    pgRating = LiteMovie.PG_RATING.TV_Y7;
                                                                 } else if (pgRatingStr.equalsIgnoreCase("TV-G")) {
-                                                                    pgRating = Movie.PG_RATING.TV_G;
+                                                                    pgRating = LiteMovie.PG_RATING.TV_G;
                                                                 } else if (pgRatingStr.equalsIgnoreCase("TV-PG")) {
-                                                                    pgRating = Movie.PG_RATING.TV_PG;
+                                                                    pgRating = LiteMovie.PG_RATING.TV_PG;
                                                                 } else if (pgRatingStr.equalsIgnoreCase("TV-14")) {
-                                                                    pgRating = Movie.PG_RATING.TV_14;
+                                                                    pgRating = LiteMovie.PG_RATING.TV_14;
                                                                 } else if (pgRatingStr.equalsIgnoreCase("PG-MA")) {
-                                                                    pgRating = Movie.PG_RATING.TV_MA;
+                                                                    pgRating = LiteMovie.PG_RATING.TV_MA;
                                                                 }
                                                             }
 
-                                                            movies.add(new Movie.Builder()
+                                                            movies.add(new LiteMovie.Builder()
                                                                     .withId(document.getId())
                                                                     .titled(title)
                                                                     .withImage(imageUrl)
@@ -274,13 +357,19 @@ public class FirestoreConnector {
                                                                     .classifiedAs(pgRating)
                                                                     .rated(imdbRating)
                                                                     .build());
-                                                        }
 
-                                                        listener.onSuccess(movies);
+                                                        } catch (Exception e) {
+                                                            Log.e(Constants.TAG, "[FirestoreConnector]::getMoviesByTitle: error parsing movies.", e);
+                                                        }
                                                     }
 
+                                                    /* Step 4
+                                                     * Notify the listener.
+                                                     */
+                                                    listener.onSuccess(movies);
+
                                                 } else {
-                                                    Log.w(Constants.TAG, "Error getting movies.", task.getException());
+                                                    Log.w(Constants.TAG, "[FirestoreConnector]::getMoviesByTitle: error getting movies.", task.getException());
                                                     listener.onError();
                                                 }
                                             }
@@ -290,10 +379,53 @@ public class FirestoreConnector {
                             }
 
                         } else {
-                            Log.w(Constants.TAG, "Error searching movies.", task.getException());
+                            Log.w(Constants.TAG, "[FirestoreConnector]::getMoviesByTitle: error searching movies.", task.getException());
                             listener.onError();
                         }
                     }
                 });
+    }
+
+    private synchronized void setLastSearch(String search) {
+        mLastSearch = search;
+    }
+
+    private synchronized void clearLastSearch() {
+        mLastSearch = "";
+    }
+
+    private synchronized boolean isLastSearch(String search) {
+        return mLastSearch.equals(search);
+    }
+
+    private List<String> filterIds(QuerySnapshot task, String search_term) {
+        List<String> ids = new ArrayList<>();
+        for (QueryDocumentSnapshot document : task) {
+            // Firestore compares strings lexicographically, and that's not exactly what we want, so
+            // let's filter the movies retrieved.
+            if (ids.size() < MAX_SUGGESTIONS) {
+                //noinspection ConstantConditions
+                if (document.getString(MOVIE_TITLE).startsWith(search_term)) {
+                    ids.add(document.getId());
+                }
+
+            } else {
+                break;
+            }
+        }
+
+        for (QueryDocumentSnapshot document : task) {
+            if (ids.size() < MAX_SUGGESTIONS) {
+                //noinspection ConstantConditions
+                if (document.getString(MOVIE_TITLE).contains(search_term) && !ids.contains(document.getId())) {
+                    ids.add(document.getId());
+                }
+
+            } else {
+                break;
+            }
+        }
+
+        return ids;
     }
 }

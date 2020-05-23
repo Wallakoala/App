@@ -24,7 +24,8 @@ import com.google.android.material.snackbar.Snackbar;
 import com.mancj.materialsearchbar.MaterialSearchBar;
 import com.movielix.adapter.MoviesAdapter;
 import com.movielix.adapter.MoviesSuggestionAdapter;
-import com.movielix.bean.Movie;
+import com.movielix.bean.LiteMovie;
+import com.movielix.bean.BaseMovie;
 import com.movielix.constants.Constants;
 import com.movielix.firestore.FirestoreConnector;
 import com.movielix.firestore.FirestoreListener;
@@ -100,15 +101,15 @@ public class MoviesActivity extends AppCompatActivity implements MaterialSearchB
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
 
             @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+            public void onTextChanged(final CharSequence charSequence, int i, int i1, int i2) {
                 if (charSequence.length() > 1) {
                     showProgressBar();
-                    firestoreConnector.getMoviesSuggestionsByTitle(charSequence.toString(), new FirestoreListener<Movie>() {
+                    firestoreConnector.getMoviesSuggestionsByTitle(MoviesActivity.this, charSequence.toString(), new FirestoreListener<BaseMovie>() {
                         @Override
-                        public void onSuccess(List<Movie> movies) {
+                        public void onSuccess(List<BaseMovie> movies) {
                             hideProgressBar(true);
 
-                            MoviesSuggestionAdapter adapter = new MoviesSuggestionAdapter(MoviesActivity.this, movies);
+                            MoviesSuggestionAdapter adapter = new MoviesSuggestionAdapter(MoviesActivity.this, movies, charSequence.toString());
                             mSuggestionsRecyclerView.setAdapter(adapter);
                             mSuggestionsContainer.setVisibility(View.VISIBLE);
                         }
@@ -185,10 +186,11 @@ public class MoviesActivity extends AppCompatActivity implements MaterialSearchB
 
             mMessageTextview.setVisibility(View.GONE);
             mMoviesRecyclerView.setVisibility(View.GONE);
-            firestoreConnector.getMoviesByTitle(text.toString(), new FirestoreListener<Movie>() {
+            firestoreConnector.getMoviesByTitle(text.toString(), new FirestoreListener<LiteMovie>() {
                 @Override
-                public void onSuccess(List<Movie> movies) {
+                public void onSuccess(List<LiteMovie> movies) {
                     hideProgressBar(true);
+                    hideSuggestions();
 
                     if (!movies.isEmpty()) {
                         MoviesAdapter moviesAdapter = new MoviesAdapter(movies, MoviesActivity.this);

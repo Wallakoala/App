@@ -1,7 +1,7 @@
 package com.movielix.util;
 
 import com.movielix.R;
-import com.movielix.bean.Movie;
+import com.movielix.bean.LiteMovie;
 
 public class Util {
 
@@ -19,7 +19,7 @@ public class Util {
         }
     }
 
-    public static int getRatingImage(Movie.PG_RATING rating) {
+    public static int getRatingImage(LiteMovie.PG_RATING rating) {
         switch (rating) {
             case G:
                 return R.drawable.ic_rated_g;
