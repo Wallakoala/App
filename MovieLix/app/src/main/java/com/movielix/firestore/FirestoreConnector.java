@@ -13,6 +13,7 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.movielix.R;
 import com.movielix.bean.BaseMovie;
+import com.movielix.bean.LiteMovie;
 import com.movielix.bean.Movie;
 import com.movielix.constants.Constants;
 
@@ -144,7 +145,6 @@ public class FirestoreConnector {
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                     @Override
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        Log.d(Constants.TAG, "[FirestoreConnector]::getMoviesSuggestionsByTitle: found ids");
                         if (task.isSuccessful()) {
                             /* Step 3
                              * Everything went well, let's filter the ids of all the documents received.
@@ -175,12 +175,17 @@ public class FirestoreConnector {
                                                 public void onComplete(@NonNull Task<QuerySnapshot> task) {
                                                     if (task.isSuccessful() && (task.getResult() != null)) {
                                                         for (QueryDocumentSnapshot document : task.getResult()) {
-                                                            String title = document.getString(MOVIE_TITLE);
-                                                            String imageUrl = document.getString(MOVIE_IMAGE_URL);
-                                                            List<String> genres = (ArrayList<String>) document.get(MOVIE_GENRES);
-                                                            int year = Objects.requireNonNull(document.getLong(MOVIE_RELEASE_YEAR)).intValue();
+                                                            try {
+                                                                String title = document.getString(MOVIE_TITLE);
+                                                                String imageUrl = document.getString(MOVIE_IMAGE_URL);
+                                                                List<String> genres = (ArrayList<String>) document.get(MOVIE_GENRES);
+                                                                int year = Objects.requireNonNull(document.getLong(MOVIE_RELEASE_YEAR)).intValue();
 
-                                                            movies.add(new BaseMovie(document.getId(), title, imageUrl, genres, year));
+                                                                movies.add(new BaseMovie(document.getId(), title, imageUrl, genres, year));
+
+                                                            } catch (Exception e) {
+                                                                Log.e(Constants.TAG, "[FirestoreConnector]::getMoviesSuggestionsByTitle: error parsing movies.", e);
+                                                            }
                                                         }
 
                                                         /* Step 6
@@ -196,7 +201,7 @@ public class FirestoreConnector {
                                                         listener.onSuccess(movies);
 
                                                     } else {
-                                                        Log.w(Constants.TAG, "[FirestoreConnector] error getting movies suggestions.", task.getException());
+                                                        Log.w(Constants.TAG, "[FirestoreConnector]::getMoviesSuggestionsByTitle: error getting movies suggestions.", task.getException());
                                                         listener.onError();
                                                     }
                                                 }
@@ -211,15 +216,27 @@ public class FirestoreConnector {
                             listener.onSuccess(movies);
 
                         } else {
-                            Log.w(Constants.TAG, "[FirestoreConnector] error searching movies.", task.getException());
+                            Log.w(Constants.TAG, "[FirestoreConnector]::getMoviesSuggestionsByTitle: error searching movies.", task.getException());
                             listener.onError();
                         }
                     }
                 });
     }
 
+    /**
+     * Method to retrieve movies based on the search term.
+     *
+     * @param search search terms.
+     * @param listener FirestoreListener object to be notified once the operation is complete.
+     */
     public void getMoviesByTitle(String search, final FirestoreListener listener) {
+        Log.d(Constants.TAG, "[FirestoreConnector]::getMoviesByTitle: request to get movies by searching: " + search);
+
         final String search_term = search.toLowerCase();
+
+        /* Step 1
+         * Search first in the `movies_search` collection to get the ids of the matching movies.
+         */
         mDb.collection(MOVIES_SEARCH_COLLECTION)
                 .whereGreaterThanOrEqualTo(MOVIE_TITLE, search)
                 .get()
@@ -227,15 +244,16 @@ public class FirestoreConnector {
                     @Override
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
                         if (task.isSuccessful()) {
-                            List<String> ids = new ArrayList<>();
-                            final List<Movie> movies = new ArrayList<>();
-                            // Everything went well, let's get the ids of all the documents
-                            if (task.getResult() != null) {
-                                ids = filterIds(task.getResult(), search_term);
-                            }
+                            /* Step 2
+                             * Everything went well, let's filter the ids of all the documents received.
+                             */
+                            final List<String> ids = filterIds(Objects.requireNonNull(task.getResult()), search_term);
+                            final List<LiteMovie> movies = new ArrayList<>();
 
                             if (!ids.isEmpty()) {
-                                // Now let's search for those ids
+                                /* Step 3
+                                 * Now let's search for those ids.
+                                 */
                                 mDb.collection(MOVIES_LITE_COLLECTION)
                                         .whereIn(FieldPath.documentId(), ids)
                                         .get()
@@ -245,58 +263,66 @@ public class FirestoreConnector {
                                                 if (task.isSuccessful()) {
                                                     if (task.getResult() != null) {
                                                         for (QueryDocumentSnapshot document : task.getResult()) {
-                                                            String title = document.getString(MOVIE_TITLE);
-                                                            String imageUrl = document.getString(MOVIE_IMAGE_URL);
-                                                            String pgRatingStr = document.getString(MOVIE_PG_RATING);
-                                                            List<String> genres = (ArrayList<String>) document.get(MOVIE_GENRES);
-                                                            int releaseYear = Objects.requireNonNull(document.getLong(MOVIE_RELEASE_YEAR)).intValue();
-                                                            int duration = Objects.requireNonNull(document.getLong(MOVIE_DURATION)).intValue();
-                                                            int imdbRating = (int)((Objects.requireNonNull(document.getDouble(MOVIE_IMDB_RATING))) * 10);
+                                                            try {
+                                                                String title = document.getString(MOVIE_TITLE);
+                                                                String imageUrl = document.getString(MOVIE_IMAGE_URL);
+                                                                String pgRatingStr = document.getString(MOVIE_PG_RATING);
+                                                                List<String> genres = (ArrayList<String>) document.get(MOVIE_GENRES);
+                                                                int releaseYear = Objects.requireNonNull(document.getLong(MOVIE_RELEASE_YEAR)).intValue();
+                                                                int duration = Objects.requireNonNull(document.getLong(MOVIE_DURATION)).intValue();
+                                                                int imdbRating = (int)((Objects.requireNonNull(document.getDouble(MOVIE_IMDB_RATING))) * 10);
 
-                                                            Movie.PG_RATING pgRating = Movie.PG_RATING.NOT_RATED;
-                                                            if (pgRatingStr != null) {
-                                                                if (pgRatingStr.equalsIgnoreCase("G")) {
-                                                                    pgRating = Movie.PG_RATING.G;
-                                                                } else if (pgRatingStr.equalsIgnoreCase("PG")) {
-                                                                    pgRating = Movie.PG_RATING.PG;
-                                                                } else if (pgRatingStr.equalsIgnoreCase("PG-13")) {
-                                                                    pgRating = Movie.PG_RATING.PG_13;
-                                                                } else if (pgRatingStr.equalsIgnoreCase("R")) {
-                                                                    pgRating = Movie.PG_RATING.R;
-                                                                } else if (pgRatingStr.equalsIgnoreCase("NC-17")) {
-                                                                    pgRating = Movie.PG_RATING.NC_17;
-                                                                } else if (pgRatingStr.equalsIgnoreCase("TV-Y")) {
-                                                                    pgRating = Movie.PG_RATING.TV_Y;
-                                                                } else if (pgRatingStr.equalsIgnoreCase("TV-Y7")) {
-                                                                    pgRating = Movie.PG_RATING.TV_Y7;
-                                                                } else if (pgRatingStr.equalsIgnoreCase("TV-G")) {
-                                                                    pgRating = Movie.PG_RATING.TV_G;
-                                                                } else if (pgRatingStr.equalsIgnoreCase("TV-PG")) {
-                                                                    pgRating = Movie.PG_RATING.TV_PG;
-                                                                } else if (pgRatingStr.equalsIgnoreCase("TV-14")) {
-                                                                    pgRating = Movie.PG_RATING.TV_14;
-                                                                } else if (pgRatingStr.equalsIgnoreCase("PG-MA")) {
-                                                                    pgRating = Movie.PG_RATING.TV_MA;
+                                                                LiteMovie.PG_RATING pgRating = LiteMovie.PG_RATING.NOT_RATED;
+                                                                if (pgRatingStr != null) {
+                                                                    if (pgRatingStr.equalsIgnoreCase("G")) {
+                                                                        pgRating = LiteMovie.PG_RATING.G;
+                                                                    } else if (pgRatingStr.equalsIgnoreCase("PG")) {
+                                                                        pgRating = LiteMovie.PG_RATING.PG;
+                                                                    } else if (pgRatingStr.equalsIgnoreCase("PG-13")) {
+                                                                        pgRating = LiteMovie.PG_RATING.PG_13;
+                                                                    } else if (pgRatingStr.equalsIgnoreCase("R")) {
+                                                                        pgRating = LiteMovie.PG_RATING.R;
+                                                                    } else if (pgRatingStr.equalsIgnoreCase("NC-17")) {
+                                                                        pgRating = LiteMovie.PG_RATING.NC_17;
+                                                                    } else if (pgRatingStr.equalsIgnoreCase("TV-Y")) {
+                                                                        pgRating = LiteMovie.PG_RATING.TV_Y;
+                                                                    } else if (pgRatingStr.equalsIgnoreCase("TV-Y7")) {
+                                                                        pgRating = LiteMovie.PG_RATING.TV_Y7;
+                                                                    } else if (pgRatingStr.equalsIgnoreCase("TV-G")) {
+                                                                        pgRating = LiteMovie.PG_RATING.TV_G;
+                                                                    } else if (pgRatingStr.equalsIgnoreCase("TV-PG")) {
+                                                                        pgRating = LiteMovie.PG_RATING.TV_PG;
+                                                                    } else if (pgRatingStr.equalsIgnoreCase("TV-14")) {
+                                                                        pgRating = LiteMovie.PG_RATING.TV_14;
+                                                                    } else if (pgRatingStr.equalsIgnoreCase("PG-MA")) {
+                                                                        pgRating = LiteMovie.PG_RATING.TV_MA;
+                                                                    }
                                                                 }
-                                                            }
 
-                                                            movies.add(new Movie.Builder()
-                                                                    .withId(document.getId())
-                                                                    .titled(title)
-                                                                    .withImage(imageUrl)
-                                                                    .releasedIn(releaseYear)
-                                                                    .lasts(duration)
-                                                                    .categorizedAs(genres)
-                                                                    .classifiedAs(pgRating)
-                                                                    .rated(imdbRating)
-                                                                    .build());
+                                                                movies.add(new LiteMovie.Builder()
+                                                                        .withId(document.getId())
+                                                                        .titled(title)
+                                                                        .withImage(imageUrl)
+                                                                        .releasedIn(releaseYear)
+                                                                        .lasts(duration)
+                                                                        .categorizedAs(genres)
+                                                                        .classifiedAs(pgRating)
+                                                                        .rated(imdbRating)
+                                                                        .build());
+
+                                                            } catch (Exception e) {
+                                                                Log.e(Constants.TAG, "[FirestoreConnector]::getMoviesByTitle: error parsing movies.", e);
+                                                            }
                                                         }
 
+                                                        /* Step 4
+                                                         * Notify the listener.
+                                                         */
                                                         listener.onSuccess(movies);
                                                     }
 
                                                 } else {
-                                                    Log.w(Constants.TAG, "Error getting movies.", task.getException());
+                                                    Log.w(Constants.TAG, "[FirestoreConnector]::getMoviesByTitle: error getting movies.", task.getException());
                                                     listener.onError();
                                                 }
                                             }
@@ -306,7 +332,7 @@ public class FirestoreConnector {
                             }
 
                         } else {
-                            Log.w(Constants.TAG, "Error searching movies.", task.getException());
+                            Log.w(Constants.TAG, "[FirestoreConnector]::getMoviesByTitle: error searching movies.", task.getException());
                             listener.onError();
                         }
                     }

@@ -24,7 +24,7 @@ import com.google.android.material.snackbar.Snackbar;
 import com.mancj.materialsearchbar.MaterialSearchBar;
 import com.movielix.adapter.MoviesAdapter;
 import com.movielix.adapter.MoviesSuggestionAdapter;
-import com.movielix.bean.Movie;
+import com.movielix.bean.LiteMovie;
 import com.movielix.bean.BaseMovie;
 import com.movielix.constants.Constants;
 import com.movielix.firestore.FirestoreConnector;
@@ -186,9 +186,9 @@ public class MoviesActivity extends AppCompatActivity implements MaterialSearchB
 
             mMessageTextview.setVisibility(View.GONE);
             mMoviesRecyclerView.setVisibility(View.GONE);
-            firestoreConnector.getMoviesByTitle(text.toString(), new FirestoreListener<Movie>() {
+            firestoreConnector.getMoviesByTitle(text.toString(), new FirestoreListener<LiteMovie>() {
                 @Override
-                public void onSuccess(List<Movie> movies) {
+                public void onSuccess(List<LiteMovie> movies) {
                     hideProgressBar(true);
 
                     if (!movies.isEmpty()) {

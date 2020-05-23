@@ -13,7 +13,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.makeramen.roundedimageview.RoundedImageView;
 import com.movielix.R;
-import com.movielix.bean.Movie;
+import com.movielix.bean.LiteMovie;
 import com.movielix.util.Util;
 import com.squareup.picasso.Picasso;
 
@@ -25,9 +25,9 @@ import java.util.List;
 public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieHolder> {
 
     private final Context mContext;
-    private final List<Movie> mMovies;
+    private final List<LiteMovie> mMovies;
 
-    public MoviesAdapter(final List<Movie> movies, final Context context) {
+    public MoviesAdapter(final List<LiteMovie> movies, final Context context) {
         mMovies = movies;
         mContext = context;
     }
@@ -45,7 +45,7 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieHolde
 
     @Override
     public void onBindViewHolder(@NonNull MovieHolder holder, int position) {
-        holder.bindMovieItem(mMovies.get(position), (mMovies.size() - 1) == position);
+        holder.bindMovieItem(mMovies.get(position));
     }
 
     @Override
@@ -58,10 +58,6 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieHolde
      */
     class MovieHolder extends RecyclerView.ViewHolder {
 
-        private static final int EXTRA_PADDING = 32;
-
-        private View mContainer;
-
         private TextView mTitle;
         private TextView mInfo;
         private TextView mDuration;
@@ -73,7 +69,6 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieHolde
         MovieHolder(@NonNull View itemView) {
             super(itemView);
 
-            mContainer = itemView.findViewById(R.id.movie_container);
             mTitle = itemView.findViewById(R.id.movie_title);
             mInfo = itemView.findViewById(R.id.movie_release_year);
             mDuration = itemView.findViewById(R.id.movie_duration);
@@ -83,14 +78,7 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieHolde
         }
 
         @SuppressLint("SetTextI18n")
-        void bindMovieItem(final Movie movie, boolean last) {
-            if (last) {
-                float scale = mContext.getResources().getDisplayMetrics().density;
-                int dpAsPixels = (int) (EXTRA_PADDING * scale + 0.5f);
-
-                mContainer.setPadding(0, 0, 0, dpAsPixels);
-            }
-
+        void bindMovieItem(final LiteMovie movie) {
             mTitle.setText(movie.getTitle());
             mInfo.setText("(" + movie.getReleaseYear() + ") - " + movie.getGenresAsString());
             mDuration.setText(movie.getDurationAsStr());
