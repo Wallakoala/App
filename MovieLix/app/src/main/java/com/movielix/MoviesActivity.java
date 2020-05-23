@@ -190,6 +190,7 @@ public class MoviesActivity extends AppCompatActivity implements MaterialSearchB
                 @Override
                 public void onSuccess(List<LiteMovie> movies) {
                     hideProgressBar(true);
+                    hideSuggestions();
 
                     if (!movies.isEmpty()) {
                         MoviesAdapter moviesAdapter = new MoviesAdapter(movies, MoviesActivity.this);
