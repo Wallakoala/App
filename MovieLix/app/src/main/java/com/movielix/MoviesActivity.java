@@ -109,7 +109,8 @@ public class MoviesActivity extends AppCompatActivity implements MaterialSearchB
                         public void onSuccess(List<BaseMovie> movies) {
                             hideProgressBar(true);
 
-                            MoviesSuggestionAdapter adapter = new MoviesSuggestionAdapter(MoviesActivity.this, movies, charSequence.toString());
+                            MoviesSuggestionAdapter adapter = new MoviesSuggestionAdapter(
+                                    MoviesActivity.this, movies, charSequence.toString());
                             mSuggestionsRecyclerView.setAdapter(adapter);
                             mSuggestionsContainer.setVisibility(View.VISIBLE);
                         }
