@@ -10,6 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
+        <!-- Background image -->
         <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/movie_cover"
             android:layout_width="match_parent"
@@ -18,34 +19,26 @@
             android:src="@drawable/captain_america"
             android:adjustViewBounds="true"/>
 
-        <androidx.appcompat.widget.AppCompatImageView
-            android:id="@+id/movie_back_button"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:layout_margin="16dp"
-            app:srcCompat="@drawable/ic_back"/>
-
+        <!-- Content -->
         <ScrollView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:fillViewport="true">
+            android:fillViewport="true"
+            android:overScrollMode="always">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:weightSum="1">
+                android:orientation="vertical">
 
                 <!-- Transparent view -->
                 <View
                     android:layout_width="match_parent"
-                    android:layout_height="0dp"
-                    android:layout_weight=".4"/>
+                    android:layout_height="275dp"/>
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="0dp"
-                    android:layout_weight=".6"
+                    android:layout_height="wrap_content"
                     android:orientation="vertical">
 
                     <!-- Header -->
@@ -138,7 +131,8 @@
                         android:paddingStart="16dp"
                         android:paddingEnd="16dp"
                         android:paddingTop="8dp"
-                        android:background="@drawable/dark_background">
+                        android:background="@drawable/dark_background"
+                        android:paddingBottom="120dp">
 
                         <View
                             android:layout_width="match_parent"
@@ -209,6 +203,14 @@
             </LinearLayout>
 
         </ScrollView>
+
+        <!-- Back button -->
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/movie_back_button"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_margin="16dp"
+            app:srcCompat="@drawable/ic_back"/>
 
     </FrameLayout>
 

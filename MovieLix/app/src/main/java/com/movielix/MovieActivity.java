@@ -1,6 +1,7 @@
 package com.movielix;
 
 import android.os.Bundle;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -40,6 +41,13 @@ public class MovieActivity extends AppCompatActivity implements FirestoreListene
         ((TextView) findViewById(R.id.movie_title)).setText(title);
         ((TextView) findViewById(R.id.movie_genres)).setText(genres);
         ((TextView) findViewById(R.id.movie_release_year)).setText("(" + releaseYear + ")");
+
+        findViewById(R.id.movie_back_button).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onBackPressed();
+            }
+        });
 
         FirestoreConnector.newInstance().getMovieById(mMovieId, this);
     }
