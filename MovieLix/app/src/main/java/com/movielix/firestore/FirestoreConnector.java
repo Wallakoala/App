@@ -28,11 +28,13 @@ public class FirestoreConnector {
     // Collections names
     private static final String MOVIES_SEARCH_COLLECTION = "movies_search";
     private static final String MOVIES_LITE_COLLECTION = "movies_lite";
+    private static final String MOVIES_COLLECTION = "movies";
     private static final String MOVIES_SUGGESTIONS_COLLECTION = "movies_suggestions";
 
     // Document fields names
     private static final String MOVIE_TITLE = "2";
     private static final String MOVIE_RELEASE_YEAR = "3";
+    private static final String MOVIE_OVERVIEW = "4";
     private static final String MOVIE_DURATION = "5";
     private static final String MOVIE_IMDB_RATING = "6";
     private static final String MOVIE_IMAGE_URL = "8";
@@ -121,7 +123,7 @@ public class FirestoreConnector {
      * @param search search terms.
      * @param listener object of type FirestoreListener to be notifed with the result.
      */
-    public void getMoviesSuggestionsByTitle(final Context context, final String search, final FirestoreListener listener) {
+    public void getMoviesSuggestionsByTitle(final Context context, final String search, final FirestoreListener<BaseMovie> listener) {
         Log.d(Constants.TAG, "[FirestoreConnector]::getMoviesSuggestionsByTitle: request to get suggestions by searching: " + search);
 
         final String search_term = search.toLowerCase();
@@ -129,10 +131,10 @@ public class FirestoreConnector {
         /* Step 1
          * See if the same search has been done in this session.
          */
-        final List<BaseMovie> volatileSuggestions = mVolatileCache.getSearch(search_term);
-        if (volatileSuggestions != null) {
+        Object cachedResult = mVolatileCache.get(search_term);
+        if (cachedResult != null) {
             Log.d(Constants.TAG, "[FirestoreConnector]::getMoviesSuggestionsByTitle: volatile cache hit");
-            listener.onSuccess(volatileSuggestions);
+            listener.onSuccess((List<BaseMovie>) cachedResult);
             return;
         }
 
@@ -194,7 +196,7 @@ public class FirestoreConnector {
                                                         /* Step 6
                                                          * Update the volatile and persistent caches.
                                                          */
-                                                        mVolatileCache.putSearch(search_term, movies);
+                                                        mVolatileCache.put(search_term, movies);
                                                         mPersistentCache.putSuggestions(context, movies);
 
                                                         /* Step 7
@@ -227,7 +229,7 @@ public class FirestoreConnector {
 
                                 } else {
                                     // All the movies are cached, no need to connect with Firestore.
-                                    mVolatileCache.putSearch(search_term, persistentSuggestions);
+                                    mVolatileCache.put(search_term, persistentSuggestions);
                                     if (isLastSearch(search_term)) {
                                         Log.d(Constants.TAG,
                                                 "[FirestoreConnector]::getMoviesSuggestionsByTitle: last request, notifying the listener");
@@ -278,7 +280,7 @@ public class FirestoreConnector {
      * @param search search terms.
      * @param listener FirestoreListener object to be notified once the operation is complete.
      */
-    public void getMoviesByTitle(String search, final FirestoreListener listener) {
+    public void getMoviesByTitle(String search, final FirestoreListener<LiteMovie> listener) {
         Log.d(Constants.TAG, "[FirestoreConnector]::getMoviesByTitle: request to get movies by searching: " + search);
 
         final String search_term = search.toLowerCase();
@@ -380,6 +382,98 @@ public class FirestoreConnector {
 
                         } else {
                             Log.w(Constants.TAG, "[FirestoreConnector]::getMoviesByTitle: error searching movies.", task.getException());
+                            listener.onError();
+                        }
+                    }
+                });
+    }
+
+    public void getMovieById(final String id, final FirestoreListener<Movie> listener) {
+        Log.d(Constants.TAG, "[FirestoreConnector]::getMovieById: request to get movie by id: " + id);
+
+        /* Step 1
+         * See if the same movie has been retrieved in the same session.
+         */
+        Object cachedResult = mVolatileCache.get(id);
+        if (cachedResult != null) {
+            Log.d(Constants.TAG, "[FirestoreConnector]::getMovieById: volatile cache hit");
+            listener.onSuccess((Movie) cachedResult);
+            return;
+        }
+
+        mDb.collection(MOVIES_COLLECTION)
+                .whereEqualTo(FieldPath.documentId(), id)
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful() && (task.getResult() != null)) {
+                            if (!task.getResult().getDocuments().isEmpty()) {
+                                QueryDocumentSnapshot document = (QueryDocumentSnapshot) task.getResult().getDocuments().get(0);
+
+                                try {
+                                    String title = document.getString(MOVIE_TITLE);
+                                    String imageUrl = document.getString(MOVIE_IMAGE_URL);
+                                    String overview = document.getString(MOVIE_OVERVIEW);
+                                    String pgRatingStr = document.getString(MOVIE_PG_RATING);
+                                    List<String> genres = (ArrayList<String>) document.get(MOVIE_GENRES);
+                                    int releaseYear = Objects.requireNonNull(document.getLong(MOVIE_RELEASE_YEAR)).intValue();
+                                    int duration = Objects.requireNonNull(document.getLong(MOVIE_DURATION)).intValue();
+                                    int imdbRating = (int)((Objects.requireNonNull(document.getDouble(MOVIE_IMDB_RATING))) * 10);
+
+                                    LiteMovie.PG_RATING pgRating = LiteMovie.PG_RATING.NOT_RATED;
+                                    if (pgRatingStr != null) {
+                                        if (pgRatingStr.equalsIgnoreCase("G")) {
+                                            pgRating = LiteMovie.PG_RATING.G;
+                                        } else if (pgRatingStr.equalsIgnoreCase("PG")) {
+                                            pgRating = LiteMovie.PG_RATING.PG;
+                                        } else if (pgRatingStr.equalsIgnoreCase("PG-13")) {
+                                            pgRating = LiteMovie.PG_RATING.PG_13;
+                                        } else if (pgRatingStr.equalsIgnoreCase("R")) {
+                                            pgRating = LiteMovie.PG_RATING.R;
+                                        } else if (pgRatingStr.equalsIgnoreCase("NC-17")) {
+                                            pgRating = LiteMovie.PG_RATING.NC_17;
+                                        } else if (pgRatingStr.equalsIgnoreCase("TV-Y")) {
+                                            pgRating = LiteMovie.PG_RATING.TV_Y;
+                                        } else if (pgRatingStr.equalsIgnoreCase("TV-Y7")) {
+                                            pgRating = LiteMovie.PG_RATING.TV_Y7;
+                                        } else if (pgRatingStr.equalsIgnoreCase("TV-G")) {
+                                            pgRating = LiteMovie.PG_RATING.TV_G;
+                                        } else if (pgRatingStr.equalsIgnoreCase("TV-PG")) {
+                                            pgRating = LiteMovie.PG_RATING.TV_PG;
+                                        } else if (pgRatingStr.equalsIgnoreCase("TV-14")) {
+                                            pgRating = LiteMovie.PG_RATING.TV_14;
+                                        } else if (pgRatingStr.equalsIgnoreCase("PG-MA")) {
+                                            pgRating = LiteMovie.PG_RATING.TV_MA;
+                                        }
+                                    }
+
+                                    Movie movie = new Movie.Builder()
+                                            .withId(document.getId())
+                                            .titled(title)
+                                            .withImage(imageUrl)
+                                            .releasedIn(releaseYear)
+                                            .lasts(duration)
+                                            .categorizedAs(genres)
+                                            .classifiedAs(pgRating)
+                                            .rated(imdbRating)
+                                            .withOverview(overview)
+                                            .build();
+
+                                    listener.onSuccess(movie);
+
+                                } catch (Exception e) {
+                                    Log.e(Constants.TAG, "[FirestoreConnector]::getMoviesByTitle: error parsing movies.", e);
+                                    listener.onError();
+                                }
+
+                            } else {
+                                Log.w(Constants.TAG, "[FirestoreConnector]::getMovieById: no movie found with the id " + id);
+                                listener.onError();
+                            }
+
+                        } else {
+                            Log.w(Constants.TAG, "[FirestoreConnector]::getMovieById: error getting movie.", task.getException());
                             listener.onError();
                         }
                     }

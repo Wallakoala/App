@@ -2,6 +2,7 @@ package com.movielix.adapter;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,8 +13,10 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.makeramen.roundedimageview.RoundedImageView;
+import com.movielix.MovieActivity;
 import com.movielix.R;
 import com.movielix.bean.LiteMovie;
+import com.movielix.constants.Constants;
 import com.movielix.util.Util;
 import com.squareup.picasso.Picasso;
 
@@ -56,7 +59,9 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieHolde
     /**
      * Holder responsible to set all the attributes of this specific movie.
      */
-    class MovieHolder extends RecyclerView.ViewHolder {
+    class MovieHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+
+        private LiteMovie mMovie;
 
         private TextView mTitle;
         private TextView mInfo;
@@ -75,10 +80,14 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieHolde
             mPGRating = itemView.findViewById(R.id.movie_pg_rating);
             mIMDBRating = itemView.findViewById(R.id.movie_imdb_rating);
             mCover = itemView.findViewById(R.id.movie_cover);
+
+            itemView.setOnClickListener(this);
         }
 
         @SuppressLint("SetTextI18n")
         void bindMovieItem(final LiteMovie movie) {
+            mMovie = movie;
+
             mTitle.setText(movie.getTitle());
             mInfo.setText("(" + movie.getReleaseYear() + ") - " + movie.getGenresAsString());
             mDuration.setText(movie.getDurationAsStr());
@@ -95,6 +104,19 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieHolde
             Picasso.get()
                    .load(movie.getImageUrl())
                    .into(mCover);
+        }
+
+        @Override
+        public void onClick(View v) {
+            Intent intent = new Intent(mContext, MovieActivity.class);
+
+            intent.putExtra(Constants.MOVIE_ID_INTENT, mMovie.getId());
+            intent.putExtra(Constants.MOVIE_TITLE_INTENT, mMovie.getTitle());
+            intent.putExtra(Constants.MOVIE_GENRES_INTENT, mMovie.getGenresAsString());
+            intent.putExtra(Constants.MOVIE_RELEASE_YEAR_INTENT, mMovie.getReleaseYear());
+            intent.putExtra(Constants.MOVIE_IMAGE_INTENT, mMovie.getImageUrl());
+
+            mContext.startActivity(intent);
         }
     }
 }

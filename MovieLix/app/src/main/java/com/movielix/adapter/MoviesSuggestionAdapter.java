@@ -105,6 +105,7 @@ public class MoviesSuggestionAdapter extends RecyclerView.Adapter<MoviesSuggesti
         public void onClick(View v) {
             Intent intent = new Intent(mContext, MovieActivity.class);
 
+            intent.putExtra(Constants.MOVIE_ID_INTENT, mMovie.getId());
             intent.putExtra(Constants.MOVIE_TITLE_INTENT, mMovie.getTitle());
             intent.putExtra(Constants.MOVIE_GENRES_INTENT, mMovie.getGenresAsString());
             intent.putExtra(Constants.MOVIE_RELEASE_YEAR_INTENT, mMovie.getReleaseYear());
