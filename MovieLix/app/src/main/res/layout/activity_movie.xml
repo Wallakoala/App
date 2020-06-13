@@ -66,6 +66,7 @@
                                 android:textSize="24sp"
                                 android:textColor="@color/textLight"
                                 android:textStyle="bold"
+                                android:maxWidth="250dp"
                                 app:customFont="Raleway-Regular.ttf"/>
 
                             <com.movielix.font.MovieLixTextView
