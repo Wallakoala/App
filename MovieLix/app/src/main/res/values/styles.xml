@@ -13,6 +13,10 @@
         <item name="elevation">0dp</item>
         <item name="android:windowBackground">@drawable/dark_background</item>
         <item name="android:windowContentTransitions">true</item>
+
+        <!-- Assign dialog style here. -->
+        <item name="alertDialogTheme">@style/MyAlertDialogStyle</item>
+        <item name="alertDialogStyle">@style/MyAlertDialogStyle</item>
     </style>
 
     <style name="AppTheme.NoActionBar">
@@ -59,5 +63,27 @@
         <item name="mt_hintColor">@color/textIdle</item>
         <item name="mt_placeholderColor">@color/textIdle</item>
         <item name="mt_highlightedTextColor">@color/colorAccent</item>
+    </style>
+
+    <!-- Dialog -->
+    <style name="MyAlertDialogStyle" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <item name="android:background">@color/colorPrimary</item>
+        <item name="buttonBarPositiveButtonStyle">@style/MyAlertDialogPositiveButtonStyle</item>
+        <item name="buttonBarNegativeButtonStyle">@style/MyAlertDialogNegativeButtonStyle</item>
+    </style>
+
+    <style name="MyAlertDialogPositiveButtonStyle" parent="@style/Widget.MaterialComponents.Button.TextButton.Dialog">
+        <item name="android:textColor">@color/colorAccent</item>
+        <item name="android:textSize">@dimen/text_size_small</item>
+    </style>
+
+    <style name="MyAlertDialogNegativeButtonStyle" parent="@style/Widget.MaterialComponents.Button.TextButton.Dialog">
+        <item name="android:textColor">@color/textIdle</item>
+        <item name="android:textSize">@dimen/text_size_small</item>
+    </style>
+
+    <style name="MyDialogFadeAnimation">
+        <item name="android:windowEnterAnimation">@android:anim/fade_in</item>
+        <item name="android:windowExitAnimation">@android:anim/fade_out</item>
     </style>
 </resources>

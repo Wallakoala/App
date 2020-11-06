@@ -221,7 +221,7 @@ public class RegisterActivity extends AppCompatActivity {
 
                 } catch (ApiException e) {
                     // Google Sign In failed, update UI appropriately
-                    Log.w(Constants.TAG, "Google sign in failed", e);
+                    Log.w(Constants.TAG, "FirebaseAuth with Google failed", e);
                     Log.e(Constants.TAG, " - Status code: " + e.getStatusCode());
 
                     showError(AuthType.GOOGLE, AuthError.OTHER);
@@ -231,6 +231,11 @@ public class RegisterActivity extends AppCompatActivity {
                 mRegistering = false;
                 mRegisterButton.revertAnimation();
                 mRegisterButton.setBackground(getResources().getDrawable(R.drawable.rounded_button_fill, getTheme()));
+
+                Log.w(Constants.TAG, "Google sign in failed");
+                Log.e(Constants.TAG, " - Status code: " + requestCode);
+
+                showError(AuthType.GOOGLE, AuthError.OTHER);
             }
 
         } else if (requestCode == RC_FACEBOOK) {

@@ -6,6 +6,7 @@
     <color name="colorPrimaryDark">#131313</color>
     <color name="colorAccent">#F59309</color>
     <color name="colorAccent2">#DB3264</color>
+    <color name="colorAccentDark">#965800</color>
     <color name="lightGray">#DDDDDD</color>
 
     <color name="lightBackground">#F5F5F5</color>
