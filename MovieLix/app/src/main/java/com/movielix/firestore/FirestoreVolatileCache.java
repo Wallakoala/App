@@ -15,7 +15,7 @@ class FirestoreVolatileCache {
 
     private static FirestoreVolatileCache sFirestoreVolatileCache;
 
-    private Map<String, Object> mCache;
+    private final Map<String, Object> mCache;
 
     private FirestoreVolatileCache() {
         mCache = new ConcurrentHashMap<>();

@@ -2,15 +2,19 @@ package com.movielix;
 
 import android.annotation.SuppressLint;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.movielix.bean.Movie;
+import com.movielix.bean.Review;
 import com.movielix.constants.Constants;
 import com.movielix.firestore.FirestoreConnector;
+import com.movielix.firestore.FirestoreItem;
 import com.movielix.firestore.FirestoreListener;
 import com.squareup.picasso.Picasso;
 import com.stepstone.apprating.AppRatingDialog;
@@ -20,7 +24,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-public class MovieActivity extends AppCompatActivity implements FirestoreListener<Movie>, RatingDialogListener {
+public class MovieActivity extends AppCompatActivity implements FirestoreListener<FirestoreItem>, RatingDialogListener {
 
     private String mMovieId;
 
@@ -83,21 +87,35 @@ public class MovieActivity extends AppCompatActivity implements FirestoreListene
     }
 
     @Override
-    public void onSuccess(Movie movie) {
-        ((TextView) findViewById(R.id.movie_summary)).setText(movie.getOverview());
+    public void onSuccess(FirestoreItem.Type type) {
+        if (type == FirestoreItem.Type.REVIEW) {
+            Log.d(Constants.TAG, "Cucu 2");
+        }
     }
 
     @Override
-    public void onSuccess(List<Movie> items) {}
+    public void onSuccess(FirestoreItem.Type type, FirestoreItem item) {
+        if (type == FirestoreItem.Type.MOVIE) {
+            ((TextView) findViewById(R.id.movie_summary)).setText(((Movie) item).getOverview());
+        }
+    }
 
     @Override
-    public void onError() {
+    public void onSuccess(FirestoreItem.Type type, List<FirestoreItem> items) {}
+
+    @Override
+    public void onError(FirestoreItem.Type type) {
 
     }
 
     @Override
-    public void onPositiveButtonClicked(int i, String s) {
+    public void onPositiveButtonClicked(int score, @Nullable String comment) {
+        if (comment != null && comment.isEmpty()) {
+            comment = null;
+        }
 
+        FirestoreConnector.newInstance().createReview(
+                mMovieId, "Lucittronsen", score, comment, this);
     }
 
     @Override

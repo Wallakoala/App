@@ -1,55 +1,45 @@
 package com.movielix.bean;
 
-import java.util.Date;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import com.movielix.firestore.FirestoreItem;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Review class.
  */
+public class Review extends FirestoreItem {
 
-public class Review {
+    private static final String SCORE = "score";
+    private static final String MOVIE = "movie";
+    private static final String USER = "user";
+    private static final String COMMENT = "comment";
 
-    private float mScore;
+    private int mScore;
+    private String mMovieId;
+    private String mUserId;
+    private String mComment;
 
-    private Movie mMovie;
-    private User mUser;
-    private Date mDate;
-
-    public Review(float score, Movie movie, User user, Date date) {
+    public Review(int score, @NonNull String movie, @NonNull String user, @Nullable String comment) {
         this.mScore = score;
-        this.mMovie = movie;
-        this.mUser = user;
-        this.mDate = date;
+        this.mMovieId = movie;
+        this.mUserId = user;
+        this.mComment = comment;
     }
 
-    public float getScore() {
-        return mScore;
-    }
+    public Map<String, Object> asMap() {
+        Map<String, Object> map = new HashMap<>();
 
-    public void setScore(float score) {
-        this.mScore = score;
-    }
+        map.put(SCORE, mScore);
+        map.put(MOVIE, mMovieId);
+        map.put(USER, mUserId);
+        if (mComment != null) {
+            map.put(COMMENT, mComment);
+        }
 
-    public User getUser() {
-        return mUser;
-    }
-
-    public void setUser(User user) {
-        this.mUser = user;
-    }
-
-    public Date getDate() {
-        return mDate;
-    }
-
-    public void setDate(Date date) {
-        this.mDate = date;
-    }
-
-    public Movie getMovie() {
-        return mMovie;
-    }
-
-    public void setMovie(Movie movie) {
-        this.mMovie = movie;
+        return map;
     }
 }
