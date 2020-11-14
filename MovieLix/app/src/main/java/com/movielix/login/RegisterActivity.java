@@ -149,8 +149,6 @@ public class RegisterActivity extends AppCompatActivity implements FirestoreList
     private boolean mExiting;
     private boolean mRegistering;
 
-    private AuthType mAuthType;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -232,7 +230,7 @@ public class RegisterActivity extends AppCompatActivity implements FirestoreList
                     Log.w(Constants.TAG, "FirebaseAuth with Google failed", e);
                     Log.e(Constants.TAG, " - Status code: " + e.getStatusCode());
 
-                    showError(AuthError.OTHER);
+                    showError(AuthType.GOOGLE, AuthError.OTHER);
                 }
 
             } else {
@@ -243,7 +241,7 @@ public class RegisterActivity extends AppCompatActivity implements FirestoreList
                 Log.w(Constants.TAG, "Google sign in failed");
                 Log.e(Constants.TAG, " - Status code: " + requestCode);
 
-                showError(AuthError.OTHER);
+                showError(AuthType.GOOGLE, AuthError.OTHER);
             }
 
         } else if (requestCode == RC_FACEBOOK) {
@@ -371,8 +369,7 @@ public class RegisterActivity extends AppCompatActivity implements FirestoreList
                         break;
 
                     case FIRESTORE:
-                        PersistentCache<User> persistentCache = new PersistentCache<>(this);
-                        FirestoreConnector.newInstance().addUser(persistentCache.get(Constants.USER_KEY, User.class), this);
+                        registerWithFirestore();
                         break;
                 }
             }
@@ -383,8 +380,6 @@ public class RegisterActivity extends AppCompatActivity implements FirestoreList
      * Registers the user using the email and password using Firebase.
      */
     private void registerWithEmailAndPassword() {
-        mAuthType = AuthType.EMAIL_AND_PASSWORD;
-
         // Get all the fields
         final String name = Objects.requireNonNull(mNameEditText.getText()).toString();
         final String email = Objects.requireNonNull(mEmailEditText.getText()).toString();
@@ -410,13 +405,7 @@ public class RegisterActivity extends AppCompatActivity implements FirestoreList
                                         if (task.isSuccessful()) {
                                             Log.d(Constants.TAG, "updateProfileName: success");
 
-                                            User myUser = new User(user.getUid(), user.getDisplayName(), user.getPhotoUrl());
-
-                                            // Let's store it in the persistent cache.
-                                            PersistentCache<User> persistentCache = new PersistentCache<>(RegisterActivity.this);
-                                            persistentCache.put(Constants.USER_KEY, myUser);
-
-                                            FirestoreConnector.newInstance().addUser(myUser, RegisterActivity.this);
+                                            registerWithFirestore();
                                         }
                                     }
                                 });
@@ -424,16 +413,16 @@ public class RegisterActivity extends AppCompatActivity implements FirestoreList
                     } else {
                         Log.wtf(Constants.TAG, "createUserWithEmail: user is null after creation");
 
-                        showError(AuthError.OTHER);
+                        showError(AuthType.EMAIL_AND_PASSWORD, AuthError.OTHER);
                     }
 
                 } else {
                     Log.w(Constants.TAG, "createUserWithEmail: failure", task.getException());
 
                     if (task.getException() instanceof FirebaseAuthUserCollisionException) {
-                        showError(AuthError.EMAIL_ALREADY_REGISTERED);
+                        showError(AuthType.EMAIL_AND_PASSWORD, AuthError.EMAIL_ALREADY_REGISTERED);
                     } else {
-                        showError(AuthError.OTHER);
+                        showError(AuthType.EMAIL_AND_PASSWORD, AuthError.OTHER);
                     }
                 }
             }
@@ -490,7 +479,7 @@ public class RegisterActivity extends AppCompatActivity implements FirestoreList
                     public void onError(FacebookException exception) {
                         Log.w(Constants.TAG, "facebook:onError", exception);
 
-                        showError(AuthError.OTHER);
+                        showError(AuthType.FACEBOOK, AuthError.OTHER);
                     }
                 }
         );
@@ -510,16 +499,9 @@ public class RegisterActivity extends AppCompatActivity implements FirestoreList
                             new OnSuccessListener<AuthResult>() {
                                 @Override
                                 public void onSuccess(AuthResult authResult) {
+                                    Log.d(Constants.TAG, "signInWithTwitter: success");
                                     // User is signed in.
-                                    final FirebaseUser user = mFirebaseAuth.getCurrentUser();
-
-                                    User myUser = new User(user.getUid(), user.getDisplayName(), user.getPhotoUrl());
-
-                                    // Let's store it in the persistent cache.
-                                    PersistentCache<User> persistentCache = new PersistentCache<>(RegisterActivity.this);
-                                    persistentCache.put(Constants.USER_KEY, myUser);
-
-                                    FirestoreConnector.newInstance().addUser(myUser, RegisterActivity.this);
+                                    registerWithFirestore();
                                 }
                             })
                     .addOnFailureListener(
@@ -529,9 +511,9 @@ public class RegisterActivity extends AppCompatActivity implements FirestoreList
                                     Log.w(Constants.TAG, "twitterAuth:failure " + e);
                                     // Handle failure.
                                     if (e instanceof FirebaseAuthUserCollisionException) {
-                                        showError(AuthError.EMAIL_ALREADY_REGISTERED);
+                                        showError(AuthType.TWITTER, AuthError.EMAIL_ALREADY_REGISTERED);
                                     } else {
-                                        showError(AuthError.OTHER);
+                                        showError(AuthType.TWITTER, AuthError.OTHER);
                                     }
                                 }
                             });
@@ -543,9 +525,9 @@ public class RegisterActivity extends AppCompatActivity implements FirestoreList
                             new OnSuccessListener<AuthResult>() {
                                 @Override
                                 public void onSuccess(AuthResult authResult) {
+                                    Log.d(Constants.TAG, "signInWithTwitter: success");
                                     // User is signed in.
-                                    mRegistering = false;
-                                    animateSuccess(mRegisterButton);
+                                    registerWithFirestore();
                                 }
                             })
                     .addOnFailureListener(
@@ -555,9 +537,9 @@ public class RegisterActivity extends AppCompatActivity implements FirestoreList
                                     Log.w(Constants.TAG, "twitterAuth:failure " + e);
                                     // Handle failure.
                                     if (e instanceof FirebaseAuthUserCollisionException) {
-                                        showError(AuthError.EMAIL_ALREADY_REGISTERED);
+                                        showError(AuthType.TWITTER, AuthError.EMAIL_ALREADY_REGISTERED);
                                     } else {
-                                        showError(AuthError.OTHER);
+                                        showError(AuthType.TWITTER, AuthError.OTHER);
                                     }
                                 }
                             });
@@ -576,24 +558,16 @@ public class RegisterActivity extends AppCompatActivity implements FirestoreList
                             // Sign in success, update UI with the signed-in user's information
                             Log.d(Constants.TAG, "signInWithCredential: success");
 
-                            final FirebaseUser user = mFirebaseAuth.getCurrentUser();
-
-                            User myUser = new User(user.getUid(), user.getDisplayName(), user.getPhotoUrl());
-
-                            // Let's store it in the persistent cache.
-                            PersistentCache<User> persistentCache = new PersistentCache<>(RegisterActivity.this);
-                            persistentCache.put(Constants.USER_KEY, myUser);
-
-                            FirestoreConnector.newInstance().addUser(myUser, RegisterActivity.this);
+                            registerWithFirestore();
 
                         } else {
                             // If sign in fails, display a message to the user.
                             Log.w(Constants.TAG, "signInWithCredential: failure", task.getException());
 
                             if (task.getException() instanceof FirebaseAuthUserCollisionException) {
-                                showError(AuthError.EMAIL_ALREADY_REGISTERED);
+                                showError(AuthType.GOOGLE, AuthError.EMAIL_ALREADY_REGISTERED);
                             } else {
-                                showError(AuthError.OTHER);
+                                showError(AuthType.GOOGLE, AuthError.OTHER);
                             }
                         }
                     }
@@ -612,28 +586,32 @@ public class RegisterActivity extends AppCompatActivity implements FirestoreList
                             // Sign in success, update UI with the signed-in user's information
                             Log.d(Constants.TAG, "signInWithCredential:success");
 
-                            final FirebaseUser user = mFirebaseAuth.getCurrentUser();
-
-                            User myUser = new User(user.getUid(), user.getDisplayName(), user.getPhotoUrl());
-
-                            // Let's store it in the persistent cache.
-                            PersistentCache<User> persistentCache = new PersistentCache<>(RegisterActivity.this);
-                            persistentCache.put(Constants.USER_KEY, myUser);
-
-                            FirestoreConnector.newInstance().addUser(myUser, RegisterActivity.this);
+                            registerWithFirestore();
 
                         } else {
                             // If sign in fails, display a message to the user.
                             Log.w(Constants.TAG, "signInWithCredential:failure", task.getException());
 
                             if (task.getException() instanceof FirebaseAuthUserCollisionException) {
-                                showError(AuthError.EMAIL_ALREADY_REGISTERED);
+                                showError(AuthType.FACEBOOK, AuthError.EMAIL_ALREADY_REGISTERED);
                             } else {
-                                showError(AuthError.OTHER);
+                                showError(AuthType.FACEBOOK, AuthError.OTHER);
                             }
                         }
                     }
                 });
+    }
+
+    private void registerWithFirestore() {
+        final FirebaseUser user = mFirebaseAuth.getCurrentUser();
+
+        User myUser = new User(user.getUid(), user.getDisplayName(), user.getPhotoUrl());
+
+        // Let's store it in the persistent cache.
+        PersistentCache<User> persistentCache = new PersistentCache<>(this);
+        persistentCache.put(Constants.USER_KEY, myUser);
+
+        FirestoreConnector.newInstance().addUser(myUser, this);
     }
 
     @Override
@@ -645,7 +623,7 @@ public class RegisterActivity extends AppCompatActivity implements FirestoreList
     @Override
     public void onError(FirestoreItem.Type type) {
         mRegistering = false;
-        showError(AuthError.FIRESTORE);
+        showError(AuthType.FIRESTORE, AuthError.FIRESTORE);
     }
 
     @Override
@@ -661,12 +639,13 @@ public class RegisterActivity extends AppCompatActivity implements FirestoreList
     /**
      * Shows an error message when registering.
      */
-    private void showError(AuthError error) {
+    private void showError(final AuthType authType, final AuthError error) {
         mRegistering = false;
 
         // Show the retry icon in the button
         mRegisterButton.revertAnimation();
-        mRegisterButton.setBackground(ResourcesCompat.getDrawable(getResources(), R.drawable.rounded_button_fill, getTheme()));
+        mRegisterButton.setBackground(
+                ResourcesCompat.getDrawable(getResources(), R.drawable.rounded_button_fill, getTheme()));
 
         // And show the snackbar
         Snackbar snackbar;
@@ -677,7 +656,7 @@ public class RegisterActivity extends AppCompatActivity implements FirestoreList
             snackbar = Snackbar.make(mContainer, R.string.something_went_wrong, Snackbar.LENGTH_LONG).setAction("Reintentar", new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    register(mAuthType);
+                    register(authType);
                 }
             });
 
@@ -685,7 +664,7 @@ public class RegisterActivity extends AppCompatActivity implements FirestoreList
             snackbar = Snackbar.make(mContainer, R.string.something_went_wrong, Snackbar.LENGTH_LONG).setAction("Reintentar", new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    register(mAuthType);
+                    register(authType);
                 }
             });
         }

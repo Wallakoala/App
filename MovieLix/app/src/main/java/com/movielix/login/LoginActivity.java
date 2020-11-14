@@ -19,6 +19,7 @@ import android.view.animation.DecelerateInterpolator;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatEditText;
+import androidx.core.content.res.ResourcesCompat;
 
 import com.daimajia.androidanimations.library.Techniques;
 import com.daimajia.androidanimations.library.YoYo;
@@ -44,18 +45,25 @@ import com.google.firebase.auth.FacebookAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthInvalidUserException;
 import com.google.firebase.auth.FirebaseAuthUserCollisionException;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.auth.OAuthProvider;
 import com.movielix.MainActivity;
 import com.movielix.R;
+import com.movielix.bean.User;
 import com.movielix.constants.Constants;
+import com.movielix.firestore.FirestoreConnector;
+import com.movielix.firestore.FirestoreItem;
+import com.movielix.firestore.FirestoreListener;
 import com.movielix.font.TypeFace;
+import com.movielix.util.PersistentCache;
 import com.movielix.validator.EmailValidator;
 import com.movielix.validator.PasswordValidator;
 import com.movielix.validator.Validator;
 import com.movielix.view.TextInputLayout;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
 import br.com.simplepass.loadingbutton.customViews.CircularProgressButton;
@@ -63,7 +71,7 @@ import br.com.simplepass.loadingbutton.customViews.CircularProgressButton;
 /**
  * Login screen
  */
-public class LoginActivity extends AppCompatActivity {
+public class LoginActivity extends AppCompatActivity implements FirestoreListener<User> {
 
     private static final int RC_GOOGLE = 0xA5;
     private static final int RC_FACEBOOK = 64206;
@@ -72,12 +80,14 @@ public class LoginActivity extends AppCompatActivity {
         EMAIL_AND_PASSWORD,
         TWITTER,
         FACEBOOK,
-        GOOGLE
+        GOOGLE,
+        FIRESTORE
     }
 
     private enum AuthError {
         USER_NOT_FOUND,
         EMAIL_REGISTER_WITH_DIFFERENT_PROVIDER,
+        FIRESTORE,
         OTHER
     }
 
@@ -224,7 +234,12 @@ public class LoginActivity extends AppCompatActivity {
             } else {
                 mSigningIn = false;
                 mLoginButton.revertAnimation();
-                mLoginButton.setBackground(getResources().getDrawable(R.drawable.rounded_button_fill, getTheme()));
+                mLoginButton.setBackground(ResourcesCompat.getDrawable(getResources(), R.drawable.rounded_button_fill, getTheme()));
+
+                Log.w(Constants.TAG, "Google sign in failed");
+                Log.e(Constants.TAG, " - Status code: " + requestCode);
+
+                showError(AuthType.GOOGLE, AuthError.OTHER);
             }
 
         } else if (requestCode == RC_FACEBOOK) {
@@ -265,7 +280,7 @@ public class LoginActivity extends AppCompatActivity {
         mPasswordEditText    = findViewById(R.id.password_edittext);
 
         // Background.
-        mBackground = getDrawable(R.drawable.dark_background);
+        mBackground = ResourcesCompat.getDrawable(getResources(), R.drawable.dark_background, getTheme());
         mContainer.setBackground(mBackground);
 
         mLoginButton.setOnClickListener(new View.OnClickListener() {
@@ -340,6 +355,10 @@ public class LoginActivity extends AppCompatActivity {
                     case TWITTER:
                         signInWithTwitter();
                         break;
+
+                    case FIRESTORE:
+                        registerWithFirestore();
+                        break;
                 }
             }
         }
@@ -357,9 +376,7 @@ public class LoginActivity extends AppCompatActivity {
             public void onComplete(@NonNull Task<AuthResult> task) {
                 if (task.isSuccessful()) {
                     Log.d(Constants.TAG, "signInWithEmailAndPassword: success");
-
-                    mSigningIn = false;
-                    animateSuccess(mLoginButton);
+                    registerWithFirestore();
 
                 } else {
                     Log.w(Constants.TAG, "signInWithEmailAndPassword: failure", task.getException());
@@ -369,8 +386,6 @@ public class LoginActivity extends AppCompatActivity {
                     } else {
                         showError(AuthType.EMAIL_AND_PASSWORD, AuthError.OTHER);
                     }
-
-                    mSigningIn = false;
                 }
             }
         });
@@ -419,7 +434,7 @@ public class LoginActivity extends AppCompatActivity {
 
                         mSigningIn = false;
                         mLoginButton.revertAnimation();
-                        mLoginButton.setBackground(getResources().getDrawable(R.drawable.rounded_button_fill, getTheme()));
+                        mLoginButton.setBackground(ResourcesCompat.getDrawable(getResources(), R.drawable.rounded_button_fill, getTheme()));
                     }
 
                     @Override
@@ -446,9 +461,9 @@ public class LoginActivity extends AppCompatActivity {
                             new OnSuccessListener<AuthResult>() {
                                 @Override
                                 public void onSuccess(AuthResult authResult) {
+                                    Log.d(Constants.TAG, "signInWithTwitter: success");
                                     // User is signed in.
-                                    mSigningIn = false;
-                                    animateSuccess(mLoginButton);
+                                    registerWithFirestore();
                                 }
                             })
                     .addOnFailureListener(
@@ -472,9 +487,9 @@ public class LoginActivity extends AppCompatActivity {
                             new OnSuccessListener<AuthResult>() {
                                 @Override
                                 public void onSuccess(AuthResult authResult) {
+                                    Log.d(Constants.TAG, "signInWithTwitter: success");
                                     // User is signed in.
-                                    mSigningIn = false;
-                                    animateSuccess(mLoginButton);
+                                    registerWithFirestore();
                                 }
                             })
                     .addOnFailureListener(
@@ -505,8 +520,7 @@ public class LoginActivity extends AppCompatActivity {
                             // Sign in success, update UI with the signed-in user's information
                             Log.d(Constants.TAG, "signInWithCredential: success");
 
-                            mSigningIn = false;
-                            animateSuccess(mLoginButton);
+                            registerWithFirestore();
 
                         } else {
                             // If sign in fails, display a message to the user.
@@ -534,8 +548,7 @@ public class LoginActivity extends AppCompatActivity {
                             // Sign in success, update UI with the signed-in user's information
                             Log.d(Constants.TAG, "signInWithCredential:success");
 
-                            mSigningIn = false;
-                            animateSuccess(mLoginButton);
+                            registerWithFirestore();
 
                         } else {
                             // If sign in fails, display a message to the user.
@@ -549,6 +562,40 @@ public class LoginActivity extends AppCompatActivity {
                         }
                     }
                 });
+    }
+
+    private void registerWithFirestore() {
+        final FirebaseUser user = mFirebaseAuth.getCurrentUser();
+
+        User myUser = new User(user.getUid(), user.getDisplayName(), user.getPhotoUrl());
+
+        // Let's store it in the persistent cache.
+        PersistentCache<User> persistentCache = new PersistentCache<>(LoginActivity.this);
+        persistentCache.put(Constants.USER_KEY, myUser);
+
+        FirestoreConnector.newInstance().addUser(myUser, this);
+    }
+
+    @Override
+    public void onSuccess(FirestoreItem.Type type) {
+        mSigningIn = false;
+        animateSuccess(mLoginButton);
+    }
+
+    @Override
+    public void onError(FirestoreItem.Type type) {
+        mSigningIn = false;
+        showError(AuthType.FIRESTORE, AuthError.FIRESTORE);
+    }
+
+    @Override
+    public void onSuccess(FirestoreItem.Type type, User item) {
+        // Non-used
+    }
+
+    @Override
+    public void onSuccess(FirestoreItem.Type type, List<User> items) {
+        // Non-used
     }
 
     /**
@@ -605,7 +652,7 @@ public class LoginActivity extends AppCompatActivity {
 
         // Show the retry icon in the button
         mLoginButton.revertAnimation();
-        mLoginButton.setBackground(getResources().getDrawable(R.drawable.rounded_button_fill, getTheme()));
+        mLoginButton.setBackground(ResourcesCompat.getDrawable(getResources(), R.drawable.rounded_button_fill, getTheme()));
 
         // And show the snackbar
         Snackbar snackbar;
@@ -615,7 +662,15 @@ public class LoginActivity extends AppCompatActivity {
         } else if (error == AuthError.EMAIL_REGISTER_WITH_DIFFERENT_PROVIDER) {
             snackbar = Snackbar.make(mContainer, R.string.email_used_with_different_provider, Snackbar.LENGTH_SHORT);
 
-        } else {
+        } else if (error == AuthError.FIRESTORE) {
+            snackbar = Snackbar.make(mContainer, R.string.something_went_wrong, Snackbar.LENGTH_LONG).setAction("Reintentar", new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    signIn(authType);
+                }
+            });
+
+        }else {
             snackbar = Snackbar.make(mContainer, R.string.something_went_wrong, Snackbar.LENGTH_LONG).setAction("Reintentar", new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -788,9 +843,9 @@ public class LoginActivity extends AppCompatActivity {
     /**
      * Custom TextWatcher to validate the fields.
      */
-    private class MyTextWatcher implements TextWatcher {
+    private static class MyTextWatcher implements TextWatcher {
 
-        private Validator validator;
+        private final Validator validator;
 
         private MyTextWatcher(Validator validator) {
             this.validator = validator;
