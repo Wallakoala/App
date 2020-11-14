@@ -21,6 +21,7 @@ import com.movielix.bean.BaseMovie;
 import com.movielix.bean.LiteMovie;
 import com.movielix.bean.Movie;
 import com.movielix.bean.Review;
+import com.movielix.bean.User;
 import com.movielix.constants.Constants;
 
 import java.util.ArrayList;
@@ -39,6 +40,7 @@ public class FirestoreConnector {
     private static final String MOVIES_COLLECTION = "movies";
     private static final String MOVIES_SUGGESTIONS_COLLECTION = "movies_suggestions";
     private static final String REVIEWS_COLLECTION = "reviews";
+    private static final String USERS_COLLECTION = "users";
 
     // Document fields names
     private static final String MOVIE_TITLE = "2";
@@ -397,6 +399,11 @@ public class FirestoreConnector {
                 });
     }
 
+    /**
+     *
+     * @param id
+     * @param listener
+     */
     public void getMovieById(@NonNull final String id, @NonNull final FirestoreListener<FirestoreItem> listener) {
         Log.d(TAG, "[FirestoreConnector]::getMovieById: request to get movie by id: " + id);
 
@@ -489,6 +496,14 @@ public class FirestoreConnector {
                 });
     }
 
+    /**
+     *
+     * @param idMovie
+     * @param idUser
+     * @param score
+     * @param comment
+     * @param listener
+     */
     public void createReview(@NonNull final String idMovie, @NonNull final String idUser, int score, @Nullable final String comment, @NonNull final FirestoreListener<FirestoreItem> listener) {
         Log.d(TAG, "[FirestoreConnector]::createReview: request to create review");
 
@@ -498,13 +513,40 @@ public class FirestoreConnector {
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
-                        Log.d(TAG, "DocumentSnapshot successfully written!");
+                        listener.onSuccess(FirestoreItem.Type.REVIEW);
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
-                        Log.w(TAG, "Error writing document", e);
+                        Log.w(TAG, "[FirestoreConnector]::createReview: error creating review", e);
+                        listener.onError(FirestoreItem.Type.REVIEW);
+                    }
+                });
+    }
+
+    /**
+     *
+     * @param user
+     * @param listener
+     */
+    public void addUser(@NonNull User user, @NonNull final FirestoreListener<User> listener) {
+        Log.d(TAG, "[FirestoreConnector]::addUser: request to add user");
+
+        mDb.collection(USERS_COLLECTION)
+                .document(user.getId())
+                .set(user.asMap())
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        listener.onSuccess(FirestoreItem.Type.USER);
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.w(TAG, "[FirestoreConnector]::addUser: error creating review", e);
+                        listener.onError(FirestoreItem.Type.USER);
                     }
                 });
     }

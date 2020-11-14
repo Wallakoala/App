@@ -20,6 +20,7 @@ import android.view.animation.DecelerateInterpolator;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatEditText;
+import androidx.core.content.res.ResourcesCompat;
 
 import com.daimajia.androidanimations.library.Techniques;
 import com.daimajia.androidanimations.library.YoYo;
@@ -48,10 +49,14 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.auth.OAuthProvider;
 import com.google.firebase.auth.UserProfileChangeRequest;
-import com.google.firebase.firestore.FirebaseFirestore;
 import com.movielix.MainActivity;
 import com.movielix.R;
+import com.movielix.bean.User;
 import com.movielix.constants.Constants;
+import com.movielix.firestore.FirestoreConnector;
+import com.movielix.firestore.FirestoreItem;
+import com.movielix.firestore.FirestoreListener;
+import com.movielix.util.PersistentCache;
 import com.movielix.validator.EmailValidator;
 import com.movielix.validator.NameValidator;
 import com.movielix.validator.PasswordValidator;
@@ -60,6 +65,7 @@ import com.movielix.view.TextInputLayout;
 import com.movielix.font.TypeFace;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
 import br.com.simplepass.loadingbutton.customViews.CircularProgressButton;
@@ -67,7 +73,7 @@ import br.com.simplepass.loadingbutton.customViews.CircularProgressButton;
 /**
  * Register activity.
  */
-public class RegisterActivity extends AppCompatActivity {
+public class RegisterActivity extends AppCompatActivity implements FirestoreListener<User> {
 
     private static final int RC_GOOGLE = 0xA5;
     private static final int RC_FACEBOOK = 64206;
@@ -76,12 +82,14 @@ public class RegisterActivity extends AppCompatActivity {
         EMAIL_AND_PASSWORD,
         TWITTER,
         FACEBOOK,
-        GOOGLE
+        GOOGLE,
+        FIRESTORE
     }
 
     private enum AuthError {
         EMAIL_ALREADY_REGISTERED,
-        OTHER
+        FIRESTORE,
+        OTHER,
     }
 
     private static final int SHAKE_ANIM_DURATION = 350;
@@ -97,8 +105,6 @@ public class RegisterActivity extends AppCompatActivity {
 
     /* Firebase */
     private FirebaseAuth mFirebaseAuth;
-    /* Firestore */
-    private FirebaseFirestore mFirestore;
 
     /* Facebook SDK */
     private CallbackManager mCallbackManager;
@@ -142,6 +148,8 @@ public class RegisterActivity extends AppCompatActivity {
 
     private boolean mExiting;
     private boolean mRegistering;
+
+    private AuthType mAuthType;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -224,18 +232,18 @@ public class RegisterActivity extends AppCompatActivity {
                     Log.w(Constants.TAG, "FirebaseAuth with Google failed", e);
                     Log.e(Constants.TAG, " - Status code: " + e.getStatusCode());
 
-                    showError(AuthType.GOOGLE, AuthError.OTHER);
+                    showError(AuthError.OTHER);
                 }
 
             } else {
                 mRegistering = false;
                 mRegisterButton.revertAnimation();
-                mRegisterButton.setBackground(getResources().getDrawable(R.drawable.rounded_button_fill, getTheme()));
+                mRegisterButton.setBackground(ResourcesCompat.getDrawable(getResources(), R.drawable.rounded_button_fill, getTheme()));
 
                 Log.w(Constants.TAG, "Google sign in failed");
                 Log.e(Constants.TAG, " - Status code: " + requestCode);
 
-                showError(AuthType.GOOGLE, AuthError.OTHER);
+                showError(AuthError.OTHER);
             }
 
         } else if (requestCode == RC_FACEBOOK) {
@@ -276,7 +284,7 @@ public class RegisterActivity extends AppCompatActivity {
         mEmailEditText       = findViewById(R.id.email_edittext);
         mPasswordEditText    = findViewById(R.id.password_edittext);
 
-        mBackground = getDrawable(R.drawable.dark_background);
+        mBackground = ResourcesCompat.getDrawable(getResources(), R.drawable.dark_background, getTheme());
         mContainer.setBackground(mBackground);
 
         mRegisterButton.setOnClickListener(new View.OnClickListener() {
@@ -361,6 +369,11 @@ public class RegisterActivity extends AppCompatActivity {
                     case TWITTER:
                         registerWithTwitter();
                         break;
+
+                    case FIRESTORE:
+                        PersistentCache<User> persistentCache = new PersistentCache<>(this);
+                        FirestoreConnector.newInstance().addUser(persistentCache.get(Constants.USER_KEY, User.class), this);
+                        break;
                 }
             }
         }
@@ -370,6 +383,8 @@ public class RegisterActivity extends AppCompatActivity {
      * Registers the user using the email and password using Firebase.
      */
     private void registerWithEmailAndPassword() {
+        mAuthType = AuthType.EMAIL_AND_PASSWORD;
+
         // Get all the fields
         final String name = Objects.requireNonNull(mNameEditText.getText()).toString();
         final String email = Objects.requireNonNull(mEmailEditText.getText()).toString();
@@ -381,7 +396,7 @@ public class RegisterActivity extends AppCompatActivity {
             public void onComplete(@NonNull Task<AuthResult> task) {
                 if (task.isSuccessful()) {
                     Log.d(Constants.TAG, "createUserWithEmail: success");
-                    FirebaseUser user = mFirebaseAuth.getCurrentUser();
+                    final FirebaseUser user = mFirebaseAuth.getCurrentUser();
 
                     if (user != null) {
                         UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
@@ -395,8 +410,13 @@ public class RegisterActivity extends AppCompatActivity {
                                         if (task.isSuccessful()) {
                                             Log.d(Constants.TAG, "updateProfileName: success");
 
-                                            mRegistering = false;
-                                            animateSuccess(mRegisterButton);
+                                            User myUser = new User(user.getUid(), user.getDisplayName(), user.getPhotoUrl());
+
+                                            // Let's store it in the persistent cache.
+                                            PersistentCache<User> persistentCache = new PersistentCache<>(RegisterActivity.this);
+                                            persistentCache.put(Constants.USER_KEY, myUser);
+
+                                            FirestoreConnector.newInstance().addUser(myUser, RegisterActivity.this);
                                         }
                                     }
                                 });
@@ -404,16 +424,16 @@ public class RegisterActivity extends AppCompatActivity {
                     } else {
                         Log.wtf(Constants.TAG, "createUserWithEmail: user is null after creation");
 
-                        showError(AuthType.EMAIL_AND_PASSWORD, AuthError.OTHER);
+                        showError(AuthError.OTHER);
                     }
 
                 } else {
                     Log.w(Constants.TAG, "createUserWithEmail: failure", task.getException());
 
                     if (task.getException() instanceof FirebaseAuthUserCollisionException) {
-                        showError(AuthType.EMAIL_AND_PASSWORD, AuthError.EMAIL_ALREADY_REGISTERED);
+                        showError(AuthError.EMAIL_ALREADY_REGISTERED);
                     } else {
-                        showError(AuthType.EMAIL_AND_PASSWORD, AuthError.OTHER);
+                        showError(AuthError.OTHER);
                     }
                 }
             }
@@ -463,14 +483,14 @@ public class RegisterActivity extends AppCompatActivity {
 
                         mRegistering = false;
                         mRegisterButton.revertAnimation();
-                        mRegisterButton.setBackground(getResources().getDrawable(R.drawable.rounded_button_fill, getTheme()));
+                        mRegisterButton.setBackground(ResourcesCompat.getDrawable(getResources(), R.drawable.rounded_button_fill, getTheme()));
                     }
 
                     @Override
                     public void onError(FacebookException exception) {
                         Log.w(Constants.TAG, "facebook:onError", exception);
 
-                        showError(AuthType.FACEBOOK, AuthError.OTHER);
+                        showError(AuthError.OTHER);
                     }
                 }
         );
@@ -491,8 +511,15 @@ public class RegisterActivity extends AppCompatActivity {
                                 @Override
                                 public void onSuccess(AuthResult authResult) {
                                     // User is signed in.
-                                    mRegistering = false;
-                                    animateSuccess(mRegisterButton);
+                                    final FirebaseUser user = mFirebaseAuth.getCurrentUser();
+
+                                    User myUser = new User(user.getUid(), user.getDisplayName(), user.getPhotoUrl());
+
+                                    // Let's store it in the persistent cache.
+                                    PersistentCache<User> persistentCache = new PersistentCache<>(RegisterActivity.this);
+                                    persistentCache.put(Constants.USER_KEY, myUser);
+
+                                    FirestoreConnector.newInstance().addUser(myUser, RegisterActivity.this);
                                 }
                             })
                     .addOnFailureListener(
@@ -502,9 +529,9 @@ public class RegisterActivity extends AppCompatActivity {
                                     Log.w(Constants.TAG, "twitterAuth:failure " + e);
                                     // Handle failure.
                                     if (e instanceof FirebaseAuthUserCollisionException) {
-                                        showError(AuthType.TWITTER, AuthError.EMAIL_ALREADY_REGISTERED);
+                                        showError(AuthError.EMAIL_ALREADY_REGISTERED);
                                     } else {
-                                        showError(AuthType.TWITTER, AuthError.OTHER);
+                                        showError(AuthError.OTHER);
                                     }
                                 }
                             });
@@ -528,9 +555,9 @@ public class RegisterActivity extends AppCompatActivity {
                                     Log.w(Constants.TAG, "twitterAuth:failure " + e);
                                     // Handle failure.
                                     if (e instanceof FirebaseAuthUserCollisionException) {
-                                        showError(AuthType.TWITTER, AuthError.EMAIL_ALREADY_REGISTERED);
+                                        showError(AuthError.EMAIL_ALREADY_REGISTERED);
                                     } else {
-                                        showError(AuthType.TWITTER, AuthError.OTHER);
+                                        showError(AuthError.OTHER);
                                     }
                                 }
                             });
@@ -549,17 +576,24 @@ public class RegisterActivity extends AppCompatActivity {
                             // Sign in success, update UI with the signed-in user's information
                             Log.d(Constants.TAG, "signInWithCredential: success");
 
-                            mRegistering = false;
-                            animateSuccess(mRegisterButton);
+                            final FirebaseUser user = mFirebaseAuth.getCurrentUser();
+
+                            User myUser = new User(user.getUid(), user.getDisplayName(), user.getPhotoUrl());
+
+                            // Let's store it in the persistent cache.
+                            PersistentCache<User> persistentCache = new PersistentCache<>(RegisterActivity.this);
+                            persistentCache.put(Constants.USER_KEY, myUser);
+
+                            FirestoreConnector.newInstance().addUser(myUser, RegisterActivity.this);
 
                         } else {
                             // If sign in fails, display a message to the user.
                             Log.w(Constants.TAG, "signInWithCredential: failure", task.getException());
 
                             if (task.getException() instanceof FirebaseAuthUserCollisionException) {
-                                showError(AuthType.GOOGLE, AuthError.EMAIL_ALREADY_REGISTERED);
+                                showError(AuthError.EMAIL_ALREADY_REGISTERED);
                             } else {
-                                showError(AuthType.GOOGLE, AuthError.OTHER);
+                                showError(AuthError.OTHER);
                             }
                         }
                     }
@@ -578,43 +612,80 @@ public class RegisterActivity extends AppCompatActivity {
                             // Sign in success, update UI with the signed-in user's information
                             Log.d(Constants.TAG, "signInWithCredential:success");
 
-                            mRegistering = false;
-                            animateSuccess(mRegisterButton);
+                            final FirebaseUser user = mFirebaseAuth.getCurrentUser();
+
+                            User myUser = new User(user.getUid(), user.getDisplayName(), user.getPhotoUrl());
+
+                            // Let's store it in the persistent cache.
+                            PersistentCache<User> persistentCache = new PersistentCache<>(RegisterActivity.this);
+                            persistentCache.put(Constants.USER_KEY, myUser);
+
+                            FirestoreConnector.newInstance().addUser(myUser, RegisterActivity.this);
 
                         } else {
                             // If sign in fails, display a message to the user.
                             Log.w(Constants.TAG, "signInWithCredential:failure", task.getException());
 
                             if (task.getException() instanceof FirebaseAuthUserCollisionException) {
-                                showError(AuthType.FACEBOOK, AuthError.EMAIL_ALREADY_REGISTERED);
+                                showError(AuthError.EMAIL_ALREADY_REGISTERED);
                             } else {
-                                showError(AuthType.FACEBOOK, AuthError.OTHER);
+                                showError(AuthError.OTHER);
                             }
                         }
                     }
                 });
     }
 
+    @Override
+    public void onSuccess(FirestoreItem.Type type) {
+        mRegistering = false;
+        animateSuccess(mRegisterButton);
+    }
+
+    @Override
+    public void onError(FirestoreItem.Type type) {
+        mRegistering = false;
+        showError(AuthError.FIRESTORE);
+    }
+
+    @Override
+    public void onSuccess(FirestoreItem.Type type, User item) {
+        // Non-used
+    }
+
+    @Override
+    public void onSuccess(FirestoreItem.Type type, List<User> items) {
+        // Non-used
+    }
+
     /**
      * Shows an error message when registering.
      */
-    private void showError(final AuthType authType, final AuthError error) {
+    private void showError(AuthError error) {
         mRegistering = false;
 
         // Show the retry icon in the button
         mRegisterButton.revertAnimation();
-        mRegisterButton.setBackground(getResources().getDrawable(R.drawable.rounded_button_fill, getTheme()));
+        mRegisterButton.setBackground(ResourcesCompat.getDrawable(getResources(), R.drawable.rounded_button_fill, getTheme()));
 
         // And show the snackbar
         Snackbar snackbar;
         if (error == AuthError.EMAIL_ALREADY_REGISTERED) {
             snackbar = Snackbar.make(mContainer, R.string.email_already_register, Snackbar.LENGTH_SHORT);
 
+        } else if (error == AuthError.FIRESTORE) {
+            snackbar = Snackbar.make(mContainer, R.string.something_went_wrong, Snackbar.LENGTH_LONG).setAction("Reintentar", new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    register(mAuthType);
+                }
+            });
+
         } else {
             snackbar = Snackbar.make(mContainer, R.string.something_went_wrong, Snackbar.LENGTH_LONG).setAction("Reintentar", new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    register(authType);
+                    register(mAuthType);
                 }
             });
         }
@@ -632,8 +703,8 @@ public class RegisterActivity extends AppCompatActivity {
         // Animate the change of background
         final AnimationDrawable drawable = new AnimationDrawable();
 
-        drawable.addFrame(Objects.requireNonNull(getDrawable(R.drawable.rounded_button_border)), 0);
-        drawable.addFrame(Objects.requireNonNull(getDrawable(R.drawable.rounded_button_fill)), 0);
+        drawable.addFrame(Objects.requireNonNull(ResourcesCompat.getDrawable(getResources(), R.drawable.rounded_button_border, getTheme())), 0);
+        drawable.addFrame(Objects.requireNonNull(ResourcesCompat.getDrawable(getResources(), R.drawable.rounded_button_fill, getTheme())), 0);
         drawable.setOneShot(true);
         drawable.setEnterFadeDuration(ENTER_ANIM_DURATION);
         drawable.setExitFadeDuration(ENTER_ANIM_DURATION);
@@ -731,8 +802,8 @@ public class RegisterActivity extends AppCompatActivity {
 
         final AnimationDrawable drawable = new AnimationDrawable();
 
-        drawable.addFrame(Objects.requireNonNull(getDrawable(R.drawable.rounded_button_fill)), 0);
-        drawable.addFrame(Objects.requireNonNull(getDrawable(R.drawable.rounded_button_border)), 0);
+        drawable.addFrame(Objects.requireNonNull(ResourcesCompat.getDrawable(getResources(), R.drawable.rounded_button_fill, getTheme())), 0);
+        drawable.addFrame(Objects.requireNonNull(ResourcesCompat.getDrawable(getResources(), R.drawable.rounded_button_border, getTheme())), 0);
         drawable.setOneShot(true);
         drawable.setEnterFadeDuration(EXIT_ANIM_DURATION);
         drawable.setExitFadeDuration(EXIT_ANIM_DURATION);
@@ -856,7 +927,7 @@ public class RegisterActivity extends AppCompatActivity {
      */
     private static class MyTextWatcher implements TextWatcher {
 
-        private Validator validator;
+        private final Validator validator;
 
         private MyTextWatcher(Validator validator) {
             this.validator = validator;

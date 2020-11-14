@@ -12,4 +12,6 @@ public class Constants {
     public static final String MOVIE_IMAGE_INTENT = "movie_image";
     public static final String MOVIE_GENRES_INTENT = "movie_genres";
     public static final String MOVIE_RELEASE_YEAR_INTENT = "movie_release_year";
+
+    public static final String USER_KEY = "user";
 }

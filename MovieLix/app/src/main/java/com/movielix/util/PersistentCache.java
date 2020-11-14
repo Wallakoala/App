@@ -20,7 +20,7 @@ import javax.annotation.Nullable;
  */
 public class PersistentCache<T> {
 
-    private SharedPreferences mSharedPreferences;
+    private final SharedPreferences mSharedPreferences;
 
     /**
      * Creates an object to access the persistent cache.

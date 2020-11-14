@@ -6,7 +6,8 @@ public class FirestoreItem {
 
     public enum Type {
         REVIEW,
-        MOVIE
+        MOVIE,
+        USER
     }
 
     protected String mId;
