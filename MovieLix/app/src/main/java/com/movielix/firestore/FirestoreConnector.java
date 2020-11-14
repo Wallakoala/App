@@ -10,19 +10,16 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FieldPath;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
-import com.movielix.MovieActivity;
 import com.movielix.R;
 import com.movielix.bean.BaseMovie;
 import com.movielix.bean.LiteMovie;
 import com.movielix.bean.Movie;
 import com.movielix.bean.Review;
 import com.movielix.bean.User;
-import com.movielix.constants.Constants;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -145,7 +142,7 @@ public class FirestoreConnector {
         Object cachedResult = mVolatileCache.get(search_term);
         if (cachedResult != null) {
             Log.d(TAG, "[FirestoreConnector]::getMoviesSuggestionsByTitle: volatile cache hit");
-            listener.onSuccess(FirestoreItem.Type.MOVIE, (List<BaseMovie>) cachedResult);
+            listener.onSuccess((List<BaseMovie>) cachedResult);
             return;
         }
 
@@ -214,25 +211,22 @@ public class FirestoreConnector {
                                                          * Notify the listener if it's the last request.
                                                          */
                                                         if (isLastSearch(search_term)) {
-                                                            Log.d(TAG,
-                                                                    "[FirestoreConnector]::getMoviesSuggestionsByTitle: last request, notifying the listener");
+                                                            Log.d(TAG, "[FirestoreConnector]::getMoviesSuggestionsByTitle: last request, notifying the listener");
 
                                                             clearLastSearch();
                                                             movies.addAll(persistentSuggestions);
-                                                            listener.onSuccess(FirestoreItem.Type.MOVIE, movies);
+                                                            listener.onSuccess(movies);
 
                                                         } else {
-                                                            Log.d(TAG,
-                                                                    "[FirestoreConnector]::getMoviesSuggestionsByTitle: not the last request, discarding results");
+                                                            Log.d(TAG, "[FirestoreConnector]::getMoviesSuggestionsByTitle: not the last request, discarding results");
                                                         }
 
                                                     } else {
-                                                        Log.w(TAG,
-                                                                "[FirestoreConnector]::getMoviesSuggestionsByTitle: error getting movies suggestions.", task.getException());
+                                                        Log.w(TAG, "[FirestoreConnector]::getMoviesSuggestionsByTitle: error getting movies suggestions.", task.getException());
 
                                                         if (isLastSearch(search_term)) {
                                                             clearLastSearch();
-                                                            listener.onError(FirestoreItem.Type.MOVIE);
+                                                            listener.onError();
                                                         }
                                                     }
                                                 }
@@ -247,7 +241,7 @@ public class FirestoreConnector {
 
                                         // This request is the last one, so we notify the listener.
                                         clearLastSearch();
-                                        listener.onSuccess(FirestoreItem.Type.MOVIE, persistentSuggestions);
+                                        listener.onSuccess(persistentSuggestions);
 
                                     } else {
                                         Log.d(TAG,
@@ -263,7 +257,7 @@ public class FirestoreConnector {
 
                                     // This request is the last one, so we notify the listener.
                                     clearLastSearch();
-                                    listener.onSuccess(FirestoreItem.Type.MOVIE, movies);
+                                    listener.onSuccess(movies);
 
                                 } else {
                                     Log.d(TAG,
@@ -278,7 +272,7 @@ public class FirestoreConnector {
 
                             if (isLastSearch(search_term)) {
                                 clearLastSearch();
-                                listener.onError(FirestoreItem.Type.MOVIE);
+                                listener.onError();
                             }
                         }
                     }
@@ -291,7 +285,7 @@ public class FirestoreConnector {
      * @param search search terms.
      * @param listener FirestoreListener object to be notified once the operation is complete.
      */
-    public void getMoviesByTitle(String search, final FirestoreListener<LiteMovie> listener) {
+    public void getMoviesByTitle(final String search, final FirestoreListener<LiteMovie> listener) {
         Log.d(TAG, "[FirestoreConnector]::getMoviesByTitle: request to get movies by searching: " + search);
 
         final String search_term = search.toLowerCase();
@@ -379,32 +373,33 @@ public class FirestoreConnector {
                                                     /* Step 4
                                                      * Notify the listener.
                                                      */
-                                                    listener.onSuccess(FirestoreItem.Type.MOVIE, movies);
+                                                    listener.onSuccess(movies);
 
                                                 } else {
                                                     Log.w(TAG, "[FirestoreConnector]::getMoviesByTitle: error getting movies.", task.getException());
-                                                    listener.onError(FirestoreItem.Type.MOVIE);
+                                                    listener.onError();
                                                 }
                                             }
                                         });
                             } else {
-                                listener.onSuccess(FirestoreItem.Type.MOVIE, movies);
+                                listener.onSuccess(movies);
                             }
 
                         } else {
                             Log.w(TAG, "[FirestoreConnector]::getMoviesByTitle: error searching movies.", task.getException());
-                            listener.onError(FirestoreItem.Type.MOVIE);
+                            listener.onError();
                         }
                     }
                 });
     }
 
     /**
+     * Method that returns a movie given the ID.
      *
-     * @param id
-     * @param listener
+     * @param id movie id.
+     * @param listener FirestoreListener object to be notified once the operation is complete.
      */
-    public void getMovieById(@NonNull final String id, @NonNull final FirestoreListener<FirestoreItem> listener) {
+    public void getMovieById(@NonNull final String id, @NonNull final FirestoreListener<Movie> listener) {
         Log.d(TAG, "[FirestoreConnector]::getMovieById: request to get movie by id: " + id);
 
         /* Step 1
@@ -413,7 +408,7 @@ public class FirestoreConnector {
         Object cachedResult = mVolatileCache.get(id);
         if (cachedResult != null) {
             Log.d(TAG, "[FirestoreConnector]::getMovieById: volatile cache hit");
-            listener.onSuccess(FirestoreItem.Type.MOVIE, (Movie) cachedResult);
+            listener.onSuccess((Movie) cachedResult);
             return;
         }
 
@@ -476,35 +471,42 @@ public class FirestoreConnector {
                                             .withOverview(overview)
                                             .build();
 
-                                    listener.onSuccess(FirestoreItem.Type.MOVIE, movie);
+                                    listener.onSuccess(movie);
 
                                 } catch (Exception e) {
                                     Log.e(TAG, "[FirestoreConnector]::getMoviesByTitle: error parsing movies.", e);
-                                    listener.onError(FirestoreItem.Type.MOVIE);
+                                    listener.onError();
                                 }
 
                             } else {
                                 Log.w(TAG, "[FirestoreConnector]::getMovieById: no movie found with the id " + id);
-                                listener.onError(FirestoreItem.Type.MOVIE);
+                                listener.onError();
                             }
 
                         } else {
                             Log.w(TAG, "[FirestoreConnector]::getMovieById: error getting movie.", task.getException());
-                            listener.onError(FirestoreItem.Type.MOVIE);
+                            listener.onError();
                         }
                     }
                 });
     }
 
     /**
+     * Method that creates a review from a user.
      *
-     * @param idMovie
-     * @param idUser
-     * @param score
-     * @param comment
-     * @param listener
+     * @param idMovie movie id.
+     * @param idUser user id.
+     * @param score movie's score.
+     * @param comment optional user's comment.
+     * @param listener FirestoreListener object to be notified once the operation is complete.
      */
-    public void createReview(@NonNull final String idMovie, @NonNull final String idUser, int score, @Nullable final String comment, @NonNull final FirestoreListener<FirestoreItem> listener) {
+    public void createReview(
+            @NonNull final String idMovie,
+            @NonNull final String idUser,
+            int score,
+            @Nullable final String comment,
+            @NonNull final FirestoreListener<Review> listener)
+    {
         Log.d(TAG, "[FirestoreConnector]::createReview: request to create review");
 
         mDb.collection(REVIEWS_COLLECTION)
@@ -513,22 +515,24 @@ public class FirestoreConnector {
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
-                        listener.onSuccess(FirestoreItem.Type.REVIEW);
+                        Log.d(TAG, "[FirestoreConnector]::createReview: review created successfully");
+                        listener.onSuccess();
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
                         Log.w(TAG, "[FirestoreConnector]::createReview: error creating review", e);
-                        listener.onError(FirestoreItem.Type.REVIEW);
+                        listener.onError();
                     }
                 });
     }
 
     /**
+     * Method that adds a new user.
      *
-     * @param user
-     * @param listener
+     * @param user user object.
+     * @param listener FirestoreListener object to be notified once the operation is complete.
      */
     public void addUser(@NonNull User user, @NonNull final FirestoreListener<User> listener) {
         Log.d(TAG, "[FirestoreConnector]::addUser: request to add user");
@@ -539,14 +543,15 @@ public class FirestoreConnector {
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
-                        listener.onSuccess(FirestoreItem.Type.USER);
+                        Log.d(TAG, "[FirestoreConnector]::addUser: user added successfully");
+                        listener.onSuccess();
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
                         Log.w(TAG, "[FirestoreConnector]::addUser: error creating review", e);
-                        listener.onError(FirestoreItem.Type.USER);
+                        listener.onError();
                     }
                 });
     }

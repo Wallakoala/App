@@ -577,24 +577,24 @@ public class LoginActivity extends AppCompatActivity implements FirestoreListene
     }
 
     @Override
-    public void onSuccess(FirestoreItem.Type type) {
+    public void onSuccess() {
         mSigningIn = false;
         animateSuccess(mLoginButton);
     }
 
     @Override
-    public void onError(FirestoreItem.Type type) {
+    public void onError() {
         mSigningIn = false;
         showError(AuthType.FIRESTORE, AuthError.FIRESTORE);
     }
 
     @Override
-    public void onSuccess(FirestoreItem.Type type, User item) {
+    public void onSuccess(User item) {
         // Non-used
     }
 
     @Override
-    public void onSuccess(FirestoreItem.Type type, List<User> items) {
+    public void onSuccess(List<User> items) {
         // Non-used
     }
 

@@ -615,24 +615,24 @@ public class RegisterActivity extends AppCompatActivity implements FirestoreList
     }
 
     @Override
-    public void onSuccess(FirestoreItem.Type type) {
+    public void onSuccess() {
         mRegistering = false;
         animateSuccess(mRegisterButton);
     }
 
     @Override
-    public void onError(FirestoreItem.Type type) {
+    public void onError() {
         mRegistering = false;
         showError(AuthType.FIRESTORE, AuthError.FIRESTORE);
     }
 
     @Override
-    public void onSuccess(FirestoreItem.Type type, User item) {
+    public void onSuccess(User item) {
         // Non-used
     }
 
     @Override
-    public void onSuccess(FirestoreItem.Type type, List<User> items) {
+    public void onSuccess(List<User> items) {
         // Non-used
     }
 

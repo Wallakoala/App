@@ -8,9 +8,19 @@ import java.util.List;
  */
 public class Movie extends LiteMovie {
 
-    private String mOverview;
+    private final String mOverview;
 
-    public Movie(String id, String title, String overview, int releaseYear, int duration, String imageUrl, List<String> genres, PG_RATING pgRating, int imdbRating) {
+    public Movie(
+            String id,
+            String title,
+            String overview,
+            int releaseYear,
+            int duration,
+            String imageUrl,
+            List<String> genres,
+            PG_RATING pgRating,
+            int imdbRating)
+    {
         super(id, title, releaseYear, duration, imageUrl, genres, pgRating, imdbRating);
 
         this.mOverview = overview;
@@ -28,8 +38,7 @@ public class Movie extends LiteMovie {
         private List<String> genres = new ArrayList<>();
         private String overview = "";
 
-        public Builder() {
-        }
+        public Builder() {}
 
         public Builder withId(String id) {
             this.id = id;

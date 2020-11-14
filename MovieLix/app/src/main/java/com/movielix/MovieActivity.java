@@ -2,7 +2,6 @@ package com.movielix;
 
 import android.annotation.SuppressLint;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -10,10 +9,11 @@ import android.widget.TextView;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.firebase.auth.FirebaseAuth;
 import com.movielix.bean.Movie;
+import com.movielix.bean.Review;
 import com.movielix.constants.Constants;
 import com.movielix.firestore.FirestoreConnector;
-import com.movielix.firestore.FirestoreItem;
 import com.movielix.firestore.FirestoreListener;
 import com.squareup.picasso.Picasso;
 import com.stepstone.apprating.AppRatingDialog;
@@ -23,7 +23,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-public class MovieActivity extends AppCompatActivity implements FirestoreListener<FirestoreItem>, RatingDialogListener {
+public class MovieActivity extends AppCompatActivity implements RatingDialogListener {
 
     private String mMovieId;
 
@@ -82,29 +82,23 @@ public class MovieActivity extends AppCompatActivity implements FirestoreListene
             }
         });
 
-        FirestoreConnector.newInstance().getMovieById(mMovieId, this);
-    }
+        FirestoreConnector.newInstance().getMovieById(mMovieId, new FirestoreListener<Movie>() {
+            @Override
+            public void onSuccess() {}
 
-    @Override
-    public void onSuccess(FirestoreItem.Type type) {
-        if (type == FirestoreItem.Type.REVIEW) {
-            Log.d(Constants.TAG, "Cucu 2");
-        }
-    }
+            @Override
+            public void onSuccess(Movie item) {
+                ((TextView) findViewById(R.id.movie_summary)).setText(((Movie) item).getOverview());
+            }
 
-    @Override
-    public void onSuccess(FirestoreItem.Type type, FirestoreItem item) {
-        if (type == FirestoreItem.Type.MOVIE) {
-            ((TextView) findViewById(R.id.movie_summary)).setText(((Movie) item).getOverview());
-        }
-    }
+            @Override
+            public void onSuccess(List<Movie> items) {}
 
-    @Override
-    public void onSuccess(FirestoreItem.Type type, List<FirestoreItem> items) {}
+            @Override
+            public void onError() {
 
-    @Override
-    public void onError(FirestoreItem.Type type) {
-
+            }
+        });
     }
 
     @Override
@@ -114,13 +108,27 @@ public class MovieActivity extends AppCompatActivity implements FirestoreListene
         }
 
         FirestoreConnector.newInstance().createReview(
-                mMovieId, "Lucittronsen", score, comment, this);
+                mMovieId, FirebaseAuth.getInstance().getUid(), score, comment, new FirestoreListener<Review>() {
+                    @Override
+                    public void onSuccess() {
+
+                    }
+
+                    @Override
+                    public void onSuccess(Review item) {}
+
+                    @Override
+                    public void onSuccess(List<Review> items) {}
+
+                    @Override
+                    public void onError() {
+
+                    }
+                });
     }
 
     @Override
-    public void onNegativeButtonClicked() {
-
-    }
+    public void onNegativeButtonClicked() {}
 
     @Override
     public void onNeutralButtonClicked() {}

@@ -107,13 +107,13 @@ public class MoviesActivity extends AppCompatActivity implements MaterialSearchB
                     showProgressBar();
                     firestoreConnector.getMoviesSuggestionsByTitle(MoviesActivity.this, charSequence.toString(), new FirestoreListener<BaseMovie>() {
                         @Override
-                        public void onSuccess(FirestoreItem.Type type) {}
+                        public void onSuccess() {}
 
                         @Override
-                        public void onSuccess(FirestoreItem.Type type, BaseMovie item) {}
+                        public void onSuccess(BaseMovie item) {}
 
                         @Override
-                        public void onSuccess(FirestoreItem.Type type, List<BaseMovie> movies) {
+                        public void onSuccess(List<BaseMovie> movies) {
                             hideProgressBar(true);
 
                             MoviesSuggestionAdapter adapter = new MoviesSuggestionAdapter(
@@ -123,7 +123,7 @@ public class MoviesActivity extends AppCompatActivity implements MaterialSearchB
                         }
 
                         @Override
-                        public void onError(FirestoreItem.Type type) {
+                        public void onError() {
                             hideProgressBar(true);
                         }
                     });
@@ -196,13 +196,13 @@ public class MoviesActivity extends AppCompatActivity implements MaterialSearchB
             mMoviesRecyclerView.setVisibility(View.GONE);
             firestoreConnector.getMoviesByTitle(text.toString(), new FirestoreListener<LiteMovie>() {
                 @Override
-                public void onSuccess(FirestoreItem.Type type) {}
+                public void onSuccess() {}
 
                 @Override
-                public void onSuccess(FirestoreItem.Type type, LiteMovie item) {}
+                public void onSuccess(LiteMovie item) {}
 
                 @Override
-                public void onSuccess(FirestoreItem.Type type, List<LiteMovie> movies) {
+                public void onSuccess(List<LiteMovie> movies) {
                     hideProgressBar(true);
                     hideSuggestions();
 
@@ -223,7 +223,7 @@ public class MoviesActivity extends AppCompatActivity implements MaterialSearchB
                 }
 
                 @Override
-                public void onError(FirestoreItem.Type type) {
+                public void onError() {
                     Snackbar.make(mMoviesContainer, "Ops, algo ha ido mal", Snackbar.LENGTH_SHORT).show();
                 }
             });
