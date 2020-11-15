@@ -574,9 +574,12 @@ public class FirestoreConnector {
             // Firestore compares strings lexicographically, and that's not exactly what we want, so
             // let's filter the movies retrieved.
             if (ids.size() < MAX_SUGGESTIONS) {
-                if (document.getString(MOVIE_TITLE).startsWith(search_term)) {
-                    ids.add(document.getId());
-                }
+                try {
+                    if (document.getString(MOVIE_TITLE).startsWith(search_term)) {
+                        ids.add(document.getId());
+                    }
+
+                } catch (NullPointerException ignored) {}
 
             } else {
                 break;
@@ -585,9 +588,12 @@ public class FirestoreConnector {
 
         for (QueryDocumentSnapshot document : task) {
             if (ids.size() < MAX_SUGGESTIONS) {
-                if (document.getString(MOVIE_TITLE).contains(search_term) && !ids.contains(document.getId())) {
-                    ids.add(document.getId());
-                }
+                try {
+                    if (document.getString(MOVIE_TITLE).contains(search_term) && !ids.contains(document.getId())) {
+                        ids.add(document.getId());
+                    }
+
+                } catch (NullPointerException ignored) {}
 
             } else {
                 break;

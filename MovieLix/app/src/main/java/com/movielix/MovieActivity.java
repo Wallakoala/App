@@ -8,6 +8,7 @@ import android.widget.TextView;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.res.ResourcesCompat;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.movielix.bean.Movie;
@@ -44,6 +45,7 @@ public class MovieActivity extends AppCompatActivity implements RatingDialogList
 
         Picasso.get()
                .load(url)
+               .error(R.color.textIdle)
                .into((ImageView) findViewById(R.id.movie_cover));
 
         ((TextView) findViewById(R.id.movie_title)).setText(title);

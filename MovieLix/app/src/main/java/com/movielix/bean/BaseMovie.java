@@ -6,14 +6,10 @@ import java.util.List;
 
 public class BaseMovie extends FirestoreItem {
 
-    private String mTitle;
-    private String mImageUrl;
-    private List<String> mGenres;
-    private int mReleaseYear;
-
-    BaseMovie() {
-        super();
-    }
+    private final String mTitle;
+    private final String mImageUrl;
+    private final List<String> mGenres;
+    private final int mReleaseYear;
 
     public BaseMovie(String id, String title, String image, List<String> genres, int release) {
         super(id);

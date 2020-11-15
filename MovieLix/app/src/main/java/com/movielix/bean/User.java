@@ -7,8 +7,6 @@ import androidx.annotation.Nullable;
 
 import com.movielix.firestore.FirestoreItem;
 
-import org.checkerframework.checker.nullness.compatqual.NonNullType;
-
 import java.util.HashMap;
 import java.util.Map;
 

@@ -18,10 +18,10 @@ public class Review extends FirestoreItem {
     private static final String USER = "user";
     private static final String COMMENT = "comment";
 
-    private int mScore;
-    private String mMovieId;
-    private String mUserId;
-    private String mComment;
+    private final int mScore;
+    private final String mMovieId;
+    private final String mUserId;
+    private final String mComment;
 
     public Review(int score, @NonNull String movie, @NonNull String user, @Nullable String comment) {
         this.mScore = score;

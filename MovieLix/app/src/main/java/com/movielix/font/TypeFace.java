@@ -11,7 +11,7 @@ import java.util.Hashtable;
 public class TypeFace {
     private static final String TYPEFACE_FOLDER = "fonts";
 
-    private static Hashtable<String, Typeface> sTypeFaces = new Hashtable<>(1);
+    private static final Hashtable<String, Typeface> sTypeFaces = new Hashtable<>(1);
 
     public static Typeface getTypeFace(Context context, String fileName) {
         Typeface tempTypeface = sTypeFaces.get(fileName);

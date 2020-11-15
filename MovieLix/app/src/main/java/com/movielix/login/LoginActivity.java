@@ -53,7 +53,6 @@ import com.movielix.R;
 import com.movielix.bean.User;
 import com.movielix.constants.Constants;
 import com.movielix.firestore.FirestoreConnector;
-import com.movielix.firestore.FirestoreItem;
 import com.movielix.firestore.FirestoreListener;
 import com.movielix.font.TypeFace;
 import com.movielix.util.PersistentCache;
@@ -567,13 +566,15 @@ public class LoginActivity extends AppCompatActivity implements FirestoreListene
     private void registerWithFirestore() {
         final FirebaseUser user = mFirebaseAuth.getCurrentUser();
 
-        User myUser = new User(user.getUid(), user.getDisplayName(), user.getPhotoUrl());
+        if (user != null) {
+            User myUser = new User(user.getUid(), user.getDisplayName() == null ? "Anónimo" : user.getDisplayName(), user.getPhotoUrl());
 
-        // Let's store it in the persistent cache.
-        PersistentCache<User> persistentCache = new PersistentCache<>(LoginActivity.this);
-        persistentCache.put(Constants.USER_KEY, myUser);
+            // Let's store it in the persistent cache.
+            PersistentCache<User> persistentCache = new PersistentCache<>(this);
+            persistentCache.put(Constants.USER_KEY, myUser);
 
-        FirestoreConnector.newInstance().addUser(myUser, this);
+            FirestoreConnector.newInstance().addUser(myUser, this);
+        }
     }
 
     @Override

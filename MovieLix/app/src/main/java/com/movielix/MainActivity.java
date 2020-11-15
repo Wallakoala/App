@@ -19,7 +19,6 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.daimajia.androidanimations.library.Techniques;
 import com.daimajia.androidanimations.library.YoYo;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.movielix.adapter.ReviewsAdapter;
 import com.movielix.bean.Movie;
 import com.movielix.firestore.FirestoreConnector;
@@ -35,11 +34,7 @@ public class MainActivity extends AppCompatActivity {
     // Views
     private Toolbar mToolbar;
     private ActionBarDrawerToggle mDrawerToggle;
-    private FloatingActionButton mFAB;
     private ProgressBar mProgressBar;
-
-    // Container
-    private DrawerLayout mDrawerLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,8 +84,7 @@ public class MainActivity extends AppCompatActivity {
      * Initializes the floating action button.
      */
     private void initializedFAB() {
-        mFAB = findViewById(R.id.fab);
-        mFAB.setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.fab).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(MainActivity.this, MoviesActivity.class);
@@ -128,12 +122,12 @@ public class MainActivity extends AppCompatActivity {
      */
     private void initializeDrawer() {
         // Navigation drawer
-        mDrawerLayout = findViewById(R.id.drawer_layout);
+        DrawerLayout dl = findViewById(R.id.drawer_layout);
 
         mDrawerToggle = new ActionBarDrawerToggle(
-                this, mDrawerLayout, mToolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+                this, dl, mToolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
 
-        mDrawerLayout.addDrawerListener(mDrawerToggle);
+        dl.addDrawerListener(mDrawerToggle);
 
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -153,7 +147,7 @@ public class MainActivity extends AppCompatActivity {
     @SuppressWarnings("StaticFieldLeak")
     private class GetReviewsTask extends AsyncTask<Void, Void, Void> {
 
-        private WeakReference<Context> mContext;
+        private final WeakReference<Context> mContext;
         private List<Movie> movies;
 
         GetReviewsTask(final Context context) {

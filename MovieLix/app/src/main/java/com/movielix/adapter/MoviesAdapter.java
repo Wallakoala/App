@@ -63,13 +63,12 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieHolde
 
         private LiteMovie mMovie;
 
-        private TextView mTitle;
-        private TextView mInfo;
-        private TextView mDuration;
-        private ImageView mPGRating;
-        private TextView mIMDBRating;
-
-        private RoundedImageView mCover;
+        private final TextView mTitle;
+        private final TextView mInfo;
+        private final TextView mDuration;
+        private final ImageView mPGRating;
+        private final TextView mIMDBRating;
+        private final RoundedImageView mCover;
 
         MovieHolder(@NonNull View itemView) {
             super(itemView);
@@ -103,6 +102,7 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieHolde
 
             Picasso.get()
                    .load(movie.getImageUrl())
+                   .error(R.color.textIdle)
                    .into(mCover);
         }
 

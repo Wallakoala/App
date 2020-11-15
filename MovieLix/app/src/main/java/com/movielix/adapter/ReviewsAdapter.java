@@ -61,20 +61,19 @@ public class ReviewsAdapter extends RecyclerView.Adapter<ReviewsAdapter.ReviewHo
 
         private static final int EXTRA_PADDING = 72;
 
-        private View mContainer;
+        private final View mContainer;
 
-        private TextView mTitle;
-        private TextView mInfo;
-        private TextView mOverview;
-        private TextView mDuration;
-        private TextView mRatingVar;
-        private TextView mRatingFixed;
-        private TextView mProfileName;
-        private TextView mIMDBRating;
-        private ImageView mPGRating;
-
-        private RoundedImageView mCover;
-        private CircleImageView mProfilePic;
+        private final TextView mTitle;
+        private final TextView mInfo;
+        private final TextView mOverview;
+        private final TextView mDuration;
+        private final TextView mRatingVar;
+        private final TextView mRatingFixed;
+        private final TextView mProfileName;
+        private final TextView mIMDBRating;
+        private final ImageView mPGRating;
+        private final RoundedImageView mCover;
+        private final CircleImageView mProfilePic;
 
         ReviewHolder(@NonNull View itemView) {
             super(itemView);
@@ -118,8 +117,9 @@ public class ReviewsAdapter extends RecyclerView.Adapter<ReviewsAdapter.ReviewHo
             }
 
             Picasso.get()
-                    .load(movie.getImageUrl())
-                    .into(mCover);
+                   .load(movie.getImageUrl())
+                   .error(R.color.textIdle)
+                   .into(mCover);
         }
     }
 }

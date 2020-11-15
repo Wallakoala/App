@@ -1,8 +1,5 @@
 package com.movielix.firestore;
 
-import com.movielix.bean.BaseMovie;
-
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
