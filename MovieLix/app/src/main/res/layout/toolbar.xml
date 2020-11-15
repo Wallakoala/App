@@ -25,4 +25,13 @@
         android:transitionName="shared_title"
         app:customFont="BebasNeue-Regular.otf"/>
 
+    <ImageView
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginEnd="16dp"
+        android:src="@drawable/ic_add_person_48dp"
+        android:background="@android:color/transparent"
+        android:layout_gravity="center_vertical|end"
+        app:tint="@color/colorAccent"/>
+
 </androidx.appcompat.widget.Toolbar>
