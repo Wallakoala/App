@@ -13,10 +13,10 @@ import com.movielix.view.TextInputLayout;
 
 public class PasswordValidator implements Validator {
 
-    private Activity activity;
+    private final Activity activity;
 
-    private AppCompatEditText editText;
-    private TextInputLayout textInputLayout;
+    private final AppCompatEditText editText;
+    private final TextInputLayout textInputLayout;
 
     public PasswordValidator(@NonNull Activity activity, @NonNull AppCompatEditText editText, @NonNull TextInputLayout textInputLayout) {
         this.activity = activity;

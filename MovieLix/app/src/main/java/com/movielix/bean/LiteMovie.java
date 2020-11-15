@@ -12,11 +12,20 @@ public class LiteMovie extends BaseMovie {
         G, PG, PG_13, R, NC_17, TV_Y, TV_Y7, TV_G, TV_PG, TV_14, TV_MA, NOT_RATED
     }
 
-    private PG_RATING mPGRating;
-    private int mDuration;
-    private int mIMDBRating;
+    private final PG_RATING mPGRating;
+    private final int mDuration;
+    private final int mIMDBRating;
 
-    LiteMovie(String id, String title, int releaseYear, int duration, String imageUrl, List<String> genres, PG_RATING pgRating, int imdbRating) {
+    LiteMovie(
+            String id,
+            String title,
+            int releaseYear,
+            int duration,
+            String imageUrl,
+            List<String> genres,
+            PG_RATING pgRating,
+            int imdbRating)
+    {
         super(id, title, imageUrl, genres, releaseYear);
 
         this.mDuration = duration;

@@ -10,40 +10,35 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
+        <!-- Background image -->
         <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/movie_cover"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:scaleType="fitCenter"
             android:src="@drawable/captain_america"
             android:adjustViewBounds="true"/>
 
-        <androidx.appcompat.widget.AppCompatImageView
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:layout_margin="16dp"
-            app:srcCompat="@drawable/ic_back_white_48dp"/>
-
+        <!-- Content -->
         <ScrollView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:fillViewport="true">
+            android:fillViewport="true"
+            android:overScrollMode="always">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:weightSum="1">
+                android:orientation="vertical">
 
                 <!-- Transparent view -->
                 <View
                     android:layout_width="match_parent"
-                    android:layout_height="0dp"
-                    android:layout_weight=".4"/>
+                    android:layout_height="275dp"/>
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="0dp"
-                    android:layout_weight=".6"
+                    android:layout_height="wrap_content"
                     android:orientation="vertical">
 
                     <!-- Header -->
@@ -64,15 +59,18 @@
                             android:orientation="horizontal">
 
                             <com.movielix.font.MovieLixTextView
+                                android:id="@+id/movie_title"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/reviews_item_movie"
                                 android:textSize="24sp"
                                 android:textColor="@color/textLight"
                                 android:textStyle="bold"
+                                android:maxWidth="250dp"
                                 app:customFont="Raleway-Regular.ttf"/>
 
                             <com.movielix.font.MovieLixTextView
+                                android:id="@+id/movie_release_year"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginStart="8dp"
@@ -92,6 +90,7 @@
                             android:layout_marginTop="4dp">
 
                             <com.movielix.font.MovieLixTextView
+                                android:id="@+id/movie_duration"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/reviews_item_movie_duration"
@@ -113,6 +112,7 @@
                                 tools:ignore="HardcodedText"/>
 
                             <com.movielix.font.MovieLixTextView
+                                android:id="@+id/movie_genres"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/reviews_item_movie_genre"
@@ -132,7 +132,8 @@
                         android:paddingStart="16dp"
                         android:paddingEnd="16dp"
                         android:paddingTop="8dp"
-                        android:background="@drawable/dark_background">
+                        android:background="@drawable/dark_background"
+                        android:paddingBottom="120dp">
 
                         <View
                             android:layout_width="match_parent"
@@ -140,7 +141,7 @@
                             android:background="@color/textIdle"
                             tools:ignore="PxUsage"/>
 
-                        <!-- Plot -->
+                        <!-- Summary -->
                         <com.movielix.font.MovieLixTextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -153,6 +154,7 @@
                             app:customFont="Raleway-Regular.ttf"/>
 
                         <com.movielix.font.MovieLixTextView
+                            android:id="@+id/movie_summary"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="8dp"
@@ -203,9 +205,18 @@
 
         </ScrollView>
 
+        <!-- Back button -->
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/movie_back_button"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_margin="16dp"
+            app:srcCompat="@drawable/ic_back"/>
+
     </FrameLayout>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/movie_add_review_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"

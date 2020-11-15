@@ -1,8 +1,5 @@
 package com.movielix.firestore;
 
-import com.movielix.bean.BaseMovie;
-
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -15,10 +12,10 @@ class FirestoreVolatileCache {
 
     private static FirestoreVolatileCache sFirestoreVolatileCache;
 
-    private Map<String, List<BaseMovie>> mSearchCache;
+    private final Map<String, Object> mCache;
 
     private FirestoreVolatileCache() {
-        mSearchCache = new ConcurrentHashMap<>();
+        mCache = new ConcurrentHashMap<>();
     }
 
     static FirestoreVolatileCache newInstance() {
@@ -29,25 +26,12 @@ class FirestoreVolatileCache {
         return sFirestoreVolatileCache;
     }
 
-    /**
-     * Returns the list of movies associated with a search
-     * term if present in the cache.
-     *
-     * @param search: seartch term.
-     * @return list of movies if present, null otherwise.
-     */
     @Nullable
-    List<BaseMovie> getSearch(String search) {
-        return mSearchCache.get(search);
+    Object get(String key) {
+        return mCache.get(key);
     }
 
-    /**
-     * Adds a new entry to the cache.
-     *
-     * @param search: search term.
-     * @param movies: list of movies associated with the search.
-     */
-    void putSearch(String search, List<BaseMovie> movies) {
-        mSearchCache.put(search, movies);
+    void put(String key, Object value) {
+        mCache.put(key, value);
     }
 }

@@ -106,10 +106,17 @@ public class MoviesActivity extends AppCompatActivity implements MaterialSearchB
                     showProgressBar();
                     firestoreConnector.getMoviesSuggestionsByTitle(MoviesActivity.this, charSequence.toString(), new FirestoreListener<BaseMovie>() {
                         @Override
+                        public void onSuccess() {}
+
+                        @Override
+                        public void onSuccess(BaseMovie item) {}
+
+                        @Override
                         public void onSuccess(List<BaseMovie> movies) {
                             hideProgressBar(true);
 
-                            MoviesSuggestionAdapter adapter = new MoviesSuggestionAdapter(MoviesActivity.this, movies, charSequence.toString());
+                            MoviesSuggestionAdapter adapter = new MoviesSuggestionAdapter(
+                                    MoviesActivity.this, movies, charSequence.toString());
                             mSuggestionsRecyclerView.setAdapter(adapter);
                             mSuggestionsContainer.setVisibility(View.VISIBLE);
                         }
@@ -187,6 +194,12 @@ public class MoviesActivity extends AppCompatActivity implements MaterialSearchB
             mMessageTextview.setVisibility(View.GONE);
             mMoviesRecyclerView.setVisibility(View.GONE);
             firestoreConnector.getMoviesByTitle(text.toString(), new FirestoreListener<LiteMovie>() {
+                @Override
+                public void onSuccess() {}
+
+                @Override
+                public void onSuccess(LiteMovie item) {}
+
                 @Override
                 public void onSuccess(List<LiteMovie> movies) {
                     hideProgressBar(true);

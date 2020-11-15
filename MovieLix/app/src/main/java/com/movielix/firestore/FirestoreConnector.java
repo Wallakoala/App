@@ -4,8 +4,11 @@ import android.content.Context;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.FieldPath;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -15,12 +18,15 @@ import com.movielix.R;
 import com.movielix.bean.BaseMovie;
 import com.movielix.bean.LiteMovie;
 import com.movielix.bean.Movie;
-import com.movielix.constants.Constants;
+import com.movielix.bean.Review;
+import com.movielix.bean.User;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+
+import static com.movielix.constants.Constants.TAG;
 
 @SuppressWarnings("unchecked")
 public class FirestoreConnector {
@@ -28,11 +34,15 @@ public class FirestoreConnector {
     // Collections names
     private static final String MOVIES_SEARCH_COLLECTION = "movies_search";
     private static final String MOVIES_LITE_COLLECTION = "movies_lite";
+    private static final String MOVIES_COLLECTION = "movies";
     private static final String MOVIES_SUGGESTIONS_COLLECTION = "movies_suggestions";
+    private static final String REVIEWS_COLLECTION = "reviews";
+    private static final String USERS_COLLECTION = "users";
 
     // Document fields names
     private static final String MOVIE_TITLE = "2";
     private static final String MOVIE_RELEASE_YEAR = "3";
+    private static final String MOVIE_OVERVIEW = "4";
     private static final String MOVIE_DURATION = "5";
     private static final String MOVIE_IMDB_RATING = "6";
     private static final String MOVIE_IMAGE_URL = "8";
@@ -46,11 +56,11 @@ public class FirestoreConnector {
     private String mLastSearch;
 
     // Access a Cloud Firestore instance from your Activity
-    private FirebaseFirestore mDb;
+    private final FirebaseFirestore mDb;
 
     // Caches
-    private FirestorePersistentCache mPersistentCache;
-    private FirestoreVolatileCache mVolatileCache;
+    private final FirestorePersistentCache mPersistentCache;
+    private final FirestoreVolatileCache mVolatileCache;
 
     private FirestoreConnector() {
         mDb = FirebaseFirestore.getInstance();
@@ -59,7 +69,7 @@ public class FirestoreConnector {
 
         mLastSearch = "";
 
-        Log.d(Constants.TAG, "[FirestoreConnector] succesfully initialized");
+        Log.d(TAG, "[FirestoreConnector] succesfully initialized");
     }
 
     public static FirestoreConnector newInstance() {
@@ -121,18 +131,18 @@ public class FirestoreConnector {
      * @param search search terms.
      * @param listener object of type FirestoreListener to be notifed with the result.
      */
-    public void getMoviesSuggestionsByTitle(final Context context, final String search, final FirestoreListener listener) {
-        Log.d(Constants.TAG, "[FirestoreConnector]::getMoviesSuggestionsByTitle: request to get suggestions by searching: " + search);
+    public void getMoviesSuggestionsByTitle(final Context context, final String search, final FirestoreListener<BaseMovie> listener) {
+        Log.d(TAG, "[FirestoreConnector]::getMoviesSuggestionsByTitle: request to get suggestions by searching: " + search);
 
         final String search_term = search.toLowerCase();
 
         /* Step 1
          * See if the same search has been done in this session.
          */
-        final List<BaseMovie> volatileSuggestions = mVolatileCache.getSearch(search_term);
-        if (volatileSuggestions != null) {
-            Log.d(Constants.TAG, "[FirestoreConnector]::getMoviesSuggestionsByTitle: volatile cache hit");
-            listener.onSuccess(volatileSuggestions);
+        Object cachedResult = mVolatileCache.get(search_term);
+        if (cachedResult != null) {
+            Log.d(TAG, "[FirestoreConnector]::getMoviesSuggestionsByTitle: volatile cache hit");
+            listener.onSuccess((List<BaseMovie>) cachedResult);
             return;
         }
 
@@ -187,35 +197,32 @@ public class FirestoreConnector {
                                                                 movies.add(new BaseMovie(document.getId(), title, imageUrl, genres, year));
 
                                                             } catch (Exception e) {
-                                                                Log.e(Constants.TAG, "[FirestoreConnector]::getMoviesSuggestionsByTitle: error parsing movies.", e);
+                                                                Log.e(TAG, "[FirestoreConnector]::getMoviesSuggestionsByTitle: error parsing movies.", e);
                                                             }
                                                         }
 
                                                         /* Step 6
                                                          * Update the volatile and persistent caches.
                                                          */
-                                                        mVolatileCache.putSearch(search_term, movies);
+                                                        mVolatileCache.put(search_term, movies);
                                                         mPersistentCache.putSuggestions(context, movies);
 
                                                         /* Step 7
                                                          * Notify the listener if it's the last request.
                                                          */
                                                         if (isLastSearch(search_term)) {
-                                                            Log.d(Constants.TAG,
-                                                                    "[FirestoreConnector]::getMoviesSuggestionsByTitle: last request, notifying the listener");
+                                                            Log.d(TAG, "[FirestoreConnector]::getMoviesSuggestionsByTitle: last request, notifying the listener");
 
                                                             clearLastSearch();
                                                             movies.addAll(persistentSuggestions);
                                                             listener.onSuccess(movies);
 
                                                         } else {
-                                                            Log.d(Constants.TAG,
-                                                                    "[FirestoreConnector]::getMoviesSuggestionsByTitle: not the last request, discarding results");
+                                                            Log.d(TAG, "[FirestoreConnector]::getMoviesSuggestionsByTitle: not the last request, discarding results");
                                                         }
 
                                                     } else {
-                                                        Log.w(Constants.TAG,
-                                                                "[FirestoreConnector]::getMoviesSuggestionsByTitle: error getting movies suggestions.", task.getException());
+                                                        Log.w(TAG, "[FirestoreConnector]::getMoviesSuggestionsByTitle: error getting movies suggestions.", task.getException());
 
                                                         if (isLastSearch(search_term)) {
                                                             clearLastSearch();
@@ -227,9 +234,9 @@ public class FirestoreConnector {
 
                                 } else {
                                     // All the movies are cached, no need to connect with Firestore.
-                                    mVolatileCache.putSearch(search_term, persistentSuggestions);
+                                    mVolatileCache.put(search_term, persistentSuggestions);
                                     if (isLastSearch(search_term)) {
-                                        Log.d(Constants.TAG,
+                                        Log.d(TAG,
                                                 "[FirestoreConnector]::getMoviesSuggestionsByTitle: last request, notifying the listener");
 
                                         // This request is the last one, so we notify the listener.
@@ -237,7 +244,7 @@ public class FirestoreConnector {
                                         listener.onSuccess(persistentSuggestions);
 
                                     } else {
-                                        Log.d(Constants.TAG,
+                                        Log.d(TAG,
                                                 "[FirestoreConnector]::getMoviesSuggestionsByTitle: not the last request, discarding results");
                                     }
                                 }
@@ -245,7 +252,7 @@ public class FirestoreConnector {
                             } else {
                                 // No ids retrieved.
                                 if (isLastSearch(search_term)) {
-                                    Log.d(Constants.TAG,
+                                    Log.d(TAG,
                                             "[FirestoreConnector]::getMoviesSuggestionsByTitle: last request, notifying the listener");
 
                                     // This request is the last one, so we notify the listener.
@@ -253,14 +260,14 @@ public class FirestoreConnector {
                                     listener.onSuccess(movies);
 
                                 } else {
-                                    Log.d(Constants.TAG,
+                                    Log.d(TAG,
                                             "[FirestoreConnector]::getMoviesSuggestionsByTitle: not the last request, discarding results");
                                 }
                             }
 
                         } else {
                             // Error retrieving the ids.
-                            Log.w(Constants.TAG,
+                            Log.w(TAG,
                                     "[FirestoreConnector]::getMoviesSuggestionsByTitle: error searching movies.", task.getException());
 
                             if (isLastSearch(search_term)) {
@@ -278,8 +285,8 @@ public class FirestoreConnector {
      * @param search search terms.
      * @param listener FirestoreListener object to be notified once the operation is complete.
      */
-    public void getMoviesByTitle(String search, final FirestoreListener listener) {
-        Log.d(Constants.TAG, "[FirestoreConnector]::getMoviesByTitle: request to get movies by searching: " + search);
+    public void getMoviesByTitle(final String search, final FirestoreListener<LiteMovie> listener) {
+        Log.d(TAG, "[FirestoreConnector]::getMoviesByTitle: request to get movies by searching: " + search);
 
         final String search_term = search.toLowerCase();
 
@@ -359,7 +366,7 @@ public class FirestoreConnector {
                                                                     .build());
 
                                                         } catch (Exception e) {
-                                                            Log.e(Constants.TAG, "[FirestoreConnector]::getMoviesByTitle: error parsing movies.", e);
+                                                            Log.e(TAG, "[FirestoreConnector]::getMoviesByTitle: error parsing movies.", e);
                                                         }
                                                     }
 
@@ -369,7 +376,7 @@ public class FirestoreConnector {
                                                     listener.onSuccess(movies);
 
                                                 } else {
-                                                    Log.w(Constants.TAG, "[FirestoreConnector]::getMoviesByTitle: error getting movies.", task.getException());
+                                                    Log.w(TAG, "[FirestoreConnector]::getMoviesByTitle: error getting movies.", task.getException());
                                                     listener.onError();
                                                 }
                                             }
@@ -379,9 +386,172 @@ public class FirestoreConnector {
                             }
 
                         } else {
-                            Log.w(Constants.TAG, "[FirestoreConnector]::getMoviesByTitle: error searching movies.", task.getException());
+                            Log.w(TAG, "[FirestoreConnector]::getMoviesByTitle: error searching movies.", task.getException());
                             listener.onError();
                         }
+                    }
+                });
+    }
+
+    /**
+     * Method that returns a movie given the ID.
+     *
+     * @param id movie id.
+     * @param listener FirestoreListener object to be notified once the operation is complete.
+     */
+    public void getMovieById(@NonNull final String id, @NonNull final FirestoreListener<Movie> listener) {
+        Log.d(TAG, "[FirestoreConnector]::getMovieById: request to get movie by id: " + id);
+
+        /* Step 1
+         * See if the same movie has been retrieved in the same session.
+         */
+        Object cachedResult = mVolatileCache.get(id);
+        if (cachedResult != null) {
+            Log.d(TAG, "[FirestoreConnector]::getMovieById: volatile cache hit");
+            listener.onSuccess((Movie) cachedResult);
+            return;
+        }
+
+        mDb.collection(MOVIES_COLLECTION)
+                .whereEqualTo(FieldPath.documentId(), id)
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful() && (task.getResult() != null)) {
+                            if (!task.getResult().getDocuments().isEmpty()) {
+                                QueryDocumentSnapshot document = (QueryDocumentSnapshot) task.getResult().getDocuments().get(0);
+
+                                try {
+                                    String title = document.getString(MOVIE_TITLE);
+                                    String imageUrl = document.getString(MOVIE_IMAGE_URL);
+                                    String overview = document.getString(MOVIE_OVERVIEW);
+                                    String pgRatingStr = document.getString(MOVIE_PG_RATING);
+                                    List<String> genres = (ArrayList<String>) document.get(MOVIE_GENRES);
+                                    int releaseYear = Objects.requireNonNull(document.getLong(MOVIE_RELEASE_YEAR)).intValue();
+                                    int duration = Objects.requireNonNull(document.getLong(MOVIE_DURATION)).intValue();
+                                    int imdbRating = (int)((Objects.requireNonNull(document.getDouble(MOVIE_IMDB_RATING))) * 10);
+
+                                    LiteMovie.PG_RATING pgRating = LiteMovie.PG_RATING.NOT_RATED;
+                                    if (pgRatingStr != null) {
+                                        if (pgRatingStr.equalsIgnoreCase("G")) {
+                                            pgRating = LiteMovie.PG_RATING.G;
+                                        } else if (pgRatingStr.equalsIgnoreCase("PG")) {
+                                            pgRating = LiteMovie.PG_RATING.PG;
+                                        } else if (pgRatingStr.equalsIgnoreCase("PG-13")) {
+                                            pgRating = LiteMovie.PG_RATING.PG_13;
+                                        } else if (pgRatingStr.equalsIgnoreCase("R")) {
+                                            pgRating = LiteMovie.PG_RATING.R;
+                                        } else if (pgRatingStr.equalsIgnoreCase("NC-17")) {
+                                            pgRating = LiteMovie.PG_RATING.NC_17;
+                                        } else if (pgRatingStr.equalsIgnoreCase("TV-Y")) {
+                                            pgRating = LiteMovie.PG_RATING.TV_Y;
+                                        } else if (pgRatingStr.equalsIgnoreCase("TV-Y7")) {
+                                            pgRating = LiteMovie.PG_RATING.TV_Y7;
+                                        } else if (pgRatingStr.equalsIgnoreCase("TV-G")) {
+                                            pgRating = LiteMovie.PG_RATING.TV_G;
+                                        } else if (pgRatingStr.equalsIgnoreCase("TV-PG")) {
+                                            pgRating = LiteMovie.PG_RATING.TV_PG;
+                                        } else if (pgRatingStr.equalsIgnoreCase("TV-14")) {
+                                            pgRating = LiteMovie.PG_RATING.TV_14;
+                                        } else if (pgRatingStr.equalsIgnoreCase("PG-MA")) {
+                                            pgRating = LiteMovie.PG_RATING.TV_MA;
+                                        }
+                                    }
+
+                                    Movie movie = new Movie.Builder()
+                                            .withId(document.getId())
+                                            .titled(title)
+                                            .withImage(imageUrl)
+                                            .releasedIn(releaseYear)
+                                            .lasts(duration)
+                                            .categorizedAs(genres)
+                                            .classifiedAs(pgRating)
+                                            .rated(imdbRating)
+                                            .withOverview(overview)
+                                            .build();
+
+                                    listener.onSuccess(movie);
+
+                                } catch (Exception e) {
+                                    Log.e(TAG, "[FirestoreConnector]::getMoviesByTitle: error parsing movies.", e);
+                                    listener.onError();
+                                }
+
+                            } else {
+                                Log.w(TAG, "[FirestoreConnector]::getMovieById: no movie found with the id " + id);
+                                listener.onError();
+                            }
+
+                        } else {
+                            Log.w(TAG, "[FirestoreConnector]::getMovieById: error getting movie.", task.getException());
+                            listener.onError();
+                        }
+                    }
+                });
+    }
+
+    /**
+     * Method that creates a review from a user.
+     *
+     * @param idMovie movie id.
+     * @param idUser user id.
+     * @param score movie's score.
+     * @param comment optional user's comment.
+     * @param listener FirestoreListener object to be notified once the operation is complete.
+     */
+    public void createReview(
+            @NonNull final String idMovie,
+            @NonNull final String idUser,
+            int score,
+            @Nullable final String comment,
+            @NonNull final FirestoreListener<Review> listener)
+    {
+        Log.d(TAG, "[FirestoreConnector]::createReview: request to create review");
+
+        mDb.collection(REVIEWS_COLLECTION)
+                .document()
+                .set(new Review(score, idMovie, idUser, comment).asMap())
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.d(TAG, "[FirestoreConnector]::createReview: review created successfully");
+                        listener.onSuccess();
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.w(TAG, "[FirestoreConnector]::createReview: error creating review", e);
+                        listener.onError();
+                    }
+                });
+    }
+
+    /**
+     * Method that adds a new user.
+     *
+     * @param user user object.
+     * @param listener FirestoreListener object to be notified once the operation is complete.
+     */
+    public void addUser(@NonNull User user, @NonNull final FirestoreListener<User> listener) {
+        Log.d(TAG, "[FirestoreConnector]::addUser: request to add user");
+
+        mDb.collection(USERS_COLLECTION)
+                .document(user.getId())
+                .set(user.asMap())
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.d(TAG, "[FirestoreConnector]::addUser: user added successfully");
+                        listener.onSuccess();
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.w(TAG, "[FirestoreConnector]::addUser: error creating review", e);
+                        listener.onError();
                     }
                 });
     }
@@ -404,10 +574,12 @@ public class FirestoreConnector {
             // Firestore compares strings lexicographically, and that's not exactly what we want, so
             // let's filter the movies retrieved.
             if (ids.size() < MAX_SUGGESTIONS) {
-                //noinspection ConstantConditions
-                if (document.getString(MOVIE_TITLE).startsWith(search_term)) {
-                    ids.add(document.getId());
-                }
+                try {
+                    if (document.getString(MOVIE_TITLE).startsWith(search_term)) {
+                        ids.add(document.getId());
+                    }
+
+                } catch (NullPointerException ignored) {}
 
             } else {
                 break;
@@ -416,10 +588,12 @@ public class FirestoreConnector {
 
         for (QueryDocumentSnapshot document : task) {
             if (ids.size() < MAX_SUGGESTIONS) {
-                //noinspection ConstantConditions
-                if (document.getString(MOVIE_TITLE).contains(search_term) && !ids.contains(document.getId())) {
-                    ids.add(document.getId());
-                }
+                try {
+                    if (document.getString(MOVIE_TITLE).contains(search_term) && !ids.contains(document.getId())) {
+                        ids.add(document.getId());
+                    }
+
+                } catch (NullPointerException ignored) {}
 
             } else {
                 break;

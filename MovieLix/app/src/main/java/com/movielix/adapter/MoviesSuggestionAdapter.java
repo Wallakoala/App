@@ -26,9 +26,9 @@ import java.util.regex.Pattern;
  */
 public class MoviesSuggestionAdapter extends RecyclerView.Adapter<MoviesSuggestionAdapter.MovieHolder> {
 
-    private Context mContext;
-    private List<BaseMovie> mMovies;
-    private String mSearch;
+    private final Context mContext;
+    private final List<BaseMovie> mMovies;
+    private final String mSearch;
 
     public MoviesSuggestionAdapter(Context context, List<BaseMovie> movies, String search) {
         this.mContext = context;
@@ -64,10 +64,10 @@ public class MoviesSuggestionAdapter extends RecyclerView.Adapter<MoviesSuggesti
 
         private BaseMovie mMovie;
 
-        private TextView mTitle;
-        private TextView mExtraInfo;
+        private final TextView mTitle;
+        private final TextView mExtraInfo;
 
-        private RoundedImageView mCover;
+        private final RoundedImageView mCover;
 
         MovieHolder(@NonNull View itemView) {
             super(itemView);
@@ -98,6 +98,7 @@ public class MoviesSuggestionAdapter extends RecyclerView.Adapter<MoviesSuggesti
 
             Picasso.get()
                    .load(movie.getImageUrl())
+                   .error(R.color.textIdle)
                    .into(mCover);
         }
 
@@ -105,6 +106,7 @@ public class MoviesSuggestionAdapter extends RecyclerView.Adapter<MoviesSuggesti
         public void onClick(View v) {
             Intent intent = new Intent(mContext, MovieActivity.class);
 
+            intent.putExtra(Constants.MOVIE_ID_INTENT, mMovie.getId());
             intent.putExtra(Constants.MOVIE_TITLE_INTENT, mMovie.getTitle());
             intent.putExtra(Constants.MOVIE_GENRES_INTENT, mMovie.getGenresAsString());
             intent.putExtra(Constants.MOVIE_RELEASE_YEAR_INTENT, mMovie.getReleaseYear());
