@@ -58,6 +58,9 @@
     <string name="user_not_found">Usuario no encontrado</string>
     <string name="email_used_with_different_provider">Este email ya se ha registado con otro proveedor</string>
 
+    <string name="review_sent">¡Valoración enviada!</string>
+    <string name="review_error">¡Ops! Tu valoración no se ha podido enviar.</string>
+
     <string name="facebook_app_id">592176878302149</string> <string name="fb_login_protocol_scheme">fb592176878302149</string>
 
     <string name="search_bar_placeholder">Buscar película o serie</string>
