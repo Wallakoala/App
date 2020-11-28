@@ -7,6 +7,7 @@ import android.view.View;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
 
+import com.google.firebase.auth.FirebaseAuth;
 import com.movielix.constants.Constants;
 import com.movielix.login.LoginActivity;
 import com.movielix.login.RegisterActivity;
@@ -27,6 +28,8 @@ public class IntroActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_intro);
+
+        FirebaseAuth.getInstance().signOut();
 
         initViews();
     }

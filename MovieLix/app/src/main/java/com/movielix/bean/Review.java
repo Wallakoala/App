@@ -18,16 +18,51 @@ public class Review extends FirestoreItem {
     private static final String USER = "user";
     private static final String COMMENT = "comment";
 
+    // Firestore fields
     private final int mScore;
     private final String mMovieId;
     private final String mUserId;
     private final String mComment;
 
-    public Review(int score, @NonNull String movie, @NonNull String user, @Nullable String comment) {
+    // Internal fields
+    private Movie mMovie;
+
+    public Review(int score, @NonNull String movieId, @NonNull String user, @Nullable String comment, @Nullable Movie movie) {
         this.mScore = score;
-        this.mMovieId = movie;
+        this.mMovieId = movieId;
         this.mUserId = user;
         this.mComment = comment;
+        this.mMovie = movie;
+    }
+
+    public Review(@NonNull String id, int score, @NonNull String movieId, @NonNull String user, @Nullable String comment, @Nullable Movie movie) {
+        super(id);
+
+        this.mScore = score;
+        this.mMovieId = movieId;
+        this.mUserId = user;
+        this.mComment = comment;
+        this.mMovie = movie;
+    }
+
+    public int getScore() {
+        return mScore;
+    }
+
+    public String getUserId() {
+        return mUserId;
+    }
+
+    public String getComment() {
+        return mComment;
+    }
+
+    public String getMovieId() {
+        return mMovieId;
+    }
+
+    public Movie getMovie() {
+        return mMovie;
     }
 
     public Map<String, Object> asMap() {

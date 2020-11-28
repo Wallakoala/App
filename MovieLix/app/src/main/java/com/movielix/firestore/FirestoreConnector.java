@@ -10,6 +10,7 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldPath;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
@@ -49,6 +50,11 @@ public class FirestoreConnector {
     private static final String MOVIE_GENRES = "9";
     private static final String MOVIE_PG_RATING = "10";
 
+    private static final String REVIEW_MOVIE_ID = "movie";
+    private static final String REVIEW_USER_ID = "user";
+    private static final String REVIEW_SCORE = "score";
+    private static final String REVIEW_COMMENT = "comment";
+
     private static final int MAX_SUGGESTIONS = 10;
 
     private static FirestoreConnector sFirestoreConnector;
@@ -80,8 +86,8 @@ public class FirestoreConnector {
         return sFirestoreConnector;
     }
 
-    public List<Movie> getDummyMovies(Context context) {
-        List<Movie> movies = new ArrayList<>();
+    public List<Review> getDummyMovies(Context context) {
+        List<Review> reviews = new ArrayList<>();
         Movie movie = new Movie(
                 "0"
                 , "La La Land"
@@ -93,7 +99,7 @@ public class FirestoreConnector {
                 , Movie.PG_RATING.G
                 , 83);
 
-        movies.add(movie);
+        reviews.add(new Review(4, "0", "0", "Super divertida, y gonica", movie));
 
         movie = new Movie(
                 "1"
@@ -106,7 +112,7 @@ public class FirestoreConnector {
                 , Movie.PG_RATING.PG
                 , 72);
 
-        movies.add(movie);
+        reviews.add(new Review(2, "1", "0", "Americanada...", movie));
 
         movie = new Movie(
                 "2"
@@ -119,9 +125,9 @@ public class FirestoreConnector {
                 , Movie.PG_RATING.R
                 , 90);
 
-        movies.add(movie);
+        reviews.add(new Review(5, "2", "0", "Canela en rama", movie));
 
-        return movies;
+        return reviews;
     }
 
     /**
@@ -318,55 +324,9 @@ public class FirestoreConnector {
                                             public void onComplete(@NonNull Task<QuerySnapshot> task) {
                                                 if (task.isSuccessful() && (task.getResult() != null)) {
                                                     for (QueryDocumentSnapshot document : task.getResult()) {
-                                                        try {
-                                                            String title = document.getString(MOVIE_TITLE);
-                                                            String imageUrl = document.getString(MOVIE_IMAGE_URL);
-                                                            String pgRatingStr = document.getString(MOVIE_PG_RATING);
-                                                            List<String> genres = (ArrayList<String>) document.get(MOVIE_GENRES);
-                                                            int releaseYear = Objects.requireNonNull(document.getLong(MOVIE_RELEASE_YEAR)).intValue();
-                                                            int duration = Objects.requireNonNull(document.getLong(MOVIE_DURATION)).intValue();
-                                                            int imdbRating = (int)((Objects.requireNonNull(document.getDouble(MOVIE_IMDB_RATING))) * 10);
-
-                                                            LiteMovie.PG_RATING pgRating = LiteMovie.PG_RATING.NOT_RATED;
-                                                            if (pgRatingStr != null) {
-                                                                if (pgRatingStr.equalsIgnoreCase("G")) {
-                                                                    pgRating = LiteMovie.PG_RATING.G;
-                                                                } else if (pgRatingStr.equalsIgnoreCase("PG")) {
-                                                                    pgRating = LiteMovie.PG_RATING.PG;
-                                                                } else if (pgRatingStr.equalsIgnoreCase("PG-13")) {
-                                                                    pgRating = LiteMovie.PG_RATING.PG_13;
-                                                                } else if (pgRatingStr.equalsIgnoreCase("R")) {
-                                                                    pgRating = LiteMovie.PG_RATING.R;
-                                                                } else if (pgRatingStr.equalsIgnoreCase("NC-17")) {
-                                                                    pgRating = LiteMovie.PG_RATING.NC_17;
-                                                                } else if (pgRatingStr.equalsIgnoreCase("TV-Y")) {
-                                                                    pgRating = LiteMovie.PG_RATING.TV_Y;
-                                                                } else if (pgRatingStr.equalsIgnoreCase("TV-Y7")) {
-                                                                    pgRating = LiteMovie.PG_RATING.TV_Y7;
-                                                                } else if (pgRatingStr.equalsIgnoreCase("TV-G")) {
-                                                                    pgRating = LiteMovie.PG_RATING.TV_G;
-                                                                } else if (pgRatingStr.equalsIgnoreCase("TV-PG")) {
-                                                                    pgRating = LiteMovie.PG_RATING.TV_PG;
-                                                                } else if (pgRatingStr.equalsIgnoreCase("TV-14")) {
-                                                                    pgRating = LiteMovie.PG_RATING.TV_14;
-                                                                } else if (pgRatingStr.equalsIgnoreCase("PG-MA")) {
-                                                                    pgRating = LiteMovie.PG_RATING.TV_MA;
-                                                                }
-                                                            }
-
-                                                            movies.add(new LiteMovie.Builder()
-                                                                    .withId(document.getId())
-                                                                    .titled(title)
-                                                                    .withImage(imageUrl)
-                                                                    .releasedIn(releaseYear)
-                                                                    .lasts(duration)
-                                                                    .categorizedAs(genres)
-                                                                    .classifiedAs(pgRating)
-                                                                    .rated(imdbRating)
-                                                                    .build());
-
-                                                        } catch (Exception e) {
-                                                            Log.e(TAG, "[FirestoreConnector]::getMoviesByTitle: error parsing movies.", e);
+                                                        LiteMovie lm = getLiteMovieFromDocument(document);
+                                                        if (lm != null) {
+                                                            movies.add(lm);
                                                         }
                                                     }
 
@@ -421,62 +381,7 @@ public class FirestoreConnector {
                         if (task.isSuccessful() && (task.getResult() != null)) {
                             if (!task.getResult().getDocuments().isEmpty()) {
                                 QueryDocumentSnapshot document = (QueryDocumentSnapshot) task.getResult().getDocuments().get(0);
-
-                                try {
-                                    String title = document.getString(MOVIE_TITLE);
-                                    String imageUrl = document.getString(MOVIE_IMAGE_URL);
-                                    String overview = document.getString(MOVIE_OVERVIEW);
-                                    String pgRatingStr = document.getString(MOVIE_PG_RATING);
-                                    List<String> genres = (ArrayList<String>) document.get(MOVIE_GENRES);
-                                    int releaseYear = Objects.requireNonNull(document.getLong(MOVIE_RELEASE_YEAR)).intValue();
-                                    int duration = Objects.requireNonNull(document.getLong(MOVIE_DURATION)).intValue();
-                                    int imdbRating = (int)((Objects.requireNonNull(document.getDouble(MOVIE_IMDB_RATING))) * 10);
-
-                                    LiteMovie.PG_RATING pgRating = LiteMovie.PG_RATING.NOT_RATED;
-                                    if (pgRatingStr != null) {
-                                        if (pgRatingStr.equalsIgnoreCase("G")) {
-                                            pgRating = LiteMovie.PG_RATING.G;
-                                        } else if (pgRatingStr.equalsIgnoreCase("PG")) {
-                                            pgRating = LiteMovie.PG_RATING.PG;
-                                        } else if (pgRatingStr.equalsIgnoreCase("PG-13")) {
-                                            pgRating = LiteMovie.PG_RATING.PG_13;
-                                        } else if (pgRatingStr.equalsIgnoreCase("R")) {
-                                            pgRating = LiteMovie.PG_RATING.R;
-                                        } else if (pgRatingStr.equalsIgnoreCase("NC-17")) {
-                                            pgRating = LiteMovie.PG_RATING.NC_17;
-                                        } else if (pgRatingStr.equalsIgnoreCase("TV-Y")) {
-                                            pgRating = LiteMovie.PG_RATING.TV_Y;
-                                        } else if (pgRatingStr.equalsIgnoreCase("TV-Y7")) {
-                                            pgRating = LiteMovie.PG_RATING.TV_Y7;
-                                        } else if (pgRatingStr.equalsIgnoreCase("TV-G")) {
-                                            pgRating = LiteMovie.PG_RATING.TV_G;
-                                        } else if (pgRatingStr.equalsIgnoreCase("TV-PG")) {
-                                            pgRating = LiteMovie.PG_RATING.TV_PG;
-                                        } else if (pgRatingStr.equalsIgnoreCase("TV-14")) {
-                                            pgRating = LiteMovie.PG_RATING.TV_14;
-                                        } else if (pgRatingStr.equalsIgnoreCase("PG-MA")) {
-                                            pgRating = LiteMovie.PG_RATING.TV_MA;
-                                        }
-                                    }
-
-                                    Movie movie = new Movie.Builder()
-                                            .withId(document.getId())
-                                            .titled(title)
-                                            .withImage(imageUrl)
-                                            .releasedIn(releaseYear)
-                                            .lasts(duration)
-                                            .categorizedAs(genres)
-                                            .classifiedAs(pgRating)
-                                            .rated(imdbRating)
-                                            .withOverview(overview)
-                                            .build();
-
-                                    listener.onSuccess(movie);
-
-                                } catch (Exception e) {
-                                    Log.e(TAG, "[FirestoreConnector]::getMoviesByTitle: error parsing movies.", e);
-                                    listener.onError();
-                                }
+                                listener.onSuccess(getMovieFromDocument(document));
 
                             } else {
                                 Log.w(TAG, "[FirestoreConnector]::getMovieById: no movie found with the id " + id);
@@ -485,6 +390,48 @@ public class FirestoreConnector {
 
                         } else {
                             Log.w(TAG, "[FirestoreConnector]::getMovieById: error getting movie.", task.getException());
+                            listener.onError();
+                        }
+                    }
+                });
+    }
+
+    /**
+     *
+     * @param ids
+     * @param listener
+     */
+    public void getMoviesById(final List<String> ids, @NonNull final FirestoreListener<Movie> listener) {
+        Log.d(TAG, "[FirestoreConnector]::getMoviesById: request to get movies by ids");
+
+        mDb.collection(MOVIES_LITE_COLLECTION)
+                .whereIn(FieldPath.documentId(), ids)
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful() && (task.getResult() != null)) {
+                            if (!task.getResult().getDocuments().isEmpty()) {
+                                List<Movie> movies = new ArrayList<>();
+                                for (QueryDocumentSnapshot document : task.getResult()) {
+                                    Movie lm = getMovieFromDocument(document);
+                                    if (lm != null) {
+                                        movies.add(lm);
+                                    }
+                                }
+
+                                /* Step 4
+                                 * Notify the listener.
+                                 */
+                                listener.onSuccess(movies);
+
+                            } else {
+                                Log.w(TAG, "[FirestoreConnector]::getMoviesById: no movies found with the given ids");
+                                listener.onError();
+                            }
+
+                        } else {
+                            Log.w(TAG, "[FirestoreConnector]::getMoviesById: error getting movies.", task.getException());
                             listener.onError();
                         }
                     }
@@ -511,7 +458,7 @@ public class FirestoreConnector {
 
         mDb.collection(REVIEWS_COLLECTION)
                 .document()
-                .set(new Review(score, idMovie, idUser, comment).asMap())
+                .set(new Review(score, idMovie, idUser, comment, null).asMap())
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
@@ -552,6 +499,49 @@ public class FirestoreConnector {
                     public void onFailure(@NonNull Exception e) {
                         Log.w(TAG, "[FirestoreConnector]::addUser: error creating review", e);
                         listener.onError();
+                    }
+                });
+    }
+
+    /**
+     *
+     * @param userId
+     * @param listener
+     */
+    public void getReviewsByUser(@NonNull final String userId, final FirestoreListener<Review> listener) {
+        Log.d(TAG, "[FirestoreConnector]::getReviewsByUser: request to get review by user: " + userId);
+
+        mDb.collection(REVIEWS_COLLECTION)
+                .whereEqualTo(REVIEW_USER_ID, userId)
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful() && (task.getResult() != null)) {
+                            List<Review> reviews = new ArrayList<>();
+                            if (!task.getResult().getDocuments().isEmpty()) {
+                                for (DocumentSnapshot document : task.getResult().getDocuments()) {
+                                    Review review = new Review(
+                                            document.getId(),
+                                            Objects.requireNonNull(document.getLong(REVIEW_SCORE)).intValue(),
+                                            Objects.requireNonNull(document.getString(REVIEW_MOVIE_ID)),
+                                            Objects.requireNonNull(document.getString(REVIEW_USER_ID)),
+                                            document.getString(REVIEW_COMMENT),
+                                            null);
+
+                                    reviews.add(review);
+                                }
+
+                            } else {
+                                Log.w(TAG, "[FirestoreConnector]::getReviewsByUser: no reviews found by user " + userId);
+                            }
+
+                            listener.onSuccess(reviews);
+
+                        } else {
+                            Log.w(TAG, "[FirestoreConnector]::getReviewsByUser: error getting reviews.", task.getException());
+                            listener.onError();
+                        }
                     }
                 });
     }
@@ -601,5 +591,120 @@ public class FirestoreConnector {
         }
 
         return ids;
+    }
+
+    @Nullable
+    private LiteMovie getLiteMovieFromDocument(QueryDocumentSnapshot document) {
+        try {
+            String title = document.getString(MOVIE_TITLE);
+            String imageUrl = document.getString(MOVIE_IMAGE_URL);
+            String pgRatingStr = document.getString(MOVIE_PG_RATING);
+            List<String> genres = (ArrayList<String>) document.get(MOVIE_GENRES);
+            int releaseYear = Objects.requireNonNull(document.getLong(MOVIE_RELEASE_YEAR)).intValue();
+            int duration = Objects.requireNonNull(document.getLong(MOVIE_DURATION)).intValue();
+            int imdbRating = (int)((Objects.requireNonNull(document.getDouble(MOVIE_IMDB_RATING))) * 10);
+
+            LiteMovie.PG_RATING pgRating = LiteMovie.PG_RATING.NOT_RATED;
+            if (pgRatingStr != null) {
+                if (pgRatingStr.equalsIgnoreCase("G")) {
+                    pgRating = LiteMovie.PG_RATING.G;
+                } else if (pgRatingStr.equalsIgnoreCase("PG")) {
+                    pgRating = LiteMovie.PG_RATING.PG;
+                } else if (pgRatingStr.equalsIgnoreCase("PG-13")) {
+                    pgRating = LiteMovie.PG_RATING.PG_13;
+                } else if (pgRatingStr.equalsIgnoreCase("R")) {
+                    pgRating = LiteMovie.PG_RATING.R;
+                } else if (pgRatingStr.equalsIgnoreCase("NC-17")) {
+                    pgRating = LiteMovie.PG_RATING.NC_17;
+                } else if (pgRatingStr.equalsIgnoreCase("TV-Y")) {
+                    pgRating = LiteMovie.PG_RATING.TV_Y;
+                } else if (pgRatingStr.equalsIgnoreCase("TV-Y7")) {
+                    pgRating = LiteMovie.PG_RATING.TV_Y7;
+                } else if (pgRatingStr.equalsIgnoreCase("TV-G")) {
+                    pgRating = LiteMovie.PG_RATING.TV_G;
+                } else if (pgRatingStr.equalsIgnoreCase("TV-PG")) {
+                    pgRating = LiteMovie.PG_RATING.TV_PG;
+                } else if (pgRatingStr.equalsIgnoreCase("TV-14")) {
+                    pgRating = LiteMovie.PG_RATING.TV_14;
+                } else if (pgRatingStr.equalsIgnoreCase("PG-MA")) {
+                    pgRating = LiteMovie.PG_RATING.TV_MA;
+                }
+            }
+
+            return new LiteMovie.Builder()
+                    .withId(document.getId())
+                    .titled(title)
+                    .withImage(imageUrl)
+                    .releasedIn(releaseYear)
+                    .lasts(duration)
+                    .categorizedAs(genres)
+                    .classifiedAs(pgRating)
+                    .rated(imdbRating)
+                    .build();
+
+
+        } catch (Exception e) {
+            Log.e(TAG, "[FirestoreConnector]::getMoviesByTitle: error parsing movies.", e);
+        }
+
+        return null;
+    }
+
+    @Nullable
+    private Movie getMovieFromDocument(QueryDocumentSnapshot document) {
+        try {
+            String title = document.getString(MOVIE_TITLE);
+            String overview = document.getString(MOVIE_OVERVIEW);
+            String imageUrl = document.getString(MOVIE_IMAGE_URL);
+            String pgRatingStr = document.getString(MOVIE_PG_RATING);
+            List<String> genres = (ArrayList<String>) document.get(MOVIE_GENRES);
+            int releaseYear = Objects.requireNonNull(document.getLong(MOVIE_RELEASE_YEAR)).intValue();
+            int duration = Objects.requireNonNull(document.getLong(MOVIE_DURATION)).intValue();
+            int imdbRating = (int)((Objects.requireNonNull(document.getDouble(MOVIE_IMDB_RATING))) * 10);
+
+            Movie.PG_RATING pgRating = Movie.PG_RATING.NOT_RATED;
+            if (pgRatingStr != null) {
+                if (pgRatingStr.equalsIgnoreCase("G")) {
+                    pgRating = Movie.PG_RATING.G;
+                } else if (pgRatingStr.equalsIgnoreCase("PG")) {
+                    pgRating = Movie.PG_RATING.PG;
+                } else if (pgRatingStr.equalsIgnoreCase("PG-13")) {
+                    pgRating = Movie.PG_RATING.PG_13;
+                } else if (pgRatingStr.equalsIgnoreCase("R")) {
+                    pgRating = Movie.PG_RATING.R;
+                } else if (pgRatingStr.equalsIgnoreCase("NC-17")) {
+                    pgRating = Movie.PG_RATING.NC_17;
+                } else if (pgRatingStr.equalsIgnoreCase("TV-Y")) {
+                    pgRating = Movie.PG_RATING.TV_Y;
+                } else if (pgRatingStr.equalsIgnoreCase("TV-Y7")) {
+                    pgRating = Movie.PG_RATING.TV_Y7;
+                } else if (pgRatingStr.equalsIgnoreCase("TV-G")) {
+                    pgRating = Movie.PG_RATING.TV_G;
+                } else if (pgRatingStr.equalsIgnoreCase("TV-PG")) {
+                    pgRating = Movie.PG_RATING.TV_PG;
+                } else if (pgRatingStr.equalsIgnoreCase("TV-14")) {
+                    pgRating = Movie.PG_RATING.TV_14;
+                } else if (pgRatingStr.equalsIgnoreCase("PG-MA")) {
+                    pgRating = Movie.PG_RATING.TV_MA;
+                }
+            }
+
+            return new Movie.Builder()
+                    .withId(document.getId())
+                    .titled(title)
+                    .withImage(imageUrl)
+                    .releasedIn(releaseYear)
+                    .lasts(duration)
+                    .categorizedAs(genres)
+                    .classifiedAs(pgRating)
+                    .rated(imdbRating)
+                    .withOverview(overview)
+                    .build();
+
+        } catch (Exception e) {
+            Log.e(TAG, "[FirestoreConnector]::getMoviesByTitle: error parsing movies.", e);
+        }
+
+        return null;
     }
 }

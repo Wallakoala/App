@@ -3,23 +3,23 @@
     <group
         android:checkableBehavior="single"
         android:id="@+id/group1">
-        <item android:id="@+id/nav_item_reviews"
+        <item android:id="@+id/menu_my_reviews"
             android:title="@string/navigation_item_reviews" />
     </group>
 
     <group
     android:checkableBehavior="single"
     android:id="@+id/group2">
-        <item android:id="@+id/nav_item_feedback"
+        <item android:id="@+id/menu_feedback"
             android:title="@string/navigation_item_feedback" />
-        <item android:id="@+id/nav_item_licencias"
+        <item android:id="@+id/menu_licenses"
             android:title="@string/navigation_item_licencias" />
     </group>
 
     <group
         android:checkableBehavior="single"
         android:id="@+id/group3">
-        <item android:id="@+id/nav_item_salir"
+        <item android:id="@+id/menu_sign_out"
             android:title="@string/navigation_item_salir" />
     </group>
 </menu>
