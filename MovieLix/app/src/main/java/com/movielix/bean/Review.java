@@ -5,6 +5,7 @@ import androidx.annotation.Nullable;
 
 import com.movielix.firestore.FirestoreItem;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,12 +18,14 @@ public class Review extends FirestoreItem {
     private static final String MOVIE = "movie";
     private static final String USER = "user";
     private static final String COMMENT = "comment";
+    private static final String TIMESTAMP = "timestamp";
 
     // Firestore fields
     private final int mScore;
     private final String mMovieId;
     private final String mUserId;
     private final String mComment;
+    private final Date mTimestamp;
 
     // Internal fields
     private Movie mMovie;
@@ -33,6 +36,7 @@ public class Review extends FirestoreItem {
         this.mUserId = user;
         this.mComment = comment;
         this.mMovie = movie;
+        this.mTimestamp = new Date();
     }
 
     public Review(@NonNull String id, int score, @NonNull String movieId, @NonNull String user, @Nullable String comment, @Nullable Movie movie) {
@@ -43,6 +47,7 @@ public class Review extends FirestoreItem {
         this.mUserId = user;
         this.mComment = comment;
         this.mMovie = movie;
+        this.mTimestamp = new Date();
     }
 
     public int getScore() {
@@ -71,6 +76,7 @@ public class Review extends FirestoreItem {
         map.put(SCORE, mScore);
         map.put(MOVIE, mMovieId);
         map.put(USER, mUserId);
+        map.put(TIMESTAMP, mTimestamp);
         if (mComment != null) {
             map.put(COMMENT, mComment);
         }
