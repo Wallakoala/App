@@ -404,7 +404,7 @@ public class FirestoreConnector {
     public void getMoviesById(final List<String> ids, @NonNull final FirestoreListener<Movie> listener) {
         Log.d(TAG, "[FirestoreConnector]::getMoviesById: request to get movies by ids");
 
-        mDb.collection(MOVIES_LITE_COLLECTION)
+        mDb.collection(MOVIES_COLLECTION)
                 .whereIn(FieldPath.documentId(), ids)
                 .get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {

@@ -73,7 +73,6 @@ public class MyReviewsActivity extends AppCompatActivity {
      * Initializes the RecyclerView
      */
     private void initializeRecyclerView(final List<Review> reviews) {
-        Log.d(Constants.TAG, "-------------------- " + reviews.size());
         ReviewsAdapter reviewsAdapter = new ReviewsAdapter(reviews, true, this);
 
         mReviewsRecyclerView.setLayoutManager(new LinearLayoutManager(this, RecyclerView.VERTICAL, false));

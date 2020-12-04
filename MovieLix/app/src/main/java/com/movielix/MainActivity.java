@@ -103,7 +103,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             // todo
 
         } else if (id == R.id.menu_sign_out) {
-            // todo Add confirmation dialog
+            // todo Add confirmation dialog and go back to the intro activity.
             FirebaseAuth.getInstance().signOut();
         }
 
