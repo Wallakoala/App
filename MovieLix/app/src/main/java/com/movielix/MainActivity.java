@@ -96,6 +96,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             Intent intent = new Intent(MainActivity.this, MyReviewsActivity.class);
             startActivity(intent);
 
+        } else if (id == R.id.menu_my_friends) {
+            Intent intent = new Intent(MainActivity.this, MyFriendsActivity.class);
+            startActivity(intent);
+
         } else if (id == R.id.menu_feedback) {
             // todo
 

@@ -5,10 +5,12 @@
     <string name="tab_right">Amigos</string>
 
     <string name="my_reviews">Mis valoraciones</string>
+    <string name="my_friends">Mis amigos</string>
 
     <string name="navigation_drawer_open">Navigation drawer opened</string>
     <string name="navigation_drawer_close">Navigation drawer closed</string>
     <string name="navigation_item_reviews">Mis valoraciones</string>
+    <string name="navigation_item_friends">Mis amigos</string>
     <string name="navigation_item_feedback">Valóranos</string>
     <string name="navigation_item_licencias">Licencias</string>
     <string name="navigation_item_salir">Cerrar sesión</string>
@@ -30,7 +32,7 @@
     <string name="reviews_item_movie_rating_1">3 /</string>
     <string name="reviews_item_movie_rating_2">5</string>
 
-    <string name="friend_num_reviews">4 valoraciones</string>
+    <string name="friend_num_reviews">12</string>
     <string name="friend_follow">Seguir</string>
     <string name="friend_unfollow">Siguiendo</string>
 
@@ -71,6 +73,8 @@
     <string name="no_movies_found">No se ha encontrado ninguna película o serie con los términos\n\"%1\"</string>
     <string name="movie_suggestion_extra_info">(%1) - %2</string>
     <string name="add_review_descriptor">Añadir valoracion</string>
+    <string name="add_friend_descriptor">Añadir amigo</string>
 
     <string name="no_reviews">No has hecho ninguna valoración todavía.</string>
+    <string name="no_friends">No has añadido ningún amigo todavía.</string>
 </resources>

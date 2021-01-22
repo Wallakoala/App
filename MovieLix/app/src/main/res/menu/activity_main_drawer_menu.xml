@@ -5,6 +5,8 @@
         android:id="@+id/group1">
         <item android:id="@+id/menu_my_reviews"
             android:title="@string/navigation_item_reviews" />
+        <item android:id="@+id/menu_my_friends"
+            android:title="@string/navigation_item_friends" />
     </group>
 
     <group

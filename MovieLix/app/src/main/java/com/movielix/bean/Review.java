@@ -28,7 +28,7 @@ public class Review extends FirestoreItem {
     private final Date mTimestamp;
 
     // Internal fields
-    private Movie mMovie;
+    private final Movie mMovie;
 
     public Review(int score, @NonNull String movieId, @NonNull String user, @Nullable String comment, @Nullable Movie movie) {
         this.mScore = score;

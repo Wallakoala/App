@@ -1,6 +1,7 @@
 package com.movielix.firestore;
 
 import android.content.Context;
+import android.net.Uri;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -39,6 +40,7 @@ public class FirestoreConnector {
     private static final String MOVIES_SUGGESTIONS_COLLECTION = "movies_suggestions";
     private static final String REVIEWS_COLLECTION = "reviews";
     private static final String USERS_COLLECTION = "users";
+    private static final String FRIENDS_COLLECTION = "friends";
 
     // Document fields names
     private static final String MOVIE_TITLE = "2";
@@ -54,6 +56,13 @@ public class FirestoreConnector {
     private static final String REVIEW_USER_ID = "user";
     private static final String REVIEW_SCORE = "score";
     private static final String REVIEW_COMMENT = "comment";
+
+    private static final String FRIENDS_ID = "id";
+    private static final String FRIENDS_FRIEND_OF = "friend_of";
+    private static final String FRIENDS_PHOTO_URL = "friend_of";
+
+    private static final String USER_NAME = "name";
+    private static final String USER_PHOTO_URL = "photo_url";
 
     private static final int MAX_SUGGESTIONS = 10;
 
@@ -540,6 +549,76 @@ public class FirestoreConnector {
 
                         } else {
                             Log.w(TAG, "[FirestoreConnector]::getReviewsByUser: error getting reviews.", task.getException());
+                            listener.onError();
+                        }
+                    }
+                });
+    }
+
+    /**
+     *
+     *
+     * @param userId
+     * @param listener
+     */
+    public void getFriends(@NonNull final String userId, final FirestoreListener<User> listener) {
+        Log.d(TAG, "[FirestoreConnector]::getFriendsOf: request to get friends of user: " + userId);
+
+        mDb.collection(FRIENDS_COLLECTION)
+                .whereEqualTo(FRIENDS_ID, userId)
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful() && (task.getResult() != null)) {
+                            final List<User> users = new ArrayList<>();
+                            if (!task.getResult().getDocuments().isEmpty()) {
+                                for (DocumentSnapshot document : task.getResult().getDocuments()) {
+                                    if (document.get(FRIENDS_FRIEND_OF) != null) {
+                                        List<String> friends = (List<String>) document.get(FRIENDS_FRIEND_OF);
+
+                                        assert friends != null;
+                                        mDb.collection(USERS_COLLECTION)
+                                                .whereIn(FieldPath.documentId(), friends)
+                                                .get()
+                                                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                                                    @Override
+                                                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                                                        if (task.isSuccessful() && (task.getResult() != null)) {
+                                                            if (!task.getResult().getDocuments().isEmpty()) {
+                                                                for (DocumentSnapshot document : task.getResult().getDocuments()) {
+                                                                    Uri uri = null;
+                                                                    if (document.getString(USER_PHOTO_URL) != null) {
+                                                                        uri = Uri.parse(document.getString(USER_PHOTO_URL));
+                                                                    }
+
+                                                                    users.add(new User(
+                                                                              document.getId()
+                                                                            , Objects.requireNonNull(document.getString(USER_NAME))
+                                                                            , uri));
+                                                                }
+
+                                                            } else {
+                                                                Log.w(TAG, "[FirestoreConnector]::getFriendsOf: no friends found for user " + userId);
+                                                            }
+
+                                                            listener.onSuccess(users);
+
+                                                        } else {
+                                                            Log.w(TAG, "[FirestoreConnector]::getFriendsOf: error getting friends.", task.getException());
+                                                            listener.onError();
+                                                        }
+                                                    }
+                                                });
+                                    }
+                                }
+
+                            } else {
+                                Log.w(TAG, "[FirestoreConnector]::getFriendsOf: no friends found for user " + userId);
+                            }
+
+                        } else {
+                            Log.w(TAG, "[FirestoreConnector]::getFriendsOf: error getting friends.", task.getException());
                             listener.onError();
                         }
                     }
