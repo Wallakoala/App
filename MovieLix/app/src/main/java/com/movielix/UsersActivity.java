@@ -22,10 +22,10 @@ import com.daimajia.androidanimations.library.Techniques;
 import com.daimajia.androidanimations.library.YoYo;
 import com.google.android.material.snackbar.Snackbar;
 import com.mancj.materialsearchbar.MaterialSearchBar;
+import com.movielix.adapter.UsersSuggestionAdapter;
 import com.movielix.adapter.MoviesAdapter;
-import com.movielix.adapter.MoviesSuggestionAdapter;
-import com.movielix.bean.BaseMovie;
 import com.movielix.bean.LiteMovie;
+import com.movielix.bean.User;
 import com.movielix.constants.Constants;
 import com.movielix.firestore.FirestoreConnector;
 import com.movielix.firestore.FirestoreListener;
@@ -33,7 +33,7 @@ import com.movielix.font.TypeFace;
 
 import java.util.List;
 
-public class FriendsActivity extends AppCompatActivity implements MaterialSearchBar.OnSearchActionListener {
+public class UsersActivity extends AppCompatActivity implements MaterialSearchBar.OnSearchActionListener {
 
     // ProgressBar
     private ProgressBar mProgressBar;
@@ -42,33 +42,33 @@ public class FriendsActivity extends AppCompatActivity implements MaterialSearch
     private AppCompatTextView mMessageTextview;
 
     // RecyclerView
-    private RecyclerView mMoviesRecyclerView;
+    private RecyclerView mUsersRecyclerView;
     private RecyclerView mSuggestionsRecyclerView;
 
     // Containers
     private View mSuggestionsContainer;
-    private View mMoviesContainer;
+    private View mUserContainer;
 
-    private FirestoreConnector firestoreConnector;
+    private FirestoreConnector mFc;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.activity_movies);
+        setContentView(R.layout.activity_users);
 
-        mProgressBar = findViewById(R.id.movies_progress_bar);
-        mMessageTextview = findViewById(R.id.movies_message_textview);
-        mMoviesRecyclerView = findViewById(R.id.movies_recycler_view);
-        mSuggestionsRecyclerView = findViewById(R.id.movies_suggestions_recycler_view);
-        mSuggestionsContainer = findViewById(R.id.movies_suggestions_container);
-        mMoviesContainer = findViewById(R.id.movies_container);
+        mProgressBar = findViewById(R.id.users_progress_bar);
+        mMessageTextview = findViewById(R.id.users_message_textview);
+        mUsersRecyclerView = findViewById(R.id.users_recycler_view);
+        mSuggestionsRecyclerView = findViewById(R.id.users_suggestions_recycler_view);
+        mSuggestionsContainer = findViewById(R.id.users_suggestions_container);
+        mUserContainer = findViewById(R.id.users_container);
 
         mSuggestionsContainer.setVisibility(View.GONE);
         mSuggestionsRecyclerView.setLayoutManager(
                 new LinearLayoutManager(this, RecyclerView.VERTICAL, false));
 
-        firestoreConnector = FirestoreConnector.newInstance();
+        mFc = FirestoreConnector.newInstance();
 
         initializeSearchView();
         hideMessage();
@@ -76,7 +76,7 @@ public class FriendsActivity extends AppCompatActivity implements MaterialSearch
     }
 
     private void initializeSearchView() {
-        MaterialSearchBar searchBar = findViewById(R.id.movies_search_bar);
+        MaterialSearchBar searchBar = findViewById(R.id.users_search_bar);
 
         searchBar.setOnSearchActionListener(this);
         searchBar.setSuggestionsEnabled(false);
@@ -104,19 +104,19 @@ public class FriendsActivity extends AppCompatActivity implements MaterialSearch
             public void onTextChanged(final CharSequence charSequence, int i, int i1, int i2) {
                 if (charSequence.length() > 1) {
                     showProgressBar();
-                    firestoreConnector.getMoviesSuggestionsByTitle(FriendsActivity.this, charSequence.toString(), new FirestoreListener<BaseMovie>() {
+                    mFc.getUsersSuggestionsByName(charSequence.toString(), new FirestoreListener<User>() {
                         @Override
                         public void onSuccess() {}
 
                         @Override
-                        public void onSuccess(BaseMovie item) {}
+                        public void onSuccess(User item) {}
 
                         @Override
-                        public void onSuccess(List<BaseMovie> movies) {
+                        public void onSuccess(List<User> users) {
                             hideProgressBar(true);
 
-                            MoviesSuggestionAdapter adapter = new MoviesSuggestionAdapter(
-                                    FriendsActivity.this, movies, charSequence.toString());
+                            UsersSuggestionAdapter adapter = new UsersSuggestionAdapter(
+                                    UsersActivity.this, users, charSequence.toString());
                             mSuggestionsRecyclerView.setAdapter(adapter);
                             mSuggestionsContainer.setVisibility(View.VISIBLE);
                         }
@@ -169,12 +169,12 @@ public class FriendsActivity extends AppCompatActivity implements MaterialSearch
         if (!enabled) {
             mSuggestionsContainer.setVisibility(View.GONE);
 
-            mMoviesContainer.animate()
+            mUserContainer.animate()
                     .alpha(1.f)
                     .setDuration(250)
                     .start();
         } else {
-            mMoviesContainer.animate()
+            mUserContainer.animate()
                     .alpha(.25f)
                     .setDuration(250)
                     .start();
@@ -192,8 +192,8 @@ public class FriendsActivity extends AppCompatActivity implements MaterialSearch
             hideMessage();
 
             mMessageTextview.setVisibility(View.GONE);
-            mMoviesRecyclerView.setVisibility(View.GONE);
-            firestoreConnector.getMoviesByTitle(text.toString(), new FirestoreListener<LiteMovie>() {
+            mUsersRecyclerView.setVisibility(View.GONE);
+            mFc.getMoviesByTitle(text.toString(), new FirestoreListener<LiteMovie>() {
                 @Override
                 public void onSuccess() {}
 
@@ -206,24 +206,20 @@ public class FriendsActivity extends AppCompatActivity implements MaterialSearch
                     hideSuggestions();
 
                     if (!movies.isEmpty()) {
-                        MoviesAdapter moviesAdapter = new MoviesAdapter(movies, FriendsActivity.this);
-                        mMoviesRecyclerView.setLayoutManager(
-                                new LinearLayoutManager(FriendsActivity.this, RecyclerView.VERTICAL, false));
-                        mMoviesRecyclerView.setAdapter(moviesAdapter);
-                        mMoviesRecyclerView.setVisibility(View.VISIBLE);
+                        MoviesAdapter moviesAdapter = new MoviesAdapter(movies, UsersActivity.this);
+                        mUsersRecyclerView.setLayoutManager(
+                                new LinearLayoutManager(UsersActivity.this, RecyclerView.VERTICAL, false));
+                        mUsersRecyclerView.setAdapter(moviesAdapter);
+                        mUsersRecyclerView.setVisibility(View.VISIBLE);
 
                     } else {
-                        String search = text.toString();
-                        String message = FriendsActivity.this.getString(R.string.no_movies_found);
-                        message = message.replace("%1", search);
-
-                        showMessage(message);
+                        showMessage(UsersActivity.this.getString(R.string.no_users_found));
                     }
                 }
 
                 @Override
                 public void onError() {
-                    Snackbar.make(mMoviesContainer, "Ops, algo ha ido mal", Snackbar.LENGTH_SHORT).show();
+                    Snackbar.make(mUserContainer, "Ops, algo ha ido mal", Snackbar.LENGTH_SHORT).show();
                 }
             });
         }

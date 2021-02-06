@@ -29,7 +29,7 @@ public class User extends FirestoreItem {
         if (photoUrl != null) {
             mPhotoUrl = photoUrl.toString();
         } else {
-            mPhotoUrl = "";
+            mPhotoUrl = null;
         }
     }
 

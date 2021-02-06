@@ -59,7 +59,7 @@ public class MyFriendsActivity extends AppCompatActivity {
         findViewById(R.id.add_friend).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(MyFriendsActivity.this, FriendsActivity.class);
+                Intent intent = new Intent(MyFriendsActivity.this, UsersActivity.class);
                 startActivity(intent);
             }
         });
@@ -76,6 +76,9 @@ public class MyFriendsActivity extends AppCompatActivity {
         mRecyclerView.setVisibility(View.VISIBLE);
     }
 
+    /**
+     * Method to retrieve the reviews and show the RecyclerView.
+     */
     private void getReviews() {
         mMessageTextview.setVisibility(View.GONE);
         mRecyclerView.setVisibility(View.GONE);

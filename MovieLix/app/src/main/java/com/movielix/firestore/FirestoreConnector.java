@@ -59,7 +59,6 @@ public class FirestoreConnector {
 
     private static final String FRIENDS_ID = "id";
     private static final String FRIENDS_FRIEND_OF = "friend_of";
-    private static final String FRIENDS_PHOTO_URL = "friend_of";
 
     private static final String USER_NAME = "name";
     private static final String USER_PHOTO_URL = "photo_url";
@@ -406,9 +405,10 @@ public class FirestoreConnector {
     }
 
     /**
+     * Method that returns a list of movies given their IDs.
      *
-     * @param ids
-     * @param listener
+     * @param ids list of the movies IDs.
+     * @param listener FirestoreListener object to be notified once the operation is complete.
      */
     public void getMoviesById(final List<String> ids, @NonNull final FirestoreListener<Movie> listener) {
         Log.d(TAG, "[FirestoreConnector]::getMoviesById: request to get movies by ids");
@@ -429,9 +429,6 @@ public class FirestoreConnector {
                                     }
                                 }
 
-                                /* Step 4
-                                 * Notify the listener.
-                                 */
                                 listener.onSuccess(movies);
 
                             } else {
@@ -513,9 +510,10 @@ public class FirestoreConnector {
     }
 
     /**
+     * Method that returns a list of reviews made by the given user.
      *
-     * @param userId
-     * @param listener
+     * @param userId user's id.
+     * @param listener FirestoreListener object to be notified once the operation is complete.
      */
     public void getReviewsByUser(@NonNull final String userId, final FirestoreListener<Review> listener) {
         Log.d(TAG, "[FirestoreConnector]::getReviewsByUser: request to get review by user: " + userId);
@@ -556,10 +554,10 @@ public class FirestoreConnector {
     }
 
     /**
+     * Method that returns the list of friends of a given user.
      *
-     *
-     * @param userId
-     * @param listener
+     * @param userId user's id.
+     * @param listener FirestoreListener object to be notified once the operation is complete.
      */
     public void getFriends(@NonNull final String userId, final FirestoreListener<User> listener) {
         Log.d(TAG, "[FirestoreConnector]::getFriendsOf: request to get friends of user: " + userId);
@@ -619,6 +617,89 @@ public class FirestoreConnector {
 
                         } else {
                             Log.w(TAG, "[FirestoreConnector]::getFriendsOf: error getting friends.", task.getException());
+                            listener.onError();
+                        }
+                    }
+                });
+    }
+
+    /**
+     * Method that returns a list of users suggestions given a search term.
+     *
+     * @param search search term.
+     * @param listener FirestoreListener object to be notified once the operation is complete.
+     */
+    public void getUsersSuggestionsByName(@NonNull final String search, final FirestoreListener<User> listener) {
+        Log.d(TAG, "[FirestoreConnector]::getUsersSuggestionsByName: request to get users by searching: " + search);
+
+        char c = search.charAt(search.length() - 1);
+        c++;
+
+        char[] cArray = search.toCharArray();
+        cArray[cArray.length - 1] = c;
+
+        final char[] cUpperArray = cArray.clone();
+        if (Character.isLowerCase(cUpperArray[0])) {
+            cUpperArray[0] = Character.toUpperCase(cUpperArray[0]);
+        } else {
+            cUpperArray[0] = Character.toLowerCase(cUpperArray[0]);
+        }
+
+        final char[] cPrimeArray = search.toCharArray();
+        if (Character.isLowerCase(cPrimeArray[0])) {
+            cPrimeArray[0] = Character.toUpperCase(cPrimeArray[0]);
+        } else {
+            cPrimeArray[0] = Character.toLowerCase(cPrimeArray[0]);
+        }
+
+        mDb.collection(USERS_COLLECTION)
+                .whereGreaterThanOrEqualTo(USER_NAME, search)
+                .whereLessThan(USER_NAME, new String(cArray))
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful() && (task.getResult() != null)) {
+                            final List<User> users = new ArrayList<>();
+                            for (DocumentSnapshot document : task.getResult().getDocuments()) {
+                                User user = new User(
+                                          document.getId()
+                                        , Objects.requireNonNull(document.getString(USER_NAME))
+                                        , Uri.parse(document.getString(USER_PHOTO_URL)));
+
+                                users.add(user);
+                            }
+
+                            mDb.collection(USERS_COLLECTION)
+                                    .whereGreaterThanOrEqualTo(USER_NAME, new String(cPrimeArray))
+                                    .whereLessThan(USER_NAME, new String(cUpperArray))
+                                    .get()
+                                    .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                                        @Override
+                                        public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                                            if (task.isSuccessful() && (task.getResult() != null)) {
+                                                for (DocumentSnapshot document : task.getResult().getDocuments()) {
+                                                    User user = new User(
+                                                            document.getId()
+                                                            , Objects.requireNonNull(document.getString(USER_NAME))
+                                                            , Uri.parse(document.getString(USER_PHOTO_URL)));
+
+                                                    users.add(user);
+                                                }
+
+                                                listener.onSuccess(users);
+
+                                            } else {
+                                                Log.w(TAG, "[FirestoreConnector]::getUsersSuggestionsByName: error getting users.", task.getException());
+                                                listener.onError();
+                                            }
+                                        }
+                                    });
+
+                            listener.onSuccess(users);
+
+                        } else {
+                            Log.w(TAG, "[FirestoreConnector]::getUsersSuggestionsByName: error getting users.", task.getException());
                             listener.onError();
                         }
                     }
