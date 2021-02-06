@@ -53,6 +53,21 @@
             android:label="@string/app_name"
             android:theme="@style/AppTheme"/>
 
+        <activity
+            android:name=".MyReviewsActivity"
+            android:label="@string/app_name"
+            android:theme="@style/AppTheme"/>
+
+        <activity
+            android:name=".MyFriendsActivity"
+            android:label="@string/app_name"
+            android:theme="@style/AppTheme"/>
+
+        <activity
+            android:name=".UsersActivity"
+            android:label="@string/app_name"
+            android:theme="@style/AppTheme"/>
+
         <meta-data
             android:name="com.facebook.sdk.ApplicationId"
             android:value="@string/facebook_app_id"/>

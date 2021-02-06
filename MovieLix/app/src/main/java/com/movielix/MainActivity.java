@@ -5,6 +5,8 @@ import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ProgressBar;
 
@@ -12,6 +14,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -19,21 +22,26 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.daimajia.androidanimations.library.Techniques;
 import com.daimajia.androidanimations.library.YoYo;
+import com.google.android.material.navigation.NavigationView;
+import com.google.firebase.auth.FirebaseAuth;
 import com.movielix.adapter.ReviewsAdapter;
 import com.movielix.bean.Movie;
+import com.movielix.bean.Review;
+import com.movielix.constants.Constants;
 import com.movielix.firestore.FirestoreConnector;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     private static final int SWIPE_TRIGGER_DISTANCE = 750;
 
     // Views
     private Toolbar mToolbar;
     private ActionBarDrawerToggle mDrawerToggle;
+    private DrawerLayout mDrawerLayout;
     private ProgressBar mProgressBar;
 
     @Override
@@ -44,7 +52,7 @@ public class MainActivity extends AppCompatActivity {
 
         initializeToolbar();
         initializeDrawer();
-        initializedFAB();
+        initializeFAB();
 
         SwipeRefreshLayout swipeRefreshLayout = findViewById(R.id.swipe_refresh_layout);
         swipeRefreshLayout.setDistanceToTriggerSync(SWIPE_TRIGGER_DISTANCE);
@@ -80,11 +88,38 @@ public class MainActivity extends AppCompatActivity {
         finish();
     }
 
+    @Override
+    public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
+        int id = menuItem.getItemId();
+
+        if (id == R.id.menu_my_reviews) {
+            Intent intent = new Intent(MainActivity.this, MyReviewsActivity.class);
+            startActivity(intent);
+
+        } else if (id == R.id.menu_my_friends) {
+            Intent intent = new Intent(MainActivity.this, MyFriendsActivity.class);
+            startActivity(intent);
+
+        } else if (id == R.id.menu_feedback) {
+            // todo
+
+        } else if (id == R.id.menu_licenses) {
+            // todo
+
+        } else if (id == R.id.menu_sign_out) {
+            // todo Add confirmation dialog and go back to the intro activity.
+            FirebaseAuth.getInstance().signOut();
+        }
+
+        mDrawerLayout.closeDrawer(GravityCompat.START);
+        return true;
+    }
+
     /**
      * Initializes the floating action button.
      */
-    private void initializedFAB() {
-        findViewById(R.id.fab).setOnClickListener(new View.OnClickListener() {
+    private void initializeFAB() {
+        findViewById(R.id.add_review).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(MainActivity.this, MoviesActivity.class);
@@ -107,9 +142,9 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Initializes the RecyclerView
      */
-    private void initializeRecyclerView(final List<Movie> movies) {
+    private void initializeRecyclerView(final List<Review> reviews) {
         RecyclerView recyclerView = findViewById(R.id.review_recyclerview);
-        ReviewsAdapter reviewsAdapter = new ReviewsAdapter(movies, this);
+        ReviewsAdapter reviewsAdapter = new ReviewsAdapter(reviews, false, this);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this, RecyclerView.VERTICAL, false));
         recyclerView.setAdapter(reviewsAdapter);
@@ -122,12 +157,12 @@ public class MainActivity extends AppCompatActivity {
      */
     private void initializeDrawer() {
         // Navigation drawer
-        DrawerLayout dl = findViewById(R.id.drawer_layout);
-
+        NavigationView nv = findViewById(R.id.nav_view);
+        mDrawerLayout = findViewById(R.id.drawer_layout);
         mDrawerToggle = new ActionBarDrawerToggle(
-                this, dl, mToolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-
-        dl.addDrawerListener(mDrawerToggle);
+                this, mDrawerLayout, mToolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        mDrawerLayout.addDrawerListener(mDrawerToggle);
+        nv.setNavigationItemSelectedListener(this);
 
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -148,20 +183,20 @@ public class MainActivity extends AppCompatActivity {
     private class GetReviewsTask extends AsyncTask<Void, Void, Void> {
 
         private final WeakReference<Context> mContext;
-        private List<Movie> movies;
+        private List<Review> reviews;
 
         GetReviewsTask(final Context context) {
             super();
 
             mContext = new WeakReference<>(context);
-            movies = new ArrayList<>();
+            reviews = new ArrayList<>();
         }
 
         @Override
         protected Void doInBackground(Void... unused) {
             try {
                 FirestoreConnector fc = FirestoreConnector.newInstance();
-                movies = fc.getDummyMovies(mContext.get());
+                reviews = fc.getDummyMovies(mContext.get());
 
                 Thread.sleep(2000);
 
@@ -175,7 +210,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(Void unused) {
             hideProgressBar();
-            initializeRecyclerView(movies);
+            initializeRecyclerView(reviews);
         }
     }
 }

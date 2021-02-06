@@ -29,9 +29,12 @@ public class User extends FirestoreItem {
         if (photoUrl != null) {
             mPhotoUrl = photoUrl.toString();
         } else {
-            mPhotoUrl = "";
+            mPhotoUrl = null;
         }
     }
+
+    public String getName() { return mName; }
+    public String getPhotoUrl() { return mPhotoUrl; }
 
     public Map<String, Object> asMap() {
         Map<String, Object> map = new HashMap<>();

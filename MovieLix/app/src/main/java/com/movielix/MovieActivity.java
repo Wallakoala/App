@@ -8,8 +8,8 @@ import android.widget.TextView;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.res.ResourcesCompat;
 
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.movielix.bean.Movie;
 import com.movielix.bean.Review;
@@ -90,7 +90,7 @@ public class MovieActivity extends AppCompatActivity implements RatingDialogList
 
             @Override
             public void onSuccess(Movie item) {
-                ((TextView) findViewById(R.id.movie_summary)).setText(((Movie) item).getOverview());
+                ((TextView) findViewById(R.id.movie_summary)).setText(item.getOverview());
             }
 
             @Override
@@ -113,7 +113,10 @@ public class MovieActivity extends AppCompatActivity implements RatingDialogList
                 mMovieId, FirebaseAuth.getInstance().getUid(), score, comment, new FirestoreListener<Review>() {
                     @Override
                     public void onSuccess() {
+                        Snackbar snackbar = Snackbar.make(findViewById(R.id.movie_container), R.string.review_sent, Snackbar.LENGTH_SHORT);
+                        snackbar.getView().setBackgroundColor(getColor(R.color.colorPrimaryMedium));
 
+                        snackbar.show();
                     }
 
                     @Override
@@ -124,7 +127,10 @@ public class MovieActivity extends AppCompatActivity implements RatingDialogList
 
                     @Override
                     public void onError() {
+                        Snackbar snackbar = Snackbar.make(findViewById(R.id.movie_container), R.string.review_error, Snackbar.LENGTH_SHORT);
+                        snackbar.getView().setBackgroundColor(getColor(R.color.colorPrimaryMedium));
 
+                        snackbar.show();
                     }
                 });
     }
