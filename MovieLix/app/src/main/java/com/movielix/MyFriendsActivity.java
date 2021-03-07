@@ -33,7 +33,7 @@ public class MyFriendsActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.my_friends_activity);
+        setContentView(R.layout.activity_my_friends);
 
         mProgressBar = findViewById(R.id.my_friends_progress_bar);
         mMessageTextview = findViewById(R.id.my_friends_message_textview);

@@ -4,6 +4,7 @@ import android.animation.Animator;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -18,14 +19,20 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.movielix.adapter.ReviewsAdapter;
 import com.movielix.bean.Movie;
 import com.movielix.bean.Review;
+import com.movielix.constants.Constants;
 import com.movielix.firestore.FirestoreConnector;
 import com.movielix.firestore.FirestoreListener;
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class MyReviewsActivity extends AppCompatActivity {
+public class FriendActivity extends AppCompatActivity {
+
+    private String mUserId;
+    private String mUserName;
+    private String mUserProfilePic;
 
     private ProgressBar mProgressBar;
     private TextView mMessageTextview;
@@ -35,43 +42,48 @@ public class MyReviewsActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.activity_my_reviews);
+        setContentView(R.layout.activity_friend);
 
-        mProgressBar = findViewById(R.id.my_reviews_progress_bar);
-        mMessageTextview = findViewById(R.id.my_reviews_message_textview);
-        mReviewsRecyclerView = findViewById(R.id.my_reviews_recyclerview);
-        mContainer = findViewById(R.id.my_reviews_container);
-        findViewById(R.id.my_reviews_back_button).setOnClickListener(new View.OnClickListener() {
+        Bundle bundle = getIntent().getExtras();
+        assert(bundle != null);
+
+        mUserId = bundle.getString(Constants.FRIEND_ID);
+        mUserName = bundle.getString(Constants.FRIEND_NAME);
+        mUserProfilePic = bundle.getString(Constants.FRIEND_PROFILE_PIC);
+
+        mProgressBar = findViewById(R.id.friend_progress_bar);
+        mMessageTextview = findViewById(R.id.friend_message_textview);
+        mReviewsRecyclerView = findViewById(R.id.friend_recyclerview);
+        mContainer = findViewById(R.id.friend_container);
+        findViewById(R.id.friend_back_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 onBackPressed();
             }
         });
 
-        initializeFAB();
         hideMessage();
 
+        initViews();
         getReviews();
     }
 
-    /**
-     * Initializes the floating action button.
-     */
-    private void initializeFAB() {
-        findViewById(R.id.add_review).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(MyReviewsActivity.this, MoviesActivity.class);
-                startActivity(intent);
-            }
-        });
+    private void initViews() {
+        // Set profile pic
+        Picasso.get()
+                .load(mUserProfilePic)
+                .error(R.drawable.ic_default_profile_pic)
+                .into((ImageView) findViewById(R.id.friend_profile_pic));
+
+        // Update toolbar with the user's name.
+        ((TextView)findViewById(R.id.friend_name)).setText(mUserName);
     }
 
     /**
      * Initializes the RecyclerView
      */
     private void initializeRecyclerView(final List<Review> reviews) {
-        ReviewsAdapter reviewsAdapter = new ReviewsAdapter(reviews, true, this);
+        ReviewsAdapter reviewsAdapter = new ReviewsAdapter(reviews, false, this);
 
         mReviewsRecyclerView.setLayoutManager(new LinearLayoutManager(this, RecyclerView.VERTICAL, false));
         mReviewsRecyclerView.setAdapter(reviewsAdapter);
@@ -82,7 +94,7 @@ public class MyReviewsActivity extends AppCompatActivity {
         mMessageTextview.setVisibility(View.GONE);
         mReviewsRecyclerView.setVisibility(View.GONE);
         FirestoreConnector.newInstance()
-                .getReviewsByUser(Objects.requireNonNull(FirebaseAuth.getInstance().getUid()), new FirestoreListener<Review>() {
+                .getReviewsByUser(mUserId, new FirestoreListener<Review>() {
             @Override
             public void onSuccess() {}
 
@@ -93,7 +105,7 @@ public class MyReviewsActivity extends AppCompatActivity {
             public void onSuccess(final List<Review> reviews) {
                 hideProgressBar();
                 if (reviews.isEmpty()) {
-                    showMessage(getResources().getString(R.string.no_reviews));
+                    showMessage(getResources().getString(R.string.friend_no_reviews));
                 } else {
                     List<String> ids = new ArrayList<>();
                     for (Review review : reviews) {
