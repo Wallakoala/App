@@ -3,6 +3,7 @@ package com.movielix;
 import android.animation.Animator;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -17,6 +18,7 @@ import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.movielix.adapter.FriendsAdapter;
 import com.movielix.bean.User;
+import com.movielix.constants.Constants;
 import com.movielix.firestore.FirestoreConnector;
 import com.movielix.firestore.FirestoreListener;
 
@@ -33,7 +35,7 @@ public class MyFriendsActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.my_friends_activity);
+        setContentView(R.layout.activity_my_friends);
 
         mProgressBar = findViewById(R.id.my_friends_progress_bar);
         mMessageTextview = findViewById(R.id.my_friends_message_textview);
@@ -92,6 +94,7 @@ public class MyFriendsActivity extends AppCompatActivity {
 
             @Override
             public void onSuccess(final List<User> users) {
+                Log.d(Constants.TAG, "Cucu");
                 hideProgressBar();
                 if (users.isEmpty()) {
                     showMessage(getResources().getString(R.string.no_friends));

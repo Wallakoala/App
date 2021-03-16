@@ -613,6 +613,7 @@ public class FirestoreConnector {
 
                             } else {
                                 Log.w(TAG, "[FirestoreConnector]::getFriendsOf: no friends found for user " + userId);
+                                listener.onSuccess(users);
                             }
 
                         } else {

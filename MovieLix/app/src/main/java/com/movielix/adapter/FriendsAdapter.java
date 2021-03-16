@@ -1,6 +1,7 @@
 package com.movielix.adapter;
 
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,8 +11,10 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.movielix.FriendActivity;
 import com.movielix.R;
 import com.movielix.bean.User;
+import com.movielix.constants.Constants;
 import com.squareup.picasso.Picasso;
 
 import java.util.List;
@@ -57,6 +60,8 @@ public class FriendsAdapter extends RecyclerView.Adapter<FriendsAdapter.FriendHo
      */
     class FriendHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
+        private User mFriend;
+
         private CircleImageView mProfilePic;
         private TextView mName;
         private Button mFollow;
@@ -82,14 +87,20 @@ public class FriendsAdapter extends RecyclerView.Adapter<FriendsAdapter.FriendHo
             mFollow.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    // todo
+                    // todo #31
                 }
             });
+
+            mFriend = friend;
         }
 
         @Override
         public void onClick(View v) {
-            // todo
+            Intent intent = new Intent(mContext, FriendActivity.class);
+            intent.putExtra(Constants.FRIEND_ID, mFriend.getId());
+            intent.putExtra(Constants.FRIEND_NAME, mFriend.getName());
+            intent.putExtra(Constants.FRIEND_PROFILE_PIC, mFriend.getPhotoUrl());
+            mContext.startActivity(intent);
         }
     }
 }
