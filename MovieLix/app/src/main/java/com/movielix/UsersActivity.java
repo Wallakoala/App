@@ -1,6 +1,7 @@
 package com.movielix;
 
 import android.animation.Animator;
+import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.text.Editable;
@@ -184,7 +185,7 @@ public class UsersActivity extends AppCompatActivity implements MaterialSearchBa
     @Override
     public void onSearchConfirmed(final CharSequence text) {
         if (text.length() > 1) {
-            MaterialSearchBar searchBar = findViewById(R.id.movies_search_bar);
+            MaterialSearchBar searchBar = findViewById(R.id.users_search_bar);
             searchBar.closeSearch();
 
             showProgressBar();
@@ -193,6 +194,7 @@ public class UsersActivity extends AppCompatActivity implements MaterialSearchBa
 
             mMessageTextview.setVisibility(View.GONE);
             mUsersRecyclerView.setVisibility(View.GONE);
+            // todo this needs to retrieve the users
             mFc.getMoviesByTitle(text.toString(), new FirestoreListener<LiteMovie>() {
                 @Override
                 public void onSuccess() {}
@@ -226,5 +228,7 @@ public class UsersActivity extends AppCompatActivity implements MaterialSearchBa
     }
 
     @Override
-    public void onButtonClicked(int buttonCode) {}
+    public void onButtonClicked(int buttonCode) {
+        Log.d(Constants.TAG, "No se cuando se ejecuta esto.....");
+    }
 }

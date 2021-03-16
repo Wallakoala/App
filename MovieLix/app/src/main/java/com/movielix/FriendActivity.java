@@ -1,8 +1,8 @@
 package com.movielix;
 
 import android.animation.Animator;
-import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -15,7 +15,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.daimajia.androidanimations.library.Techniques;
 import com.daimajia.androidanimations.library.YoYo;
 import com.google.android.material.snackbar.Snackbar;
-import com.google.firebase.auth.FirebaseAuth;
 import com.movielix.adapter.ReviewsAdapter;
 import com.movielix.bean.Movie;
 import com.movielix.bean.Review;
@@ -26,9 +25,11 @@ import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
+import java.util.concurrent.CountDownLatch;
 
 public class FriendActivity extends AppCompatActivity {
+
+    private static final int NUM_REQUESTS = 4;
 
     private String mUserId;
     private String mUserName;
@@ -38,6 +39,12 @@ public class FriendActivity extends AppCompatActivity {
     private TextView mMessageTextview;
     private RecyclerView mReviewsRecyclerView;
     private View mContainer;
+
+    private CountDownLatch mBarrier;
+
+    private List<Review> mReviews;
+    private int mNumFollowers;
+    private int mNumFriends;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -63,12 +70,39 @@ public class FriendActivity extends AppCompatActivity {
         });
 
         hideMessage();
-
         initViews();
-        getReviews();
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                mBarrier = new CountDownLatch(1);
+
+                mReviews = new ArrayList<>();
+                mNumFollowers = 0;
+                mNumFriends = 0;
+
+                getReviews();
+                getNumFollowers();
+                getNumFriends();
+
+                try {
+                    mBarrier.await();
+
+                    // todo updateUi();
+
+                } catch (InterruptedException e) {
+                    Log.e(Constants.TAG, "Thread interrupted");
+
+                    // todo show error
+                }
+            }
+
+        }).start();
     }
 
     private void initViews() {
+        mContainer.setVisibility(View.INVISIBLE);
+
         // Set profile pic
         Picasso.get()
                 .load(mUserProfilePic)
@@ -91,8 +125,6 @@ public class FriendActivity extends AppCompatActivity {
     }
 
     private void getReviews() {
-        mMessageTextview.setVisibility(View.GONE);
-        mReviewsRecyclerView.setVisibility(View.GONE);
         FirestoreConnector.newInstance()
                 .getReviewsByUser(mUserId, new FirestoreListener<Review>() {
             @Override
@@ -106,6 +138,9 @@ public class FriendActivity extends AppCompatActivity {
                 hideProgressBar();
                 if (reviews.isEmpty()) {
                     showMessage(getResources().getString(R.string.friend_no_reviews));
+
+                    mBarrier.countDown();
+
                 } else {
                     List<String> ids = new ArrayList<>();
                     for (Review review : reviews) {
@@ -122,9 +157,8 @@ public class FriendActivity extends AppCompatActivity {
 
                                 @Override
                                 public void onSuccess(List<Movie> movies) {
-                                    List<Review> reviewsWithMovies = new ArrayList<>();
                                     for (Review review : reviews) {
-                                        reviewsWithMovies.add(new Review(
+                                        mReviews.add(new Review(
                                                 review.getScore(),
                                                 review.getMovieId(),
                                                 review.getUserId(),
@@ -133,7 +167,7 @@ public class FriendActivity extends AppCompatActivity {
                                         ));
                                     }
 
-                                    initializeRecyclerView(reviewsWithMovies);
+                                    mBarrier.countDown();
                                 }
 
                                 @Override
@@ -147,6 +181,8 @@ public class FriendActivity extends AppCompatActivity {
                                             getReviews();
                                         }
                                     }).show();
+
+                                    mBarrier.countDown();
                                 }
                             });
                 }
@@ -163,8 +199,18 @@ public class FriendActivity extends AppCompatActivity {
                         getReviews();
                     }
                 }).show();
+
+                mBarrier.countDown();
             }
         });
+    }
+
+    private void getNumFollowers() {
+        // todo
+    }
+
+    private void getNumFriends() {
+        // todo
     }
 
     private void showMessage(String message) {
