@@ -27,7 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
-public class FriendActivity extends AppCompatActivity {
+public class UserActivity extends AppCompatActivity {
 
     private static final int NUM_REQUESTS = 4;
 
@@ -54,9 +54,9 @@ public class FriendActivity extends AppCompatActivity {
         Bundle bundle = getIntent().getExtras();
         assert(bundle != null);
 
-        mUserId = bundle.getString(Constants.FRIEND_ID);
-        mUserName = bundle.getString(Constants.FRIEND_NAME);
-        mUserProfilePic = bundle.getString(Constants.FRIEND_PROFILE_PIC);
+        mUserId = bundle.getString(Constants.USER_ID);
+        mUserName = bundle.getString(Constants.USER_NAME);
+        mUserProfilePic = bundle.getString(Constants.USER_PROFILE_PIC);
 
         mProgressBar = findViewById(R.id.friend_progress_bar);
         mMessageTextview = findViewById(R.id.friend_message_textview);

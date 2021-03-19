@@ -13,9 +13,8 @@ public class Constants {
     public static final String MOVIE_GENRES_INTENT = "movie_genres";
     public static final String MOVIE_RELEASE_YEAR_INTENT = "movie_release_year";
 
-    public static final String FRIEND_ID = "friend_id";
-    public static final String FRIEND_NAME = "friend_name";
-    public static final String FRIEND_PROFILE_PIC = "friend_profile_pic";
-
-    public static final String USER_KEY = "user";
+    public static final String USER_ID = "user_id";
+    public static final String USER_NAME = "user_name";
+    public static final String USER_PROFILE_PIC = "user_profile_pic";
+    public static final String USER_NUM_REVIEWS = "user_num_reviews";
 }

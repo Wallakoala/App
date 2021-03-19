@@ -3,7 +3,6 @@ package com.movielix;
 import android.animation.Animator;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -18,7 +17,6 @@ import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.movielix.adapter.FriendsAdapter;
 import com.movielix.bean.User;
-import com.movielix.constants.Constants;
 import com.movielix.firestore.FirestoreConnector;
 import com.movielix.firestore.FirestoreListener;
 
@@ -51,7 +49,7 @@ public class MyFriendsActivity extends AppCompatActivity {
         initializeFAB();
         hideMessage();
 
-        getReviews();
+        getFriends();
     }
 
     /**
@@ -79,9 +77,9 @@ public class MyFriendsActivity extends AppCompatActivity {
     }
 
     /**
-     * Method to retrieve the reviews and show the RecyclerView.
+     * Method to retrieve the user's friends and show the RecyclerView.
      */
-    private void getReviews() {
+    private void getFriends() {
         mMessageTextview.setVisibility(View.GONE);
         mRecyclerView.setVisibility(View.GONE);
         FirestoreConnector.newInstance()
@@ -94,7 +92,6 @@ public class MyFriendsActivity extends AppCompatActivity {
 
             @Override
             public void onSuccess(final List<User> users) {
-                Log.d(Constants.TAG, "Cucu");
                 hideProgressBar();
                 if (users.isEmpty()) {
                     showMessage(getResources().getString(R.string.no_friends));
@@ -111,7 +108,7 @@ public class MyFriendsActivity extends AppCompatActivity {
                     @Override
                     public void onClick(View v) {
                         showProgressBar();
-                        getReviews();
+                        getFriends();
                     }
                 }).show();
             }

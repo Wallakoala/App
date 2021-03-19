@@ -26,6 +26,7 @@ import com.movielix.bean.User;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import static com.movielix.constants.Constants.TAG;
@@ -60,8 +61,9 @@ public class FirestoreConnector {
     private static final String FRIENDS_ID = "id";
     private static final String FRIENDS_FRIEND_OF = "friend_of";
 
-    private static final String USER_NAME = "name";
-    private static final String USER_PHOTO_URL = "photo_url";
+    public static final String USER_NAME = "name";
+    public static final String USER_PHOTO_URL = "photo_url";
+    public static final String USER_NUM_REVIEWS = "num_reviews";
 
     private static final int MAX_SUGGESTIONS = 10;
 
@@ -503,7 +505,36 @@ public class FirestoreConnector {
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
-                        Log.w(TAG, "[FirestoreConnector]::addUser: error creating review", e);
+                        Log.w(TAG, "[FirestoreConnector]::addUser: error creating user", e);
+                        listener.onError();
+                    }
+                });
+    }
+
+    /**
+     * Method that updates an existing user.
+     *
+     * @param id user id.
+     * @param data new data to be updated.
+     * @param listener FirestoreListener object to be notified once the operation is complete.
+     */
+    public void updateUser(@NonNull String id, @NonNull Map<String, Object> data, @NonNull final FirestoreListener<User> listener) {
+        Log.d(TAG, "[FirestoreConnector]::updateUser: request to update user");
+
+        mDb.collection(USERS_COLLECTION)
+                .document(id)
+                .update(data)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.d(TAG, "[FirestoreConnector]::updateUser: user updated successfully");
+                        listener.onSuccess();
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.w(TAG, "[FirestoreConnector]::updateUser: error updating user", e);
                         listener.onError();
                     }
                 });
@@ -593,7 +624,8 @@ public class FirestoreConnector {
                                                                     users.add(new User(
                                                                               document.getId()
                                                                             , Objects.requireNonNull(document.getString(USER_NAME))
-                                                                            , uri));
+                                                                            , uri
+                                                                            , Objects.requireNonNull(document.getLong(USER_NUM_REVIEWS)).intValue()));
                                                                 }
 
                                                             } else {
@@ -666,7 +698,8 @@ public class FirestoreConnector {
                                 User user = new User(
                                           document.getId()
                                         , Objects.requireNonNull(document.getString(USER_NAME))
-                                        , Uri.parse(document.getString(USER_PHOTO_URL)));
+                                        , Uri.parse(document.getString(USER_PHOTO_URL))
+                                        , Objects.requireNonNull(document.getLong(USER_NUM_REVIEWS)).intValue());
 
                                 users.add(user);
                             }
@@ -681,9 +714,95 @@ public class FirestoreConnector {
                                             if (task.isSuccessful() && (task.getResult() != null)) {
                                                 for (DocumentSnapshot document : task.getResult().getDocuments()) {
                                                     User user = new User(
-                                                            document.getId()
+                                                              document.getId()
                                                             , Objects.requireNonNull(document.getString(USER_NAME))
-                                                            , Uri.parse(document.getString(USER_PHOTO_URL)));
+                                                            , Uri.parse(document.getString(USER_PHOTO_URL))
+                                                            , Objects.requireNonNull(document.getLong(USER_NUM_REVIEWS)).intValue());
+
+                                                    users.add(user);
+                                                }
+
+                                                listener.onSuccess(users);
+
+                                            } else {
+                                                Log.w(TAG, "[FirestoreConnector]::getUsersSuggestionsByName: error getting users.", task.getException());
+                                                listener.onError();
+                                            }
+                                        }
+                                    });
+
+                            listener.onSuccess(users);
+
+                        } else {
+                            Log.w(TAG, "[FirestoreConnector]::getUsersSuggestionsByName: error getting users.", task.getException());
+                            listener.onError();
+                        }
+                    }
+                });
+    }
+
+    /**
+     * Method that returns a list of users given a search term.
+     *
+     * @param search search term.
+     * @param listener FirestoreListener object to be notified once the operation is complete.
+     */
+    public void getUsersByName(@NonNull final String search, final FirestoreListener<User> listener) {
+        Log.d(TAG, "[FirestoreConnector]::getUsersByName: request to get users by searching: " + search);
+
+        char c = search.charAt(search.length() - 1);
+        c++;
+
+        char[] cArray = search.toCharArray();
+        cArray[cArray.length - 1] = c;
+
+        final char[] cUpperArray = cArray.clone();
+        if (Character.isLowerCase(cUpperArray[0])) {
+            cUpperArray[0] = Character.toUpperCase(cUpperArray[0]);
+        } else {
+            cUpperArray[0] = Character.toLowerCase(cUpperArray[0]);
+        }
+
+        final char[] cPrimeArray = search.toCharArray();
+        if (Character.isLowerCase(cPrimeArray[0])) {
+            cPrimeArray[0] = Character.toUpperCase(cPrimeArray[0]);
+        } else {
+            cPrimeArray[0] = Character.toLowerCase(cPrimeArray[0]);
+        }
+
+        mDb.collection(USERS_COLLECTION)
+                .whereGreaterThanOrEqualTo(USER_NAME, search)
+                .whereLessThan(USER_NAME, new String(cArray))
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful() && (task.getResult() != null)) {
+                            final List<User> users = new ArrayList<>();
+                            for (DocumentSnapshot document : task.getResult().getDocuments()) {
+                                User user = new User(
+                                          document.getId()
+                                        , Objects.requireNonNull(document.getString(USER_NAME))
+                                        , Uri.parse(document.getString(USER_PHOTO_URL))
+                                        , Objects.requireNonNull(document.getLong(USER_NUM_REVIEWS)).intValue());
+
+                                users.add(user);
+                            }
+
+                            mDb.collection(USERS_COLLECTION)
+                                    .whereGreaterThanOrEqualTo(USER_NAME, new String(cPrimeArray))
+                                    .whereLessThan(USER_NAME, new String(cUpperArray))
+                                    .get()
+                                    .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                                        @Override
+                                        public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                                            if (task.isSuccessful() && (task.getResult() != null)) {
+                                                for (DocumentSnapshot document : task.getResult().getDocuments()) {
+                                                    User user = new User(
+                                                              document.getId()
+                                                            , Objects.requireNonNull(document.getString(USER_NAME))
+                                                            , Uri.parse(document.getString(USER_PHOTO_URL))
+                                                            , Objects.requireNonNull(document.getLong(USER_NUM_REVIEWS)).intValue());
 
                                                     users.add(user);
                                                 }
