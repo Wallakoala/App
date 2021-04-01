@@ -103,6 +103,7 @@ public class MyFriendsActivity extends AppCompatActivity {
             @Override
             public void onError() {
                 hideProgressBar();
+                hideMessage();
 
                 Snackbar.make(mContainer, R.string.something_went_wrong, Snackbar.LENGTH_LONG).setAction("Reintentar", new View.OnClickListener() {
                     @Override

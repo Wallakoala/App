@@ -13,6 +13,7 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldPath;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
@@ -25,6 +26,7 @@ import com.movielix.bean.User;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -41,7 +43,8 @@ public class FirestoreConnector {
     private static final String MOVIES_SUGGESTIONS_COLLECTION = "movies_suggestions";
     private static final String REVIEWS_COLLECTION = "reviews";
     private static final String USERS_COLLECTION = "users";
-    private static final String FRIENDS_COLLECTION = "friends";
+    private static final String FOLLOWING_COLLECTION = "following";
+    private static final String FOLLOWERS_COLLECTION = "followers";
 
     // Document fields names
     private static final String MOVIE_TITLE = "2";
@@ -58,8 +61,11 @@ public class FirestoreConnector {
     private static final String REVIEW_SCORE = "score";
     private static final String REVIEW_COMMENT = "comment";
 
-    private static final String FRIENDS_ID = "id";
-    private static final String FRIENDS_FRIEND_OF = "friend_of";
+    private static final String FOLLOWING_ID = "id";
+    private static final String FOLLOWING_FOLLOWING = "following";
+
+    private static final String FOLLOWERS_ID = "id";
+    private static final String FOLLOWERS_FOLLOWED_BY = "followed_by";
 
     public static final String USER_NAME = "name";
     public static final String USER_PHOTO_URL = "photo_url";
@@ -489,7 +495,7 @@ public class FirestoreConnector {
      * @param user user object.
      * @param listener FirestoreListener object to be notified once the operation is complete.
      */
-    public void addUser(@NonNull User user, @NonNull final FirestoreListener<User> listener) {
+    public void addUser(@NonNull final User user, @NonNull final FirestoreListener<User> listener) {
         Log.d(TAG, "[FirestoreConnector]::addUser: request to add user");
 
         mDb.collection(USERS_COLLECTION)
@@ -498,8 +504,48 @@ public class FirestoreConnector {
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
-                        Log.d(TAG, "[FirestoreConnector]::addUser: user added successfully");
-                        listener.onSuccess();
+                        Log.d(TAG, "[FirestoreConnector]::addUser: added user successfully");
+
+                        Map<String, Object> friends = new HashMap<>();
+                        friends.put(FOLLOWING_ID, user.getId());
+                        friends.put(FOLLOWING_FOLLOWING, new ArrayList<>());
+                        mDb.collection(FOLLOWING_COLLECTION)
+                                .document(user.getId())
+                                .set(friends)
+                                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                    @Override
+                                    public void onSuccess(Void aVoid) {
+                                        Log.d(TAG, "[FirestoreConnector]::addUser: added empty following list");
+
+                                        Map<String, Object> followers = new HashMap<>();
+                                        followers.put(FOLLOWERS_ID, user.getId());
+                                        followers.put(FOLLOWERS_FOLLOWED_BY, new ArrayList<>());
+                                        mDb.collection(FOLLOWERS_COLLECTION)
+                                                .document(user.getId())
+                                                .set(followers)
+                                                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                    @Override
+                                                    public void onSuccess(Void aVoid) {
+                                                        Log.d(TAG, "[FirestoreConnector]::addUser: added empty followers list");
+                                                        listener.onSuccess();
+                                                    }
+                                                })
+                                                .addOnFailureListener(new OnFailureListener() {
+                                                    @Override
+                                                    public void onFailure(@NonNull Exception e) {
+                                                        Log.w(TAG, "[FirestoreConnector]::addUser: error initializing followers list", e);
+                                                        listener.onError();
+                                                    }
+                                                });
+                                    }
+                                })
+                                .addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+                                        Log.w(TAG, "[FirestoreConnector]::addUser: error initializing empty friends list", e);
+                                        listener.onError();
+                                    }
+                                });
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
@@ -593,8 +639,8 @@ public class FirestoreConnector {
     public void getFriends(@NonNull final String userId, final FirestoreListener<User> listener) {
         Log.d(TAG, "[FirestoreConnector]::getFriendsOf: request to get friends of user: " + userId);
 
-        mDb.collection(FRIENDS_COLLECTION)
-                .whereEqualTo(FRIENDS_ID, userId)
+        mDb.collection(FOLLOWING_COLLECTION)
+                .whereEqualTo(FOLLOWING_ID, userId)
                 .get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                     @Override
@@ -603,43 +649,46 @@ public class FirestoreConnector {
                             final List<User> users = new ArrayList<>();
                             if (!task.getResult().getDocuments().isEmpty()) {
                                 for (DocumentSnapshot document : task.getResult().getDocuments()) {
-                                    if (document.get(FRIENDS_FRIEND_OF) != null) {
-                                        List<String> friends = (List<String>) document.get(FRIENDS_FRIEND_OF);
-
+                                    if (document.get(FOLLOWING_FOLLOWING) != null) {
+                                        List<String> friends = (List<String>) document.get(FOLLOWING_FOLLOWING);
                                         assert friends != null;
-                                        mDb.collection(USERS_COLLECTION)
-                                                .whereIn(FieldPath.documentId(), friends)
-                                                .get()
-                                                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                                                    @Override
-                                                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                                                        if (task.isSuccessful() && (task.getResult() != null)) {
-                                                            if (!task.getResult().getDocuments().isEmpty()) {
-                                                                for (DocumentSnapshot document : task.getResult().getDocuments()) {
-                                                                    Uri uri = null;
-                                                                    if (document.getString(USER_PHOTO_URL) != null) {
-                                                                        uri = Uri.parse(document.getString(USER_PHOTO_URL));
+                                        if (!friends.isEmpty()) {
+                                            mDb.collection(USERS_COLLECTION)
+                                                    .whereIn(FieldPath.documentId(), friends)
+                                                    .get()
+                                                    .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                                                        @Override
+                                                        public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                                                            if (task.isSuccessful() && (task.getResult() != null)) {
+                                                                if (!task.getResult().getDocuments().isEmpty()) {
+                                                                    for (DocumentSnapshot document : task.getResult().getDocuments()) {
+                                                                        Uri uri = null;
+                                                                        if (document.getString(USER_PHOTO_URL) != null) {
+                                                                            uri = Uri.parse(document.getString(USER_PHOTO_URL));
+                                                                        }
+
+                                                                        users.add(new User(
+                                                                                  document.getId()
+                                                                                , Objects.requireNonNull(document.getString(USER_NAME))
+                                                                                , uri
+                                                                                , Objects.requireNonNull(document.getLong(USER_NUM_REVIEWS)).intValue()));
                                                                     }
 
-                                                                    users.add(new User(
-                                                                              document.getId()
-                                                                            , Objects.requireNonNull(document.getString(USER_NAME))
-                                                                            , uri
-                                                                            , Objects.requireNonNull(document.getLong(USER_NUM_REVIEWS)).intValue()));
+                                                                } else {
+                                                                    Log.w(TAG, "[FirestoreConnector]::getFriendsOf: no friends found for user " + userId);
                                                                 }
 
+                                                                listener.onSuccess(users);
+
                                                             } else {
-                                                                Log.w(TAG, "[FirestoreConnector]::getFriendsOf: no friends found for user " + userId);
+                                                                Log.w(TAG, "[FirestoreConnector]::getFriendsOf: error getting friends.", task.getException());
+                                                                listener.onError();
                                                             }
-
-                                                            listener.onSuccess(users);
-
-                                                        } else {
-                                                            Log.w(TAG, "[FirestoreConnector]::getFriendsOf: error getting friends.", task.getException());
-                                                            listener.onError();
                                                         }
-                                                    }
-                                                });
+                                                    });
+                                        }
+
+                                        listener.onSuccess(users);
                                     }
                                 }
 
@@ -731,8 +780,6 @@ public class FirestoreConnector {
                                         }
                                     });
 
-                            listener.onSuccess(users);
-
                         } else {
                             Log.w(TAG, "[FirestoreConnector]::getUsersSuggestionsByName: error getting users.", task.getException());
                             listener.onError();
@@ -816,12 +863,56 @@ public class FirestoreConnector {
                                         }
                                     });
 
-                            listener.onSuccess(users);
-
                         } else {
                             Log.w(TAG, "[FirestoreConnector]::getUsersSuggestionsByName: error getting users.", task.getException());
                             listener.onError();
                         }
+                    }
+                });
+    }
+
+    /**
+     * Method to add a friend to the `following` collection and myself to as follower.
+     *
+     * @param user_id: user id.
+     * @param friend_id: friend id.
+     * @param listener FirestoreListener object to be notified once the operation is complete.
+     */
+    public void follow(@NonNull final String user_id, @NonNull final String friend_id, final FirestoreListener<User> listener) {
+        Log.d(TAG, "[FirestoreConnector]::addFriend: request to add friend (" + friend_id + ") to user (" +user_id + ")");
+
+        mDb.collection(FOLLOWING_COLLECTION)
+                .document(user_id)
+                .update(FOLLOWING_FOLLOWING, FieldValue.arrayUnion(friend_id))
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.d(TAG, "[FirestoreConnector]::addFriend: added friend to `following` collection successfully");
+
+                        mDb.collection(FOLLOWERS_COLLECTION)
+                                .document(friend_id)
+                                .update(FOLLOWERS_FOLLOWED_BY, FieldValue.arrayUnion(user_id))
+                                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                    @Override
+                                    public void onSuccess(Void aVoid) {
+                                        Log.d(TAG, "[FirestoreConnector]::addFriend: added myself to `followers` collection successfully");
+                                        listener.onSuccess();
+                                    }
+                                })
+                                .addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+                                        Log.w(TAG, "[FirestoreConnector]::addFriend: error adding myself to `followers` collection", e);
+                                        listener.onError();
+                                    }
+                                });
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.w(TAG, "[FirestoreConnector]::addFriend: error adding friend to `following` collection", e);
+                        listener.onError();
                     }
                 });
     }
@@ -845,7 +936,7 @@ public class FirestoreConnector {
             // let's filter the movies retrieved.
             if (ids.size() < MAX_SUGGESTIONS) {
                 try {
-                    if (document.getString(MOVIE_TITLE).startsWith(search_term)) {
+                    if (Objects.requireNonNull(document.getString(MOVIE_TITLE)).startsWith(search_term)) {
                         ids.add(document.getId());
                     }
 
@@ -859,7 +950,7 @@ public class FirestoreConnector {
         for (QueryDocumentSnapshot document : task) {
             if (ids.size() < MAX_SUGGESTIONS) {
                 try {
-                    if (document.getString(MOVIE_TITLE).contains(search_term) && !ids.contains(document.getId())) {
+                    if (Objects.requireNonNull(document.getString(MOVIE_TITLE)).contains(search_term) && !ids.contains(document.getId())) {
                         ids.add(document.getId());
                     }
 

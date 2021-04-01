@@ -1,5 +1,6 @@
 package com.movielix.adapter;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.view.LayoutInflater;
@@ -11,13 +12,17 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.firebase.auth.FirebaseAuth;
 import com.movielix.UserActivity;
 import com.movielix.R;
 import com.movielix.bean.User;
 import com.movielix.constants.Constants;
+import com.movielix.firestore.FirestoreConnector;
+import com.movielix.firestore.FirestoreListener;
 import com.squareup.picasso.Picasso;
 
 import java.util.List;
+import java.util.Objects;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
@@ -78,6 +83,7 @@ public class UsersAdapter extends RecyclerView.Adapter<UsersAdapter.UserHolder> 
             itemView.setOnClickListener(this);
         }
 
+        @SuppressLint("SetTextI18n")
         void bindFriendItem(final User user) {
             Picasso.get()
                     .load(user.getPhotoUrl())
@@ -85,12 +91,31 @@ public class UsersAdapter extends RecyclerView.Adapter<UsersAdapter.UserHolder> 
                     .into(mProfilePic);
 
             mName.setText(user.getName());
-            mNumReviews.setText(user.getNumReviews());
+            mNumReviews.setText(Integer.toString(user.getNumReviews()));
 
             mFollow.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    // todo #31
+                    FirestoreConnector.newInstance().follow(
+                              Objects.requireNonNull(FirebaseAuth.getInstance().getUid())
+                            , user.getId()
+                            , new FirestoreListener<User>() {
+                                @Override
+                                public void onSuccess() {
+                                    // todo notify upper layer that it succeeded
+                                }
+
+                                @Override
+                                public void onSuccess(User item) { }
+
+                                @Override
+                                public void onSuccess(List<User> items) { }
+
+                                @Override
+                                public void onError() {
+                                    // todo notify upper layer that it failed
+                                }
+                            });
                 }
             });
 
