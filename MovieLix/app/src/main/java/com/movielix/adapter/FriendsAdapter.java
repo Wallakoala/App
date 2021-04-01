@@ -11,7 +11,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.movielix.FriendActivity;
+import com.movielix.UserActivity;
 import com.movielix.R;
 import com.movielix.bean.User;
 import com.movielix.constants.Constants;
@@ -96,10 +96,11 @@ public class FriendsAdapter extends RecyclerView.Adapter<FriendsAdapter.FriendHo
 
         @Override
         public void onClick(View v) {
-            Intent intent = new Intent(mContext, FriendActivity.class);
-            intent.putExtra(Constants.FRIEND_ID, mFriend.getId());
-            intent.putExtra(Constants.FRIEND_NAME, mFriend.getName());
-            intent.putExtra(Constants.FRIEND_PROFILE_PIC, mFriend.getPhotoUrl());
+            Intent intent = new Intent(mContext, UserActivity.class);
+            intent.putExtra(Constants.USER_ID, mFriend.getId());
+            intent.putExtra(Constants.USER_NAME, mFriend.getName());
+            intent.putExtra(Constants.USER_PROFILE_PIC, mFriend.getPhotoUrl());
+            intent.putExtra(Constants.USER_NUM_REVIEWS, mFriend.getNumReviews());
             mContext.startActivity(intent);
         }
     }

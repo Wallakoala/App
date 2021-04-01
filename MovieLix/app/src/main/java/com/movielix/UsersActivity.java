@@ -1,7 +1,6 @@
 package com.movielix;
 
 import android.animation.Animator;
-import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.text.Editable;
@@ -23,9 +22,8 @@ import com.daimajia.androidanimations.library.Techniques;
 import com.daimajia.androidanimations.library.YoYo;
 import com.google.android.material.snackbar.Snackbar;
 import com.mancj.materialsearchbar.MaterialSearchBar;
+import com.movielix.adapter.UsersAdapter;
 import com.movielix.adapter.UsersSuggestionAdapter;
-import com.movielix.adapter.MoviesAdapter;
-import com.movielix.bean.LiteMovie;
 import com.movielix.bean.User;
 import com.movielix.constants.Constants;
 import com.movielix.firestore.FirestoreConnector;
@@ -194,24 +192,23 @@ public class UsersActivity extends AppCompatActivity implements MaterialSearchBa
 
             mMessageTextview.setVisibility(View.GONE);
             mUsersRecyclerView.setVisibility(View.GONE);
-            // todo this needs to retrieve the users
-            mFc.getMoviesByTitle(text.toString(), new FirestoreListener<LiteMovie>() {
+            mFc.getUsersByName(text.toString(), new FirestoreListener<User>() {
                 @Override
                 public void onSuccess() {}
 
                 @Override
-                public void onSuccess(LiteMovie item) {}
+                public void onSuccess(User item) {}
 
                 @Override
-                public void onSuccess(List<LiteMovie> movies) {
+                public void onSuccess(List<User> users) {
                     hideProgressBar(true);
                     hideSuggestions();
 
-                    if (!movies.isEmpty()) {
-                        MoviesAdapter moviesAdapter = new MoviesAdapter(movies, UsersActivity.this);
+                    if (!users.isEmpty()) {
+                        UsersAdapter usersAdapter = new UsersAdapter(users, UsersActivity.this);
                         mUsersRecyclerView.setLayoutManager(
                                 new LinearLayoutManager(UsersActivity.this, RecyclerView.VERTICAL, false));
-                        mUsersRecyclerView.setAdapter(moviesAdapter);
+                        mUsersRecyclerView.setAdapter(usersAdapter);
                         mUsersRecyclerView.setVisibility(View.VISIBLE);
 
                     } else {
