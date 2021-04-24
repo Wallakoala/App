@@ -5,6 +5,7 @@ import android.animation.ObjectAnimator;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -612,7 +613,7 @@ public class LoginActivity extends AppCompatActivity implements FirestoreListene
         if (user != null) {
             Map<String, Object> data = new HashMap<>();
             data.put(FirestoreConnector.USER_NAME, Objects.requireNonNull(user.getDisplayName()));
-            data.put(FirestoreConnector.USER_PHOTO_URL, Objects.requireNonNull(user.getPhotoUrl()));
+            data.put(FirestoreConnector.USER_PHOTO_URL, Objects.requireNonNull((user.getPhotoUrl() == null) ? "" : user.getPhotoUrl().toString()));
             FirestoreConnector.newInstance().updateUser(user.getUid(), data, this);
         }
     }
