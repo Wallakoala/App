@@ -23,6 +23,7 @@ import com.movielix.bean.LiteMovie;
 import com.movielix.bean.Movie;
 import com.movielix.bean.Review;
 import com.movielix.bean.User;
+import com.movielix.constants.Constants;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -216,7 +217,7 @@ public class FirestoreConnector {
                                                                 List<String> genres = (ArrayList<String>) document.get(MOVIE_GENRES);
                                                                 int year = Objects.requireNonNull(document.getLong(MOVIE_RELEASE_YEAR)).intValue();
 
-                                                                movies.add(new BaseMovie(document.getId(), title, imageUrl, genres, year));
+                                                                movies.add(new BaseMovie(document.getId(), title, (imageUrl == null) ? "" : imageUrl, genres, year));
 
                                                             } catch (Exception e) {
                                                                 Log.e(TAG, "[FirestoreConnector]::getMoviesSuggestionsByTitle: error parsing movies.", e);
@@ -477,7 +478,24 @@ public class FirestoreConnector {
                     @Override
                     public void onSuccess(Void aVoid) {
                         Log.d(TAG, "[FirestoreConnector]::createReview: review created successfully");
-                        listener.onSuccess();
+
+                        mDb.collection(USERS_COLLECTION)
+                                .document(idUser)
+                                .update(USER_NUM_REVIEWS, FieldValue.increment(1))
+                                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                    @Override
+                                    public void onSuccess(Void aVoid) {
+                                        Log.d(TAG, "[FirestoreConnector]::createReview: incremented number of reviews in user successfully");
+                                        listener.onSuccess();
+                                    }
+                                })
+                                .addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+                                        Log.w(TAG, "[FirestoreConnector]::createReview: incremented number of reviews in user failed", e);
+                                        listener.onError();
+                                    }
+                                });
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
@@ -686,9 +704,9 @@ public class FirestoreConnector {
                                                             }
                                                         }
                                                     });
+                                        } else {
+                                            listener.onSuccess(users);
                                         }
-
-                                        listener.onSuccess(users);
                                     }
                                 }
 

@@ -14,7 +14,7 @@ public class BaseMovie extends FirestoreItem {
     public BaseMovie(String id, String title, String image, List<String> genres, int release) {
         super(id);
         this.mTitle = title;
-        this.mImageUrl = image;
+        this.mImageUrl = (image.isEmpty()) ? null : image;
         this.mGenres = genres;
         this.mReleaseYear = release;
     }
