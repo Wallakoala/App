@@ -95,10 +95,6 @@ public class MyFriendsActivity extends AppCompatActivity {
             @Override
             public void onSuccess(final List<User> users) {
                 hideProgressBar();
-                for (User user : users) {
-                    Log.d(Constants.TAG, user.toString());
-                }
-
                 if (users.isEmpty()) {
                     showMessage(getResources().getString(R.string.no_friends));
                 } else {
