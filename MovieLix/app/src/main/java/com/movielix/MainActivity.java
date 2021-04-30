@@ -117,7 +117,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     Intent logoutIntent = new Intent(getApplicationContext(), IntroActivity.class);
                     logoutIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                     startActivity(logoutIntent);
-                    // finish();
                 }
             });
             adb.setNegativeButton("Cancelar", new DialogInterface.OnClickListener() {
