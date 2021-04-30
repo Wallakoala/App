@@ -109,7 +109,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             // todo
 
         } else if (id == R.id.menu_sign_out) {
-            AlertDialog.Builder adb = new AlertDialog.Builder(this);
+            AlertDialog.Builder adb = new AlertDialog.Builder(this, R.style.MyAlertDialogStyleLight);
             adb.setTitle("¿Seguro quieres salir?");
             adb.setPositiveButton("Aceptar", new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int which) {
