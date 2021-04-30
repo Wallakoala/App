@@ -1,6 +1,7 @@
 package com.movielix;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.AsyncTask;
@@ -12,6 +13,7 @@ import android.widget.ProgressBar;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
@@ -107,8 +109,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             // todo
 
         } else if (id == R.id.menu_sign_out) {
-            // todo Add confirmation dialog and go back to the intro activity.
-            FirebaseAuth.getInstance().signOut();
+            AlertDialog.Builder adb = new AlertDialog.Builder(this);
+            adb.setTitle("¿Seguro quieres salir?");
+            adb.setPositiveButton("Aceptar", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int which) {
+                    FirebaseAuth.getInstance().signOut();
+                    Intent logoutIntent = new Intent(getApplicationContext(), IntroActivity.class);
+                    logoutIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    startActivity(logoutIntent);
+                    // finish();
+                }
+            });
+            adb.setNegativeButton("Cancelar", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int which) { }
+            });
+            adb.show();
         }
 
         mDrawerLayout.closeDrawer(GravityCompat.START);
