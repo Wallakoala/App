@@ -151,6 +151,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayShowTitleEnabled(false);
         }
+
+        mToolbar.findViewById(R.id.toolbar_add_friend).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(MainActivity.this, UsersActivity.class);
+                startActivity(intent);
+            }
+        });
     }
 
     /**
