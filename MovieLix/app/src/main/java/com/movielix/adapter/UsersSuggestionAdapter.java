@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.movielix.MovieActivity;
 import com.movielix.R;
+import com.movielix.UserActivity;
 import com.movielix.bean.User;
 import com.movielix.constants.Constants;
 import com.squareup.picasso.Picasso;
@@ -98,7 +99,12 @@ public class UsersSuggestionAdapter extends RecyclerView.Adapter<UsersSuggestion
 
         @Override
         public void onClick(View v) {
-            // todo #32
+            Intent intent = new Intent(mContext, UserActivity.class);
+            intent.putExtra(Constants.USER_ID, mUser.getId());
+            intent.putExtra(Constants.USER_NAME, mUser.getName());
+            intent.putExtra(Constants.USER_PROFILE_PIC, mUser.getPhotoUrl());
+            intent.putExtra(Constants.USER_NUM_REVIEWS, mUser.getNumReviews());
+            mContext.startActivity(intent);
         }
     }
 }
