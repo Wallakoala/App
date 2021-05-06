@@ -57,6 +57,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         initializeFAB();
 
         SwipeRefreshLayout swipeRefreshLayout = findViewById(R.id.swipe_refresh_layout);
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                
+            }
+        });
         swipeRefreshLayout.setDistanceToTriggerSync(SWIPE_TRIGGER_DISTANCE);
 
         mProgressBar = findViewById(R.id.reviews_progress_bar);
