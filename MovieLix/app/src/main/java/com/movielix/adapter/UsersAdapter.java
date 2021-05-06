@@ -19,6 +19,7 @@ import com.movielix.bean.User;
 import com.movielix.constants.Constants;
 import com.movielix.firestore.FirestoreConnector;
 import com.movielix.firestore.FirestoreListener;
+import com.movielix.interfaces.IFollowListener;
 import com.squareup.picasso.Picasso;
 
 import java.util.List;

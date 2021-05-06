@@ -16,7 +16,7 @@ import com.daimajia.androidanimations.library.Techniques;
 import com.daimajia.androidanimations.library.YoYo;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
-import com.movielix.adapter.FriendsAdapter;
+import com.movielix.adapter.UsersAdapter;
 import com.movielix.bean.User;
 import com.movielix.firestore.FirestoreConnector;
 import com.movielix.firestore.FirestoreListener;
@@ -84,10 +84,10 @@ public class MyFriendsActivity extends AppCompatActivity {
      * Initializes the RecyclerView
      */
     private void initializeRecyclerView(final List<User> users) {
-        FriendsAdapter reviewsAdapter = new FriendsAdapter(users, this);
+        UsersAdapter friendsAdapter = new UsersAdapter(users, this);
 
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this, RecyclerView.VERTICAL, false));
-        mRecyclerView.setAdapter(reviewsAdapter);
+        mRecyclerView.setAdapter(friendsAdapter);
         mRecyclerView.setVisibility(View.VISIBLE);
     }
 

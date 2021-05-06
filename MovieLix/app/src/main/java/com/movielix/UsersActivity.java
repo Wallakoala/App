@@ -29,6 +29,7 @@ import com.movielix.constants.Constants;
 import com.movielix.firestore.FirestoreConnector;
 import com.movielix.firestore.FirestoreListener;
 import com.movielix.font.TypeFace;
+import com.movielix.interfaces.IFollowListener;
 
 import java.util.List;
 
@@ -205,7 +206,12 @@ public class UsersActivity extends AppCompatActivity implements MaterialSearchBa
                     hideSuggestions();
 
                     if (!users.isEmpty()) {
+                        // todo get if the users are being followed by us
+                        // user has to implement equals
+                        // Map<K, V> -> Map<User, boolean>
+                        // todo we need to add the `follow` flag to the users list, and then pass it along to the `UsersAdapter`.
                         UsersAdapter usersAdapter = new UsersAdapter(users, UsersActivity.this);
+
                         mUsersRecyclerView.setLayoutManager(
                                 new LinearLayoutManager(UsersActivity.this, RecyclerView.VERTICAL, false));
                         mUsersRecyclerView.setAdapter(usersAdapter);
@@ -226,6 +232,7 @@ public class UsersActivity extends AppCompatActivity implements MaterialSearchBa
 
     @Override
     public void onButtonClicked(int buttonCode) {
+        // todo review me
         Log.d(Constants.TAG, "No se cuando se ejecuta esto.....");
     }
 }
