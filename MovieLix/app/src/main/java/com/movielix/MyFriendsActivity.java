@@ -3,7 +3,6 @@ package com.movielix;
 import android.animation.Animator;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -11,6 +10,7 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.daimajia.androidanimations.library.Techniques;
 import com.daimajia.androidanimations.library.YoYo;
@@ -18,7 +18,6 @@ import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.movielix.adapter.FriendsAdapter;
 import com.movielix.bean.User;
-import com.movielix.constants.Constants;
 import com.movielix.firestore.FirestoreConnector;
 import com.movielix.firestore.FirestoreListener;
 
@@ -27,10 +26,16 @@ import java.util.Objects;
 
 public class MyFriendsActivity extends AppCompatActivity {
 
+    private enum RefreshType {
+        SWIPE,
+        DEFAULT
+    }
+
     private ProgressBar mProgressBar;
     private TextView mMessageTextview;
     private RecyclerView mRecyclerView;
     private View mContainer;
+    private SwipeRefreshLayout mSwipeRefreshLayout;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -48,10 +53,18 @@ public class MyFriendsActivity extends AppCompatActivity {
             }
         });
 
+        mSwipeRefreshLayout = findViewById(R.id.my_friends_swipe_refresh_layout);
+        mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                getFriends(RefreshType.SWIPE);
+            }
+        });
+
         initializeFAB();
         hideMessage();
 
-        getFriends();
+        getFriends(RefreshType.DEFAULT);
     }
 
     /**
@@ -81,7 +94,8 @@ public class MyFriendsActivity extends AppCompatActivity {
     /**
      * Method to retrieve the user's friends and show the RecyclerView.
      */
-    private void getFriends() {
+    private void getFriends(final RefreshType refreshType) {
+        mSwipeRefreshLayout.setEnabled(false);
         mMessageTextview.setVisibility(View.GONE);
         mRecyclerView.setVisibility(View.GONE);
         FirestoreConnector.newInstance()
@@ -94,12 +108,18 @@ public class MyFriendsActivity extends AppCompatActivity {
 
             @Override
             public void onSuccess(final List<User> users) {
-                hideProgressBar();
+                if (refreshType == RefreshType.DEFAULT) {
+                    hideProgressBar();
+                } else {
+                    mSwipeRefreshLayout.setRefreshing(false);
+                }
+
                 if (users.isEmpty()) {
                     showMessage(getResources().getString(R.string.no_friends));
                 } else {
                     initializeRecyclerView(users);
                 }
+                mSwipeRefreshLayout.setEnabled(true);
             }
 
             @Override
@@ -111,9 +131,10 @@ public class MyFriendsActivity extends AppCompatActivity {
                     @Override
                     public void onClick(View v) {
                         showProgressBar();
-                        getFriends();
+                        getFriends(refreshType);
                     }
                 }).show();
+                mSwipeRefreshLayout.setEnabled(true);
             }
         });
     }
