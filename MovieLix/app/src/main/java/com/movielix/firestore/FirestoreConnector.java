@@ -24,6 +24,7 @@ import com.movielix.bean.Movie;
 import com.movielix.bean.Review;
 import com.movielix.bean.User;
 import com.movielix.constants.Constants;
+import com.movielix.interfaces.IFirestoreFieldListener;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -154,7 +155,7 @@ public class FirestoreConnector {
      * @param search search terms.
      * @param listener object of type FirestoreListener to be notifed with the result.
      */
-    public void getMoviesSuggestionsByTitle(final Context context, final String search, final FirestoreListener<BaseMovie> listener) {
+    public void getMoviesSuggestionsByTitle(final Context context, final String search, final IFirestoreListener<BaseMovie> listener) {
         Log.d(TAG, "[FirestoreConnector]::getMoviesSuggestionsByTitle: request to get suggestions by searching: " + search);
 
         final String search_term = search.toLowerCase();
@@ -308,7 +309,7 @@ public class FirestoreConnector {
      * @param search search terms.
      * @param listener FirestoreListener object to be notified once the operation is complete.
      */
-    public void getMoviesByTitle(final String search, final FirestoreListener<LiteMovie> listener) {
+    public void getMoviesByTitle(final String search, final IFirestoreListener<LiteMovie> listener) {
         Log.d(TAG, "[FirestoreConnector]::getMoviesByTitle: request to get movies by searching: " + search);
 
         final String search_term = search.toLowerCase();
@@ -376,7 +377,7 @@ public class FirestoreConnector {
      * @param id movie id.
      * @param listener FirestoreListener object to be notified once the operation is complete.
      */
-    public void getMovieById(@NonNull final String id, @NonNull final FirestoreListener<Movie> listener) {
+    public void getMovieById(@NonNull final String id, @NonNull final IFirestoreListener<Movie> listener) {
         Log.d(TAG, "[FirestoreConnector]::getMovieById: request to get movie by id: " + id);
 
         /* Step 1
@@ -419,7 +420,7 @@ public class FirestoreConnector {
      * @param ids list of the movies IDs.
      * @param listener FirestoreListener object to be notified once the operation is complete.
      */
-    public void getMoviesById(final List<String> ids, @NonNull final FirestoreListener<Movie> listener) {
+    public void getMoviesById(final List<String> ids, @NonNull final IFirestoreListener<Movie> listener) {
         Log.d(TAG, "[FirestoreConnector]::getMoviesById: request to get movies by ids");
 
         mDb.collection(MOVIES_COLLECTION)
@@ -467,7 +468,7 @@ public class FirestoreConnector {
             @NonNull final String idUser,
             int score,
             @Nullable final String comment,
-            @NonNull final FirestoreListener<Review> listener)
+            @NonNull final IFirestoreListener<Review> listener)
     {
         Log.d(TAG, "[FirestoreConnector]::createReview: request to create review");
 
@@ -513,7 +514,7 @@ public class FirestoreConnector {
      * @param user user object.
      * @param listener FirestoreListener object to be notified once the operation is complete.
      */
-    public void addUser(@NonNull final User user, @NonNull final FirestoreListener<User> listener) {
+    public void addUser(@NonNull final User user, @NonNull final IFirestoreListener<User> listener) {
         Log.d(TAG, "[FirestoreConnector]::addUser: request to add user");
 
         mDb.collection(USERS_COLLECTION)
@@ -582,7 +583,7 @@ public class FirestoreConnector {
      * @param data new data to be updated.
      * @param listener FirestoreListener object to be notified once the operation is complete.
      */
-    public void updateUser(@NonNull String id, @NonNull Map<String, Object> data, @NonNull final FirestoreListener<User> listener) {
+    public void updateUser(@NonNull String id, @NonNull Map<String, Object> data, @NonNull final IFirestoreListener<User> listener) {
         Log.d(TAG, "[FirestoreConnector]::updateUser: request to update user");
 
         mDb.collection(USERS_COLLECTION)
@@ -610,7 +611,7 @@ public class FirestoreConnector {
      * @param userId user's id.
      * @param listener FirestoreListener object to be notified once the operation is complete.
      */
-    public void getReviewsByUser(@NonNull final String userId, final FirestoreListener<Review> listener) {
+    public void getReviewsByUser(@NonNull final String userId, final IFirestoreListener<Review> listener) {
         Log.d(TAG, "[FirestoreConnector]::getReviewsByUser: request to get review by user: " + userId);
 
         mDb.collection(REVIEWS_COLLECTION)
@@ -654,7 +655,7 @@ public class FirestoreConnector {
      * @param userId user's id.
      * @param listener FirestoreListener object to be notified once the operation is complete.
      */
-    public void getFriends(@NonNull final String userId, final FirestoreListener<User> listener) {
+    public void getFriends(@NonNull final String userId, final IFirestoreListener<User> listener) {
         Log.d(TAG, "[FirestoreConnector]::getFriendsOf: request to get friends of user: " + userId);
 
         mDb.collection(FOLLOWING_COLLECTION)
@@ -729,7 +730,7 @@ public class FirestoreConnector {
      * @param search search term.
      * @param listener FirestoreListener object to be notified once the operation is complete.
      */
-    public void getUsersSuggestionsByName(@NonNull final String search, final FirestoreListener<User> listener) {
+    public void getUsersSuggestionsByName(@NonNull final String search, final IFirestoreListener<User> listener) {
         Log.d(TAG, "[FirestoreConnector]::getUsersSuggestionsByName: request to get users by searching: " + search);
 
         char c = search.charAt(search.length() - 1);
@@ -812,7 +813,7 @@ public class FirestoreConnector {
      * @param search search term.
      * @param listener FirestoreListener object to be notified once the operation is complete.
      */
-    public void getUsersByName(@NonNull final String search, final FirestoreListener<User> listener) {
+    public void getUsersByName(@NonNull final String search, final IFirestoreListener<User> listener) {
         Log.d(TAG, "[FirestoreConnector]::getUsersByName: request to get users by searching: " + search);
 
         char c = search.charAt(search.length() - 1);
@@ -894,10 +895,9 @@ public class FirestoreConnector {
      *
      * @param user_id: user id.
      * @param friend_id: friend id.
-     * @param listener FirestoreListener object to be notified once the operation is complete.
      */
-    public void follow(@NonNull final String user_id, @NonNull final String friend_id, final FirestoreListener<User> listener) {
-        Log.d(TAG, "[FirestoreConnector]::addFriend: request to add friend (" + friend_id + ") to user (" +user_id + ")");
+    public void follow(@NonNull final String user_id, @NonNull final String friend_id) {
+        Log.d(TAG, "[FirestoreConnector]::follow: request to add friend (" + friend_id + ") to user (" + user_id + ")");
 
         mDb.collection(FOLLOWING_COLLECTION)
                 .document(user_id)
@@ -905,7 +905,7 @@ public class FirestoreConnector {
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
-                        Log.d(TAG, "[FirestoreConnector]::addFriend: added friend to `following` collection successfully");
+                        Log.d(TAG, "[FirestoreConnector]::follow: added friend to `following` collection successfully");
 
                         mDb.collection(FOLLOWERS_COLLECTION)
                                 .document(friend_id)
@@ -913,15 +913,13 @@ public class FirestoreConnector {
                                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                                     @Override
                                     public void onSuccess(Void aVoid) {
-                                        Log.d(TAG, "[FirestoreConnector]::addFriend: added myself to `followers` collection successfully");
-                                        listener.onSuccess();
+                                        Log.d(TAG, "[FirestoreConnector]::follow: added myself to `followers` collection successfully");
                                     }
                                 })
                                 .addOnFailureListener(new OnFailureListener() {
                                     @Override
                                     public void onFailure(@NonNull Exception e) {
-                                        Log.w(TAG, "[FirestoreConnector]::addFriend: error adding myself to `followers` collection", e);
-                                        listener.onError();
+                                        Log.w(TAG, "[FirestoreConnector]::follow: error adding myself to `followers` collection", e);
                                     }
                                 });
                     }
@@ -929,10 +927,82 @@ public class FirestoreConnector {
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
-                        Log.w(TAG, "[FirestoreConnector]::addFriend: error adding friend to `following` collection", e);
-                        listener.onError();
+                        Log.w(TAG, "[FirestoreConnector]::follow: error adding friend to `following` collection", e);
                     }
                 });
+    }
+
+    /**
+     * Method to remove a friend to the `following` collection and myself to as follower.
+     *
+     * @param user_id: user id.
+     * @param friend_id: friend id.
+     */
+    public void unfollow(@NonNull final String user_id, @NonNull final String friend_id) {
+        Log.d(TAG, "[FirestoreConnector]::unfollow: request to remove friend (" + friend_id + ") to user (" + user_id + ")");
+
+        mDb.collection(FOLLOWING_COLLECTION)
+                .document(user_id)
+                .update(FOLLOWING_FOLLOWING, FieldValue.arrayRemove(friend_id))
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.d(TAG, "[FirestoreConnector]::unfollow: remove friend to `following` collection successfully");
+
+                        mDb.collection(FOLLOWERS_COLLECTION)
+                                .document(friend_id)
+                                .update(FOLLOWERS_FOLLOWED_BY, FieldValue.arrayRemove(user_id))
+                                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                    @Override
+                                    public void onSuccess(Void aVoid) {
+                                        Log.d(TAG, "[FirestoreConnector]::unfollow: removed myself to `followers` collection successfully");
+                                    }
+                                })
+                                .addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+                                        Log.w(TAG, "[FirestoreConnector]::unfollow: error removing myself to `followers` collection", e);
+                                    }
+                                });
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.w(TAG, "[FirestoreConnector]::unfollow: error removing friend to `following` collection", e);
+                    }
+                });
+    }
+
+    /**
+     *
+     * @param user_id
+     * @param listener
+     */
+    public void getFollowingOfUser(@NonNull final String user_id, final IFirestoreFieldListener<String> listener) {
+        Log.d(TAG, "[FirestoreConnector]::getFollowingOfUser: request to get which users are followed by (" + user_id + ")");
+
+        mDb.collection(FOLLOWING_COLLECTION)
+                .document(user_id)
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                        if (task.isSuccessful() && (task.getResult() != null)) {
+                            List<String> ids = (List<String>) task.getResult().get(FOLLOWING_FOLLOWING);
+                            if (ids == null) {
+                                ids = new ArrayList<>();
+                            }
+
+                            listener.onSuccess(ids);
+
+                        } else {
+                            Log.w(TAG, "[FirestoreConnector]::getFollowingOfUser: error getting users following by user.", task.getException());
+                            listener.onError();
+                        }
+                    }
+                });
+
     }
 
     private synchronized void setLastSearch(String search) {

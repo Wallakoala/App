@@ -19,9 +19,14 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.movielix.adapter.UsersAdapter;
 import com.movielix.bean.User;
 import com.movielix.firestore.FirestoreConnector;
-import com.movielix.firestore.FirestoreListener;
+import com.movielix.firestore.IFirestoreListener;
+import com.movielix.interfaces.IFirestoreFieldListener;
+import com.movielix.util.Tuple;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public class MyFriendsActivity extends AppCompatActivity {
@@ -83,7 +88,7 @@ public class MyFriendsActivity extends AppCompatActivity {
     /**
      * Initializes the RecyclerView
      */
-    private void initializeRecyclerView(final List<User> users) {
+    private void initializeRecyclerView(final List<Tuple<User, Boolean>> users) {
         UsersAdapter friendsAdapter = new UsersAdapter(users, this);
 
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this, RecyclerView.VERTICAL, false));
@@ -99,7 +104,7 @@ public class MyFriendsActivity extends AppCompatActivity {
         mMessageTextview.setVisibility(View.GONE);
         mRecyclerView.setVisibility(View.GONE);
         FirestoreConnector.newInstance()
-                .getFriends(Objects.requireNonNull(FirebaseAuth.getInstance().getUid()), new FirestoreListener<User>() {
+                .getFriends(Objects.requireNonNull(FirebaseAuth.getInstance().getUid()), new IFirestoreListener<User>() {
             @Override
             public void onSuccess() {}
 
@@ -117,8 +122,14 @@ public class MyFriendsActivity extends AppCompatActivity {
                 if (users.isEmpty()) {
                     showMessage(getResources().getString(R.string.no_friends));
                 } else {
-                    initializeRecyclerView(users);
+                    List<Tuple<User, Boolean>> usersWrapper = new ArrayList<>();
+                    for (User user: users) {
+                        usersWrapper.add(new Tuple<>(user, true));
+                    }
+
+                    initializeRecyclerView(usersWrapper);
                 }
+
                 mSwipeRefreshLayout.setEnabled(true);
             }
 

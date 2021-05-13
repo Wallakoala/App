@@ -27,9 +27,8 @@ import com.movielix.adapter.UsersSuggestionAdapter;
 import com.movielix.bean.User;
 import com.movielix.constants.Constants;
 import com.movielix.firestore.FirestoreConnector;
-import com.movielix.firestore.FirestoreListener;
+import com.movielix.firestore.IFirestoreListener;
 import com.movielix.font.TypeFace;
-import com.movielix.interfaces.IFollowListener;
 
 import java.util.List;
 
@@ -104,7 +103,7 @@ public class UsersActivity extends AppCompatActivity implements MaterialSearchBa
             public void onTextChanged(final CharSequence charSequence, int i, int i1, int i2) {
                 if (charSequence.length() > 1) {
                     showProgressBar();
-                    mFc.getUsersSuggestionsByName(charSequence.toString(), new FirestoreListener<User>() {
+                    mFc.getUsersSuggestionsByName(charSequence.toString(), new IFirestoreListener<User>() {
                         @Override
                         public void onSuccess() {}
 
@@ -193,7 +192,7 @@ public class UsersActivity extends AppCompatActivity implements MaterialSearchBa
 
             mMessageTextview.setVisibility(View.GONE);
             mUsersRecyclerView.setVisibility(View.GONE);
-            mFc.getUsersByName(text.toString(), new FirestoreListener<User>() {
+            mFc.getUsersByName(text.toString(), new IFirestoreListener<User>() {
                 @Override
                 public void onSuccess() {}
 
@@ -210,12 +209,12 @@ public class UsersActivity extends AppCompatActivity implements MaterialSearchBa
                         // user has to implement equals
                         // Map<K, V> -> Map<User, boolean>
                         // todo we need to add the `follow` flag to the users list, and then pass it along to the `UsersAdapter`.
-                        UsersAdapter usersAdapter = new UsersAdapter(users, UsersActivity.this);
+                        /*UsersAdapter usersAdapter = new UsersAdapter(users, UsersActivity.this);
 
                         mUsersRecyclerView.setLayoutManager(
                                 new LinearLayoutManager(UsersActivity.this, RecyclerView.VERTICAL, false));
                         mUsersRecyclerView.setAdapter(usersAdapter);
-                        mUsersRecyclerView.setVisibility(View.VISIBLE);
+                        mUsersRecyclerView.setVisibility(View.VISIBLE);*/
 
                     } else {
                         showMessage(UsersActivity.this.getString(R.string.no_users_found));
