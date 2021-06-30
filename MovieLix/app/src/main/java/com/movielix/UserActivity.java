@@ -75,6 +75,7 @@ public class UserActivity extends AppCompatActivity {
         new Thread(new Runnable() {
             @Override
             public void run() {
+                // todo
                 mBarrier = new CountDownLatch(1);
 
                 mReviews = new ArrayList<>();

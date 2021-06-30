@@ -686,11 +686,15 @@ public class FirestoreConnector {
                                                                             uri = Uri.parse(document.getString(USER_PHOTO_URL));
                                                                         }
 
-                                                                        users.add(new User(
+                                                                        User user = new User(
                                                                                   document.getId()
                                                                                 , Objects.requireNonNull(document.getString(USER_NAME))
                                                                                 , uri
-                                                                                , Objects.requireNonNull(document.getLong(USER_NUM_REVIEWS)).intValue()));
+                                                                                , Objects.requireNonNull(document.getLong(USER_NUM_REVIEWS)).intValue());
+
+                                                                        users.add(user);
+
+                                                                        Log.d(Constants.TAG, user.toString());
                                                                     }
 
                                                                 } else {
@@ -788,6 +792,8 @@ public class FirestoreConnector {
                                                             , Objects.requireNonNull(document.getLong(USER_NUM_REVIEWS)).intValue());
 
                                                     users.add(user);
+
+                                                    Log.d(Constants.TAG, user.toString());
                                                 }
 
                                                 listener.onSuccess(users);
@@ -871,6 +877,8 @@ public class FirestoreConnector {
                                                             , Objects.requireNonNull(document.getLong(USER_NUM_REVIEWS)).intValue());
 
                                                     users.add(user);
+
+                                                    Log.d(Constants.TAG, user.toString());
                                                 }
 
                                                 listener.onSuccess(users);
@@ -975,9 +983,10 @@ public class FirestoreConnector {
     }
 
     /**
+     * Method to retrieve the list of user ids that are being followed by us.
      *
-     * @param user_id
-     * @param listener
+     * @param user_id user id.
+     * @param listener FirestoreListener object to be notified once the operation is complete.
      */
     public void getFollowingOfUser(@NonNull final String user_id, final IFirestoreFieldListener<String> listener) {
         Log.d(TAG, "[FirestoreConnector]::getFollowingOfUser: request to get which users are followed by (" + user_id + ")");

@@ -20,13 +20,10 @@ import com.movielix.adapter.UsersAdapter;
 import com.movielix.bean.User;
 import com.movielix.firestore.FirestoreConnector;
 import com.movielix.firestore.IFirestoreListener;
-import com.movielix.interfaces.IFirestoreFieldListener;
 import com.movielix.util.Tuple;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 public class MyFriendsActivity extends AppCompatActivity {

@@ -21,6 +21,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.daimajia.androidanimations.library.Techniques;
 import com.daimajia.androidanimations.library.YoYo;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.firebase.auth.FirebaseAuth;
 import com.mancj.materialsearchbar.MaterialSearchBar;
 import com.movielix.adapter.UsersAdapter;
 import com.movielix.adapter.UsersSuggestionAdapter;
@@ -29,7 +30,10 @@ import com.movielix.constants.Constants;
 import com.movielix.firestore.FirestoreConnector;
 import com.movielix.firestore.IFirestoreListener;
 import com.movielix.font.TypeFace;
+import com.movielix.interfaces.IFirestoreFieldListener;
+import com.movielix.util.Tuple;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class UsersActivity extends AppCompatActivity implements MaterialSearchBar.OnSearchActionListener {
@@ -200,21 +204,33 @@ public class UsersActivity extends AppCompatActivity implements MaterialSearchBa
                 public void onSuccess(User item) {}
 
                 @Override
-                public void onSuccess(List<User> users) {
+                public void onSuccess(final List<User> users) {
                     hideProgressBar(true);
                     hideSuggestions();
 
                     if (!users.isEmpty()) {
                         // todo get if the users are being followed by us
-                        // user has to implement equals
-                        // Map<K, V> -> Map<User, boolean>
-                        // todo we need to add the `follow` flag to the users list, and then pass it along to the `UsersAdapter`.
-                        /*UsersAdapter usersAdapter = new UsersAdapter(users, UsersActivity.this);
+                        mFc.getFollowingOfUser(FirebaseAuth.getInstance().getUid(), new IFirestoreFieldListener<String>() {
+                            @Override
+                            public void onSuccess(List<String> ids) {
+                                List<Tuple<User, Boolean>> usersWrapper = new ArrayList<>();
+                                for (User user : users) {
+                                    usersWrapper.add(new Tuple<>(user, ids.contains(user.getId())));
+                                }
 
-                        mUsersRecyclerView.setLayoutManager(
-                                new LinearLayoutManager(UsersActivity.this, RecyclerView.VERTICAL, false));
-                        mUsersRecyclerView.setAdapter(usersAdapter);
-                        mUsersRecyclerView.setVisibility(View.VISIBLE);*/
+                                UsersAdapter usersAdapter = new UsersAdapter(usersWrapper, UsersActivity.this);
+
+                                mUsersRecyclerView.setLayoutManager(
+                                        new LinearLayoutManager(UsersActivity.this, RecyclerView.VERTICAL, false));
+                                mUsersRecyclerView.setAdapter(usersAdapter);
+                                mUsersRecyclerView.setVisibility(View.VISIBLE);
+                            }
+
+                            @Override
+                            public void onError() {
+                                showMessage(UsersActivity.this.getString(R.string.something_went_wrong));
+                            }
+                        });
 
                     } else {
                         showMessage(UsersActivity.this.getString(R.string.no_users_found));

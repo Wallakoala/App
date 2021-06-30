@@ -23,7 +23,6 @@ import com.movielix.util.Tuple;
 import com.squareup.picasso.Picasso;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 import de.hdodenhof.circleimageview.CircleImageView;
