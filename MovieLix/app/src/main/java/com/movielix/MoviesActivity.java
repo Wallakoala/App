@@ -28,7 +28,7 @@ import com.movielix.bean.LiteMovie;
 import com.movielix.bean.BaseMovie;
 import com.movielix.constants.Constants;
 import com.movielix.firestore.FirestoreConnector;
-import com.movielix.firestore.FirestoreListener;
+import com.movielix.firestore.IFirestoreListener;
 import com.movielix.font.TypeFace;
 
 import java.util.List;
@@ -104,7 +104,7 @@ public class MoviesActivity extends AppCompatActivity implements MaterialSearchB
             public void onTextChanged(final CharSequence charSequence, int i, int i1, int i2) {
                 if (charSequence.length() > 1) {
                     showProgressBar();
-                    firestoreConnector.getMoviesSuggestionsByTitle(MoviesActivity.this, charSequence.toString(), new FirestoreListener<BaseMovie>() {
+                    firestoreConnector.getMoviesSuggestionsByTitle(MoviesActivity.this, charSequence.toString(), new IFirestoreListener<BaseMovie>() {
                         @Override
                         public void onSuccess() {}
 
@@ -193,7 +193,7 @@ public class MoviesActivity extends AppCompatActivity implements MaterialSearchB
 
             mMessageTextview.setVisibility(View.GONE);
             mMoviesRecyclerView.setVisibility(View.GONE);
-            firestoreConnector.getMoviesByTitle(text.toString(), new FirestoreListener<LiteMovie>() {
+            firestoreConnector.getMoviesByTitle(text.toString(), new IFirestoreListener<LiteMovie>() {
                 @Override
                 public void onSuccess() {}
 

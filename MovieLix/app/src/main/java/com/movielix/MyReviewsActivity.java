@@ -19,7 +19,7 @@ import com.movielix.adapter.ReviewsAdapter;
 import com.movielix.bean.Movie;
 import com.movielix.bean.Review;
 import com.movielix.firestore.FirestoreConnector;
-import com.movielix.firestore.FirestoreListener;
+import com.movielix.firestore.IFirestoreListener;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -82,7 +82,7 @@ public class MyReviewsActivity extends AppCompatActivity {
         mMessageTextview.setVisibility(View.GONE);
         mReviewsRecyclerView.setVisibility(View.GONE);
         FirestoreConnector.newInstance()
-                .getReviewsByUser(Objects.requireNonNull(FirebaseAuth.getInstance().getUid()), new FirestoreListener<Review>() {
+                .getReviewsByUser(Objects.requireNonNull(FirebaseAuth.getInstance().getUid()), new IFirestoreListener<Review>() {
             @Override
             public void onSuccess() {}
 
@@ -101,7 +101,7 @@ public class MyReviewsActivity extends AppCompatActivity {
                     }
 
                     FirestoreConnector.newInstance()
-                            .getMoviesById(ids, new FirestoreListener<Movie>() {
+                            .getMoviesById(ids, new IFirestoreListener<Movie>() {
                                 @Override
                                 public void onSuccess() {}
 
