@@ -209,7 +209,6 @@ public class UsersActivity extends AppCompatActivity implements MaterialSearchBa
                     hideSuggestions();
 
                     if (!users.isEmpty()) {
-                        // todo get if the users are being followed by us
                         mFc.getFollowingOfUser(FirebaseAuth.getInstance().getUid(), new IFirestoreFieldListener<String>() {
                             @Override
                             public void onSuccess(List<String> ids) {
