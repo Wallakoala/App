@@ -20,7 +20,7 @@ import com.movielix.bean.Movie;
 import com.movielix.bean.Review;
 import com.movielix.constants.Constants;
 import com.movielix.firestore.FirestoreConnector;
-import com.movielix.firestore.FirestoreListener;
+import com.movielix.firestore.IFirestoreListener;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -75,6 +75,7 @@ public class UserActivity extends AppCompatActivity {
         new Thread(new Runnable() {
             @Override
             public void run() {
+                // todo
                 mBarrier = new CountDownLatch(1);
 
                 mReviews = new ArrayList<>();
@@ -126,7 +127,7 @@ public class UserActivity extends AppCompatActivity {
 
     private void getReviews() {
         FirestoreConnector.newInstance()
-                .getReviewsByUser(mUserId, new FirestoreListener<Review>() {
+                .getReviewsByUser(mUserId, new IFirestoreListener<Review>() {
             @Override
             public void onSuccess() {}
 
@@ -148,7 +149,7 @@ public class UserActivity extends AppCompatActivity {
                     }
 
                     FirestoreConnector.newInstance()
-                            .getMoviesById(ids, new FirestoreListener<Movie>() {
+                            .getMoviesById(ids, new IFirestoreListener<Movie>() {
                                 @Override
                                 public void onSuccess() {}
 

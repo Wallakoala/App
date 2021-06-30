@@ -60,4 +60,14 @@ public class User extends FirestoreItem {
                 ", NumReviews=" + mNumReviews +
                 '}';
     }
+
+    @Override
+    public boolean equals(Object other) {
+        if (!(other instanceof User)) {
+            return false;
+        }
+
+        User user = (User) other;
+        return super.mId.equals(user.mId);
+    }
 }

@@ -21,15 +21,19 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.daimajia.androidanimations.library.Techniques;
 import com.daimajia.androidanimations.library.YoYo;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.firebase.auth.FirebaseAuth;
 import com.mancj.materialsearchbar.MaterialSearchBar;
 import com.movielix.adapter.UsersAdapter;
 import com.movielix.adapter.UsersSuggestionAdapter;
 import com.movielix.bean.User;
 import com.movielix.constants.Constants;
 import com.movielix.firestore.FirestoreConnector;
-import com.movielix.firestore.FirestoreListener;
+import com.movielix.firestore.IFirestoreListener;
 import com.movielix.font.TypeFace;
+import com.movielix.interfaces.IFirestoreFieldListener;
+import com.movielix.util.Tuple;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class UsersActivity extends AppCompatActivity implements MaterialSearchBar.OnSearchActionListener {
@@ -103,7 +107,7 @@ public class UsersActivity extends AppCompatActivity implements MaterialSearchBa
             public void onTextChanged(final CharSequence charSequence, int i, int i1, int i2) {
                 if (charSequence.length() > 1) {
                     showProgressBar();
-                    mFc.getUsersSuggestionsByName(charSequence.toString(), new FirestoreListener<User>() {
+                    mFc.getUsersSuggestionsByName(charSequence.toString(), new IFirestoreListener<User>() {
                         @Override
                         public void onSuccess() {}
 
@@ -192,7 +196,7 @@ public class UsersActivity extends AppCompatActivity implements MaterialSearchBa
 
             mMessageTextview.setVisibility(View.GONE);
             mUsersRecyclerView.setVisibility(View.GONE);
-            mFc.getUsersByName(text.toString(), new FirestoreListener<User>() {
+            mFc.getUsersByName(text.toString(), new IFirestoreListener<User>() {
                 @Override
                 public void onSuccess() {}
 
@@ -200,16 +204,32 @@ public class UsersActivity extends AppCompatActivity implements MaterialSearchBa
                 public void onSuccess(User item) {}
 
                 @Override
-                public void onSuccess(List<User> users) {
+                public void onSuccess(final List<User> users) {
                     hideProgressBar(true);
                     hideSuggestions();
 
                     if (!users.isEmpty()) {
-                        UsersAdapter usersAdapter = new UsersAdapter(users, UsersActivity.this);
-                        mUsersRecyclerView.setLayoutManager(
-                                new LinearLayoutManager(UsersActivity.this, RecyclerView.VERTICAL, false));
-                        mUsersRecyclerView.setAdapter(usersAdapter);
-                        mUsersRecyclerView.setVisibility(View.VISIBLE);
+                        mFc.getFollowingOfUser(FirebaseAuth.getInstance().getUid(), new IFirestoreFieldListener<String>() {
+                            @Override
+                            public void onSuccess(List<String> ids) {
+                                List<Tuple<User, Boolean>> usersWrapper = new ArrayList<>();
+                                for (User user : users) {
+                                    usersWrapper.add(new Tuple<>(user, ids.contains(user.getId())));
+                                }
+
+                                UsersAdapter usersAdapter = new UsersAdapter(usersWrapper, UsersActivity.this);
+
+                                mUsersRecyclerView.setLayoutManager(
+                                        new LinearLayoutManager(UsersActivity.this, RecyclerView.VERTICAL, false));
+                                mUsersRecyclerView.setAdapter(usersAdapter);
+                                mUsersRecyclerView.setVisibility(View.VISIBLE);
+                            }
+
+                            @Override
+                            public void onError() {
+                                showMessage(UsersActivity.this.getString(R.string.something_went_wrong));
+                            }
+                        });
 
                     } else {
                         showMessage(UsersActivity.this.getString(R.string.no_users_found));
@@ -226,6 +246,7 @@ public class UsersActivity extends AppCompatActivity implements MaterialSearchBa
 
     @Override
     public void onButtonClicked(int buttonCode) {
+        // todo review me
         Log.d(Constants.TAG, "No se cuando se ejecuta esto.....");
     }
 }

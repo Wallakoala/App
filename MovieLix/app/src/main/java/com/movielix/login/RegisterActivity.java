@@ -54,7 +54,7 @@ import com.movielix.R;
 import com.movielix.bean.User;
 import com.movielix.constants.Constants;
 import com.movielix.firestore.FirestoreConnector;
-import com.movielix.firestore.FirestoreListener;
+import com.movielix.firestore.IFirestoreListener;
 import com.movielix.validator.EmailValidator;
 import com.movielix.validator.NameValidator;
 import com.movielix.validator.PasswordValidator;
@@ -74,7 +74,7 @@ import br.com.simplepass.loadingbutton.customViews.CircularProgressButton;
  *
  * We support: Email - Twitter - Facebook - Google
  */
-public class RegisterActivity extends AppCompatActivity implements FirestoreListener<User> {
+public class RegisterActivity extends AppCompatActivity implements IFirestoreListener<User> {
 
     private static final int RC_GOOGLE = 0xA5;
     private static final int RC_FACEBOOK = 64206;

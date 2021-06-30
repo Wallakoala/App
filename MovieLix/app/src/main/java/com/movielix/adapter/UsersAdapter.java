@@ -10,6 +10,7 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -18,7 +19,7 @@ import com.movielix.R;
 import com.movielix.bean.User;
 import com.movielix.constants.Constants;
 import com.movielix.firestore.FirestoreConnector;
-import com.movielix.firestore.FirestoreListener;
+import com.movielix.util.Tuple;
 import com.squareup.picasso.Picasso;
 
 import java.util.List;
@@ -32,9 +33,9 @@ import de.hdodenhof.circleimageview.CircleImageView;
 public class UsersAdapter extends RecyclerView.Adapter<UsersAdapter.UserHolder> {
 
     private final Context mContext;
-    private final List<User> mUsers;
+    private final List<Tuple<User, Boolean>> mUsers;
 
-    public UsersAdapter(final List<User> users, final Context context) {
+    public UsersAdapter(final List<Tuple<User, Boolean>> users, final Context context) {
         mUsers = users;
         mContext = context;
     }
@@ -66,6 +67,7 @@ public class UsersAdapter extends RecyclerView.Adapter<UsersAdapter.UserHolder> 
     class UserHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         private User mUser;
+        private boolean mFollowing;
 
         private final CircleImageView mProfilePic;
         private final TextView mName;
@@ -84,52 +86,75 @@ public class UsersAdapter extends RecyclerView.Adapter<UsersAdapter.UserHolder> 
         }
 
         @SuppressLint("SetTextI18n")
-        void bindFriendItem(final User user) {
+        void bindFriendItem(final Tuple<User, Boolean> userWrapper) {
+            mUser = userWrapper.x();
+            mFollowing = userWrapper.y();
+
             Picasso.get()
-                    .load(user.getPhotoUrl())
+                    .load(mUser.getPhotoUrl())
                     .error(R.drawable.ic_default_profile_pic)
                     .into(mProfilePic);
 
-            mName.setText(user.getName());
-            mNumReviews.setText(Integer.toString(user.getNumReviews()));
+            mName.setText(mUser.getName());
+            mNumReviews.setText(Integer.toString(mUser.getNumReviews()));
 
-            mFollow.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    FirestoreConnector.newInstance().follow(
-                              Objects.requireNonNull(FirebaseAuth.getInstance().getUid())
-                            , user.getId()
-                            , new FirestoreListener<User>() {
-                                @Override
-                                public void onSuccess() {
-                                    // todo notify upper layer that it succeeded
-                                }
+            updateButton();
 
-                                @Override
-                                public void onSuccess(User item) { }
+            if (mFollowing) {
+                mFollow.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        FirestoreConnector.newInstance().unfollow(
+                                Objects.requireNonNull(FirebaseAuth.getInstance().getUid()), mUser.getId());
 
-                                @Override
-                                public void onSuccess(List<User> items) { }
+                        mFollowing = !mFollowing;
+                        updateButton();
+                    }
+                });
 
-                                @Override
-                                public void onError() {
-                                    // todo notify upper layer that it failed
-                                }
-                            });
-                }
-            });
+            } else {
+                mFollow.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        FirestoreConnector.newInstance().follow(
+                                  Objects.requireNonNull(FirebaseAuth.getInstance().getUid()), mUser.getId());
 
-            mUser = user;
+                        mFollowing = !mFollowing;
+                        updateButton();
+                    }
+                });
+            }
         }
 
         @Override
         public void onClick(View v) {
             Intent intent = new Intent(mContext, UserActivity.class);
+
             intent.putExtra(Constants.USER_ID, mUser.getId());
             intent.putExtra(Constants.USER_NAME, mUser.getName());
             intent.putExtra(Constants.USER_PROFILE_PIC, mUser.getPhotoUrl());
             intent.putExtra(Constants.USER_NUM_REVIEWS, mUser.getNumReviews());
+
             mContext.startActivity(intent);
+        }
+
+        private void updateButton() {
+            if (mFollowing) {
+                mFollow.setBackground(
+                        ContextCompat.getDrawable(mContext, R.drawable.rounded_button_fill));
+                mFollow.setTextColor(
+                        mContext.getResources().getColor(android.R.color.black, mContext.getTheme()));
+                mFollow.setText(
+                        mContext.getResources().getText(R.string.friend_unfollow));
+
+            } else {
+                mFollow.setBackground(
+                        ContextCompat.getDrawable(mContext, R.drawable.rounded_button_border_transparent));
+                mFollow.setTextColor(
+                        mContext.getResources().getColor(R.color.colorAccent, mContext.getTheme()));
+                mFollow.setText(
+                        mContext.getResources().getText(R.string.friend_follow));
+            }
         }
     }
 }

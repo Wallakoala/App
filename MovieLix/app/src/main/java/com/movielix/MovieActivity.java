@@ -15,7 +15,7 @@ import com.movielix.bean.Movie;
 import com.movielix.bean.Review;
 import com.movielix.constants.Constants;
 import com.movielix.firestore.FirestoreConnector;
-import com.movielix.firestore.FirestoreListener;
+import com.movielix.firestore.IFirestoreListener;
 import com.squareup.picasso.Picasso;
 import com.stepstone.apprating.AppRatingDialog;
 import com.stepstone.apprating.listener.RatingDialogListener;
@@ -84,7 +84,7 @@ public class MovieActivity extends AppCompatActivity implements RatingDialogList
             }
         });
 
-        FirestoreConnector.newInstance().getMovieById(mMovieId, new FirestoreListener<Movie>() {
+        FirestoreConnector.newInstance().getMovieById(mMovieId, new IFirestoreListener<Movie>() {
             @Override
             public void onSuccess() {}
 
@@ -110,7 +110,7 @@ public class MovieActivity extends AppCompatActivity implements RatingDialogList
         }
 
         FirestoreConnector.newInstance().createReview(
-                mMovieId, FirebaseAuth.getInstance().getUid(), score, comment, new FirestoreListener<Review>() {
+                mMovieId, FirebaseAuth.getInstance().getUid(), score, comment, new IFirestoreListener<Review>() {
                     @Override
                     public void onSuccess() {
                         Snackbar snackbar = Snackbar.make(findViewById(R.id.movie_container), R.string.review_sent, Snackbar.LENGTH_SHORT);

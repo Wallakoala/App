@@ -2,7 +2,7 @@ package com.movielix.firestore;
 
 import java.util.List;
 
-public interface FirestoreListener<T extends FirestoreItem> {
+public interface IFirestoreListener<T extends FirestoreItem> {
 
     void onSuccess();
     void onSuccess(T item);
