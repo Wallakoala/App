@@ -436,6 +436,7 @@ public class FirestoreConnector {
                                     Movie lm = getMovieFromDocument(document);
                                     if (lm != null) {
                                         movies.add(lm);
+                                        Log.d(TAG, lm.toString());
                                     }
                                 }
 
@@ -612,7 +613,7 @@ public class FirestoreConnector {
      * @param listener FirestoreListener object to be notified once the operation is complete.
      */
     public void getReviewsByUser(@NonNull final String userId, final IFirestoreListener<Review> listener) {
-        Log.d(TAG, "[FirestoreConnector]::getReviewsByUser: request to get review by user: " + userId);
+        Log.d(TAG, "[FirestoreConnector]::getReviewsByUser: request to get reviews by user: " + userId);
 
         mDb.collection(REVIEWS_COLLECTION)
                 .whereEqualTo(REVIEW_USER_ID, userId)
@@ -1011,7 +1012,6 @@ public class FirestoreConnector {
                         }
                     }
                 });
-
     }
 
     private synchronized void setLastSearch(String search) {

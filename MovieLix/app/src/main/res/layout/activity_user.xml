@@ -22,7 +22,7 @@
             app:contentInsetEndWithActions="0dp">
 
             <com.movielix.font.MovieLixTextView
-                android:id="@+id/friend_name"
+                android:id="@+id/user_name"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_gravity="center"
@@ -36,7 +36,7 @@
         </androidx.appcompat.widget.Toolbar>
 
         <ProgressBar
-            android:id="@+id/friend_progress_bar"
+            android:id="@+id/user_progress_bar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:indeterminate="true"
@@ -46,7 +46,7 @@
             style="?android:attr/progressBarStyleHorizontal"/>
 
         <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/friend_container"
+            android:id="@+id/user_container"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
@@ -70,7 +70,7 @@
                         android:background="@drawable/border_transparent">
 
                         <de.hdodenhof.circleimageview.CircleImageView
-                            android:id="@+id/friend_profile_pic"
+                            android:id="@+id/user_profile_pic"
                             android:layout_width="72dp"
                             android:layout_height="72dp"
                             android:layout_margin="16dp"
@@ -157,14 +157,14 @@
                     android:layout_height="match_parent">
 
                     <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/friend_recyclerview"
+                        android:id="@+id/user_recyclerview"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:overScrollMode="always"
                         app:fastScrollEnabled="false"/>
 
                     <com.movielix.font.MovieLixTextView
-                        android:id="@+id/friend_message_textview"
+                        android:id="@+id/user_message_textview"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="top|center"

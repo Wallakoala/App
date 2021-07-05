@@ -46,4 +46,15 @@ public class BaseMovie extends FirestoreItem {
 
         return genres.toString();
     }
+
+    @Override
+    public String toString() {
+        return "BaseMovie{" +
+                "Title='" + mTitle + '\'' +
+                ", ImageUrl='" + mImageUrl + '\'' +
+                ", Genres=" + mGenres +
+                ", ReleaseYear=" + mReleaseYear +
+                ", Id='" + mId + '\'' +
+                '}';
+    }
 }
