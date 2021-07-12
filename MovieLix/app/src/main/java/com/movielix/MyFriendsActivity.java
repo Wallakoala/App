@@ -142,6 +142,7 @@ public class MyFriendsActivity extends AppCompatActivity {
                         getFriends(refreshType);
                     }
                 }).show();
+
                 mSwipeRefreshLayout.setEnabled(true);
             }
         });

@@ -215,7 +215,7 @@ public class MoviesActivity extends AppCompatActivity implements MaterialSearchB
                     } else {
                         String search = text.toString();
                         String message = MoviesActivity.this.getString(R.string.no_movies_found);
-                        message = message.replace("%1", search);
+                        message = message.replace(Constants.STR_PLACEHOLDER_1, search);
 
                         showMessage(message);
                     }

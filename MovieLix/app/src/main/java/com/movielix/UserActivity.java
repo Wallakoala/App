@@ -135,7 +135,7 @@ public class UserActivity extends AppCompatActivity {
         updateFollowButton();
 
         if (mReviews.isEmpty()) {
-            showMessage(getResources().getString(R.string.friend_no_reviews));
+            showMessage(getResources().getString(R.string.friend_no_reviews).replace(Constants.STR_PLACEHOLDER_1, mUserName));
         } else {
             ReviewsAdapter reviewsAdapter = new ReviewsAdapter(mReviews, false, this);
 
@@ -183,7 +183,7 @@ public class UserActivity extends AppCompatActivity {
                     finishTask(true);
 
                 } else {
-                    List<String> ids = new ArrayList<>();
+                    final List<String> ids = new ArrayList<>();
                     for (Review review : reviews) {
                         ids.add(review.getMovieId());
                     }
@@ -236,7 +236,7 @@ public class UserActivity extends AppCompatActivity {
         // todo
     }
 
-    private void getFollowing(){
+    private void getFollowing() {
         mNumRequests++;
         FirestoreConnector
                 .newInstance()

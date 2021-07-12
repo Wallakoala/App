@@ -35,6 +35,7 @@ import com.movielix.util.Tuple;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class UsersActivity extends AppCompatActivity implements MaterialSearchBar.OnSearchActionListener {
 
@@ -209,7 +210,7 @@ public class UsersActivity extends AppCompatActivity implements MaterialSearchBa
                     hideSuggestions();
 
                     if (!users.isEmpty()) {
-                        mFc.getFollowingOfUser(FirebaseAuth.getInstance().getUid(), new IFirestoreFieldListener<String>() {
+                        mFc.getFollowingOfUser(Objects.requireNonNull(FirebaseAuth.getInstance().getUid()), new IFirestoreFieldListener<String>() {
                             @Override
                             public void onSuccess(List<String> ids) {
                                 List<Tuple<User, Boolean>> usersWrapper = new ArrayList<>();

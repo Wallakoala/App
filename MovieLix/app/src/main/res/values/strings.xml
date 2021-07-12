@@ -75,13 +75,13 @@
     <string name="users_search_bar_placeholder">Buscar usuario</string>
     <string name="search_bar_hint">Buscar</string>
 
-    <string name="no_movies_found">No se ha encontrado ninguna película o serie con los términos\n\"%1\"</string>
+    <string name="no_movies_found">No se ha encontrado ninguna película o serie con los términos\n\"$1\"</string>
     <string name="no_users_found">No se ha encontrado ningún usuario"</string>
-    <string name="movie_suggestion_extra_info">(%1) - %2</string>
+    <string name="movie_suggestion_extra_info">($1) - $2</string>
     <string name="add_review_descriptor">Añadir valoracion</string>
     <string name="add_friend_descriptor">Añadir amigo</string>
 
     <string name="no_reviews">No has hecho ninguna valoración todavía.</string>
-    <string name="friend_no_reviews">%1 no ha hecho ninguna valoración todavía.</string>
+    <string name="friend_no_reviews">$1 no ha hecho ninguna valoración todavía.</string>
     <string name="no_friends">No has añadido ningún amigo todavía.</string>
 </resources>

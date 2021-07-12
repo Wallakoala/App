@@ -93,8 +93,8 @@ public class MoviesSuggestionAdapter extends RecyclerView.Adapter<MoviesSuggesti
             mExtraInfo.setText(
                     mContext.getText(R.string.movie_suggestion_extra_info)
                             .toString()
-                            .replace("%1", Integer.toString(movie.getReleaseYear()))
-                            .replace("%2", movie.getGenresAsString()));
+                            .replace(Constants.STR_PLACEHOLDER_1, Integer.toString(movie.getReleaseYear()))
+                            .replace(Constants.STR_PLACEHOLDER_2, movie.getGenresAsString()));
 
             Picasso.get()
                    .load(movie.getImageUrl())
