@@ -110,7 +110,7 @@ public class MovieActivity extends AppCompatActivity implements RatingDialogList
         }
 
         FirestoreConnector.newInstance().createReview(
-                mMovieId, FirebaseAuth.getInstance().getUid(), score, comment, new IFirestoreListener<Review>() {
+                mMovieId, Objects.requireNonNull(FirebaseAuth.getInstance().getUid()), score, comment, new IFirestoreListener<Review>() {
                     @Override
                     public void onSuccess() {
                         Snackbar snackbar = Snackbar.make(findViewById(R.id.movie_container), R.string.review_sent, Snackbar.LENGTH_SHORT);

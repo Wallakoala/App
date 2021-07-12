@@ -100,30 +100,21 @@ public class UsersAdapter extends RecyclerView.Adapter<UsersAdapter.UserHolder> 
 
             updateButton();
 
-            if (mFollowing) {
-                mFollow.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
+            mFollow.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (mFollowing) {
                         FirestoreConnector.newInstance().unfollow(
                                 Objects.requireNonNull(FirebaseAuth.getInstance().getUid()), mUser.getId());
-
-                        mFollowing = !mFollowing;
-                        updateButton();
-                    }
-                });
-
-            } else {
-                mFollow.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
+                    } else {
                         FirestoreConnector.newInstance().follow(
-                                  Objects.requireNonNull(FirebaseAuth.getInstance().getUid()), mUser.getId());
-
-                        mFollowing = !mFollowing;
-                        updateButton();
+                                Objects.requireNonNull(FirebaseAuth.getInstance().getUid()), mUser.getId());
                     }
-                });
-            }
+
+                    mFollowing = !mFollowing;
+                    updateButton();
+                }
+            });
         }
 
         @Override

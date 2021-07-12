@@ -17,25 +17,24 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.daimajia.androidanimations.library.Techniques;
 import com.daimajia.androidanimations.library.YoYo;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.firebase.auth.FirebaseAuth;
 import com.movielix.adapter.ReviewsAdapter;
 import com.movielix.bean.Movie;
 import com.movielix.bean.Review;
 import com.movielix.constants.Constants;
 import com.movielix.firestore.FirestoreConnector;
 import com.movielix.firestore.IFirestoreListener;
+import com.movielix.interfaces.IFirestoreFieldListener;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class UserActivity extends AppCompatActivity {
-
-    // todo update with the correct value
-    private static final int NUM_REQUESTS = 1;
-
     private String mUserId;
     private String mUserName;
     private String mUserProfilePic;
@@ -49,12 +48,16 @@ public class UserActivity extends AppCompatActivity {
     private AtomicBoolean mRequestFailed;
 
     private List<Review> mReviews;
+
     private int mNumFollowers;
     private int mNumFriends;
 
-    private Button mFollow;
     private boolean mFollowing;
     private boolean mFollowingExists;
+
+    private int mNumRequests;
+
+    private Button mFollow;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -67,10 +70,12 @@ public class UserActivity extends AppCompatActivity {
         mUserId = bundle.getString(Constants.USER_ID);
         mUserName = bundle.getString(Constants.USER_NAME);
         mUserProfilePic = bundle.getString(Constants.USER_PROFILE_PIC);
-        if (bundle.containsKey(Constants.USER_PROFILE_PIC)) {
+
+        // If we come from the UsersAdapter we know if the user is being followed by us.
+        if (bundle.containsKey(Constants.USER_FOLLOWING)) {
             mFollowing = bundle.getBoolean(Constants.USER_FOLLOWING);
             mFollowingExists = true;
-        } else{
+        } else {
             mFollowingExists = false;
         }
 
@@ -99,24 +104,24 @@ public class UserActivity extends AppCompatActivity {
                 .into((ImageView) findViewById(R.id.user_profile_pic));
 
         // Update toolbar with the user's name.
-        ((TextView)findViewById(R.id.user_name)).setText(mUserName);
-        mFollowing = findViewById(R.id.friend_add_button);
-        if (mFollowing) {
-            mFollow.setBackground(
-                    ContextCompat.getDrawable(mContext, R.drawable.rounded_button_fill));
-            mFollow.setTextColor(
-                    mContext.getResources().getColor(android.R.color.black, mContext.getTheme()));
-            mFollow.setText(
-                    mContext.getResources().getText(R.string.friend_unfollow));
+        ((TextView) findViewById(R.id.user_name)).setText(mUserName);
 
-        } else {
-            mFollow.setBackground(
-                    ContextCompat.getDrawable(mContext, R.drawable.rounded_button_border_transparent));
-            mFollow.setTextColor(
-                    mContext.getResources().getColor(R.color.colorAccent, mContext.getTheme()));
-            mFollow.setText(
-                    mContext.getResources().getText(R.string.friend_follow));
-        }
+        mFollow = findViewById(R.id.friend_add_button);
+        mFollow.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mFollowing) {
+                    FirestoreConnector.newInstance().unfollow(
+                            Objects.requireNonNull(FirebaseAuth.getInstance().getUid()), mUserId);
+                } else {
+                    FirestoreConnector.newInstance().follow(
+                            Objects.requireNonNull(FirebaseAuth.getInstance().getUid()), mUserId);
+                }
+
+                mFollowing = !mFollowing;
+                updateFollowButton();
+            }
+        });
     }
 
     /**
@@ -124,8 +129,10 @@ public class UserActivity extends AppCompatActivity {
      */
     private void initializeUi() {
         mContainer.setVisibility(View.VISIBLE);
+
         hideProgressBar();
         hideMessage();
+        updateFollowButton();
 
         if (mReviews.isEmpty()) {
             showMessage(getResources().getString(R.string.friend_no_reviews));
@@ -146,6 +153,7 @@ public class UserActivity extends AppCompatActivity {
         mReviews = new ArrayList<>();
         mNumFollowers = 0;
         mNumFriends = 0;
+        mNumRequests = 0;
 
         mRequestCounter = new AtomicInteger(0);
         mRequestFailed = new AtomicBoolean(false);
@@ -155,12 +163,12 @@ public class UserActivity extends AppCompatActivity {
         getNumFriends();
 
         if (!mFollowingExists){
-            // TODO:
             getFollowing();
         }
     }
 
     private void getReviews() {
+        mNumRequests++;
         FirestoreConnector.newInstance()
                 .getReviewsByUser(mUserId, new IFirestoreListener<Review>() {
             @Override
@@ -229,7 +237,22 @@ public class UserActivity extends AppCompatActivity {
     }
 
     private void getFollowing(){
-        // TODO
+        mNumRequests++;
+        FirestoreConnector
+                .newInstance()
+                .getFollowingOfUser(Objects.requireNonNull(FirebaseAuth.getInstance().getUid()), new IFirestoreFieldListener<String>()
+        {
+            @Override
+            public void onSuccess(List<String> ids) {
+                mFollowing = ids.contains(mUserId);
+                finishTask(true);
+            }
+
+            @Override
+            public void onError() {
+                finishTask(false);
+            }
+        });
     }
 
     private void finishTask(boolean ok) {
@@ -238,7 +261,7 @@ public class UserActivity extends AppCompatActivity {
         }
 
         // If we are the last one, and something went wrong, then show the error.
-        if ((mRequestCounter.incrementAndGet() == NUM_REQUESTS)) {
+        if ((mRequestCounter.incrementAndGet() == mNumRequests)) {
             hideProgressBar();
             if (mRequestFailed.get()) {
                 Snackbar.make(mContainer, R.string.something_went_wrong, Snackbar.LENGTH_LONG).setAction("Reintentar", new View.OnClickListener() {
@@ -263,6 +286,25 @@ public class UserActivity extends AppCompatActivity {
 
     private void hideMessage() {
         mMessageTextview.setVisibility(View.GONE);
+    }
+
+    private void updateFollowButton() {
+        if (mFollowing) {
+            mFollow.setBackground(
+                    ContextCompat.getDrawable(this, R.drawable.rounded_button_fill));
+            mFollow.setTextColor(
+                    getResources().getColor(android.R.color.black, getTheme()));
+            mFollow.setText(
+                    getResources().getText(R.string.friend_unfollow));
+
+        } else {
+            mFollow.setBackground(
+                    ContextCompat.getDrawable(this, R.drawable.rounded_button_border_transparent));
+            mFollow.setTextColor(
+                    getResources().getColor(R.color.colorAccent, getTheme()));
+            mFollow.setText(
+                    getResources().getText(R.string.friend_follow));
+        }
     }
 
     /**
