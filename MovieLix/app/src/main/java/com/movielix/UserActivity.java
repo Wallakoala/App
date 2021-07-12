@@ -4,11 +4,13 @@ import android.animation.Animator;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -50,6 +52,10 @@ public class UserActivity extends AppCompatActivity {
     private int mNumFollowers;
     private int mNumFriends;
 
+    private Button mFollow;
+    private boolean mFollowing;
+    private boolean mFollowingExists;
+
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
@@ -61,6 +67,12 @@ public class UserActivity extends AppCompatActivity {
         mUserId = bundle.getString(Constants.USER_ID);
         mUserName = bundle.getString(Constants.USER_NAME);
         mUserProfilePic = bundle.getString(Constants.USER_PROFILE_PIC);
+        if (bundle.containsKey(Constants.USER_PROFILE_PIC)) {
+            mFollowing = bundle.getBoolean(Constants.USER_FOLLOWING);
+            mFollowingExists = true;
+        } else{
+            mFollowingExists = false;
+        }
 
         mProgressBar = findViewById(R.id.user_progress_bar);
         mMessageTextview = findViewById(R.id.user_message_textview);
@@ -88,6 +100,23 @@ public class UserActivity extends AppCompatActivity {
 
         // Update toolbar with the user's name.
         ((TextView)findViewById(R.id.user_name)).setText(mUserName);
+        mFollowing = findViewById(R.id.friend_add_button);
+        if (mFollowing) {
+            mFollow.setBackground(
+                    ContextCompat.getDrawable(mContext, R.drawable.rounded_button_fill));
+            mFollow.setTextColor(
+                    mContext.getResources().getColor(android.R.color.black, mContext.getTheme()));
+            mFollow.setText(
+                    mContext.getResources().getText(R.string.friend_unfollow));
+
+        } else {
+            mFollow.setBackground(
+                    ContextCompat.getDrawable(mContext, R.drawable.rounded_button_border_transparent));
+            mFollow.setTextColor(
+                    mContext.getResources().getColor(R.color.colorAccent, mContext.getTheme()));
+            mFollow.setText(
+                    mContext.getResources().getText(R.string.friend_follow));
+        }
     }
 
     /**
@@ -124,6 +153,11 @@ public class UserActivity extends AppCompatActivity {
         getReviews();
         getNumFollowers();
         getNumFriends();
+
+        if (!mFollowingExists){
+            // TODO:
+            getFollowing();
+        }
     }
 
     private void getReviews() {
@@ -192,6 +226,10 @@ public class UserActivity extends AppCompatActivity {
 
     private void getNumFriends() {
         // todo
+    }
+
+    private void getFollowing(){
+        // TODO
     }
 
     private void finishTask(boolean ok) {
