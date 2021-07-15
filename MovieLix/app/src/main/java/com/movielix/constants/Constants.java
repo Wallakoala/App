@@ -17,7 +17,6 @@ public class Constants {
     public static final String USER_NAME = "user_name";
     public static final String USER_PROFILE_PIC = "user_profile_pic";
     public static final String USER_NUM_REVIEWS = "user_num_reviews";
-    public static final String USER_FOLLOWING = "user_following";
 
     public static final String STR_PLACEHOLDER_1 = "$1";
     public static final String STR_PLACEHOLDER_2 = "$2";

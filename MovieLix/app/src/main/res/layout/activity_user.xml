@@ -96,7 +96,7 @@
                             android:layout_weight="0.5">
 
                             <com.movielix.font.MovieLixTextView
-                                android:id="@+id/friend_num_followers"
+                                android:id="@+id/friend_num_reviews"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginStart="4dp"
@@ -106,7 +106,7 @@
                                 app:customFont="Raleway-SemiBold.ttf"/>
 
                             <com.movielix.font.MovieLixTextView
-                                android:id="@+id/friend_num_reviews"
+                                android:id="@+id/friend_num_following"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginStart="4dp"
@@ -116,7 +116,7 @@
                                 app:customFont="Raleway-SemiBold.ttf"/>
 
                             <com.movielix.font.MovieLixTextView
-                                android:id="@+id/friend_num_friends"
+                                android:id="@+id/friend_num_followers"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginStart="4dp"

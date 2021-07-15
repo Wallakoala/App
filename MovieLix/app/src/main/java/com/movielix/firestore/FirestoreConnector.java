@@ -984,7 +984,7 @@ public class FirestoreConnector {
     }
 
     /**
-     * Method to retrieve the list of user ids that are being followed by us.
+     * Method to retrieve the list of user ids that are being followed by the given user.
      *
      * @param user_id user id.
      * @param listener FirestoreListener object to be notified once the operation is complete.
@@ -1008,6 +1008,37 @@ public class FirestoreConnector {
 
                         } else {
                             Log.w(TAG, "[FirestoreConnector]::getFollowingOfUser: error getting users following by user.", task.getException());
+                            listener.onError();
+                        }
+                    }
+                });
+    }
+
+    /**
+     * Method to retrieve the list of user ids that are following the given user.
+     *
+     * @param user_id: user id.
+     * @param listener: FirestoreListener object to be notified once the operation is complete.
+     */
+    public void getFollowersOfUser(@NonNull final String user_id, final IFirestoreFieldListener<String> listener) {
+        Log.d(TAG, "[FirestoreConnector]::getFollowersOfUser: request to get which users are being followed by (" + user_id + ")");
+
+        mDb.collection(FOLLOWERS_COLLECTION)
+                .document(user_id)
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                        if (task.isSuccessful() && (task.getResult() != null)) {
+                            List<String> ids = (List<String>) task.getResult().get(FOLLOWERS_FOLLOWED_BY);
+                            if (ids == null) {
+                                ids = new ArrayList<>();
+                            }
+
+                            listener.onSuccess(ids);
+
+                        } else {
+                            Log.w(TAG, "[FirestoreConnector]::getFollowersOfUser: error getting users followed by user.", task.getException());
                             listener.onError();
                         }
                     }

@@ -30,7 +30,6 @@ import com.squareup.picasso.Picasso;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -41,6 +40,9 @@ public class UserActivity extends AppCompatActivity {
 
     private ProgressBar mProgressBar;
     private TextView mMessageTextview;
+    private TextView mNumReviewsTextview;
+    private TextView mNumFollowersTextview;
+    private TextView mNumFollowingTextview;
     private RecyclerView mReviewsRecyclerView;
     private View mContainer;
 
@@ -48,13 +50,8 @@ public class UserActivity extends AppCompatActivity {
     private AtomicBoolean mRequestFailed;
 
     private List<Review> mReviews;
-
     private int mNumFollowers;
-    private int mNumFriends;
-
     private boolean mFollowing;
-    private boolean mFollowingExists;
-
     private int mNumRequests;
 
     private Button mFollow;
@@ -71,16 +68,11 @@ public class UserActivity extends AppCompatActivity {
         mUserName = bundle.getString(Constants.USER_NAME);
         mUserProfilePic = bundle.getString(Constants.USER_PROFILE_PIC);
 
-        // If we come from the UsersAdapter we know if the user is being followed by us.
-        if (bundle.containsKey(Constants.USER_FOLLOWING)) {
-            mFollowing = bundle.getBoolean(Constants.USER_FOLLOWING);
-            mFollowingExists = true;
-        } else {
-            mFollowingExists = false;
-        }
-
         mProgressBar = findViewById(R.id.user_progress_bar);
         mMessageTextview = findViewById(R.id.user_message_textview);
+        mNumReviewsTextview = findViewById(R.id.friend_num_reviews);
+        mNumFollowersTextview = findViewById(R.id.friend_num_followers);
+        mNumFollowingTextview = findViewById(R.id.friend_num_following);
         mReviewsRecyclerView = findViewById(R.id.user_recyclerview);
         mContainer = findViewById(R.id.user_container);
         findViewById(R.id.friend_back_button).setOnClickListener(new View.OnClickListener() {
@@ -113,10 +105,19 @@ public class UserActivity extends AppCompatActivity {
                 if (mFollowing) {
                     FirestoreConnector.newInstance().unfollow(
                             Objects.requireNonNull(FirebaseAuth.getInstance().getUid()), mUserId);
+
+                    mNumFollowers--;
+
                 } else {
                     FirestoreConnector.newInstance().follow(
                             Objects.requireNonNull(FirebaseAuth.getInstance().getUid()), mUserId);
+
+                    mNumFollowers++;
                 }
+
+                String message = (mNumFollowers == 1) ? getString(R.string.friend_num_followers_singular) : getString(R.string.friend_num_followers);
+                message = message.replace(Constants.STR_PLACEHOLDER_1, Integer.toString(mNumFollowers));
+                mNumFollowersTextview.setText(message);
 
                 mFollowing = !mFollowing;
                 updateFollowButton();
@@ -144,6 +145,9 @@ public class UserActivity extends AppCompatActivity {
             mReviewsRecyclerView.setAdapter(reviewsAdapter);
             mReviewsRecyclerView.setVisibility(View.VISIBLE);
         }
+
+        mNumReviewsTextview.setText(
+                getString(R.string.friend_num_reviews_2).replace(Constants.STR_PLACEHOLDER_1, Integer.toString(mReviews.size())));
     }
 
     private void getData() {
@@ -152,7 +156,6 @@ public class UserActivity extends AppCompatActivity {
 
         mReviews = new ArrayList<>();
         mNumFollowers = 0;
-        mNumFriends = 0;
         mNumRequests = 0;
 
         mRequestCounter = new AtomicInteger(0);
@@ -160,11 +163,7 @@ public class UserActivity extends AppCompatActivity {
 
         getReviews();
         getNumFollowers();
-        getNumFriends();
-
-        if (!mFollowingExists){
-            getFollowing();
-        }
+        getNumFollowing();
     }
 
     private void getReviews() {
@@ -229,30 +228,49 @@ public class UserActivity extends AppCompatActivity {
     }
 
     private void getNumFollowers() {
-        // todo
+        mNumRequests++;
+        FirestoreConnector
+                .newInstance()
+                .getFollowersOfUser(mUserId, new IFirestoreFieldListener<String>() {
+                    @Override
+                    public void onSuccess(List<String> ids) {
+                        mNumFollowers = ids.size();
+                        String message = (mNumFollowers == 1) ? getString(R.string.friend_num_followers_singular) : getString(R.string.friend_num_followers);
+                        message = message.replace(Constants.STR_PLACEHOLDER_1, Integer.toString(mNumFollowers));
+                        mNumFollowersTextview.setText(message);
+
+                        finishTask(true);
+                    }
+
+                    @Override
+                    public void onError() {
+                        finishTask(false);
+                    }
+                });
     }
 
-    private void getNumFriends() {
-        // todo
-    }
-
-    private void getFollowing() {
+    private void getNumFollowing() {
         mNumRequests++;
         FirestoreConnector
                 .newInstance()
                 .getFollowingOfUser(Objects.requireNonNull(FirebaseAuth.getInstance().getUid()), new IFirestoreFieldListener<String>()
-        {
-            @Override
-            public void onSuccess(List<String> ids) {
-                mFollowing = ids.contains(mUserId);
-                finishTask(true);
-            }
+                {
+                    @Override
+                    public void onSuccess(List<String> ids) {
+                        String message = (ids.size() == 1) ? getString(R.string.friend_num_friends_singular) : getString(R.string.friend_num_friends);
+                        message = message.replace(Constants.STR_PLACEHOLDER_1, Integer.toString(ids.size()));
+                        mNumFollowingTextview.setText(message);
 
-            @Override
-            public void onError() {
-                finishTask(false);
-            }
-        });
+                        mFollowing = ids.contains(mUserId);
+
+                        finishTask(true);
+                    }
+
+                    @Override
+                    public void onError() {
+                        finishTask(false);
+                    }
+                });
     }
 
     private void finishTask(boolean ok) {
@@ -279,7 +297,7 @@ public class UserActivity extends AppCompatActivity {
         }
     }
 
-    private void showMessage(String message) {
+    private void showMessage(final String message) {
         mMessageTextview.setText(message);
         mMessageTextview.setVisibility(View.VISIBLE);
     }

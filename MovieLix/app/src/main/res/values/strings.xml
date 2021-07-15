@@ -36,7 +36,9 @@
     <string name="friend_num_reviews">12</string>
     <string name="friend_num_reviews_2">$1 valoraciones</string>
     <string name="friend_num_followers">$1 seguidores</string>
+    <string name="friend_num_followers_singular">$1 seguidor</string>
     <string name="friend_num_friends">$1 seguidos</string>
+    <string name="friend_num_friends_singular">$1 seguido</string>
     <string name="friend_follow">Seguir</string>
     <string name="friend_unfollow">Siguiendo</string>
 

@@ -125,7 +125,6 @@ public class UsersAdapter extends RecyclerView.Adapter<UsersAdapter.UserHolder> 
             intent.putExtra(Constants.USER_NAME, mUser.getName());
             intent.putExtra(Constants.USER_PROFILE_PIC, mUser.getPhotoUrl());
             intent.putExtra(Constants.USER_NUM_REVIEWS, mUser.getNumReviews());
-            intent.putExtra(Constants.USER_FOLLOWING, mFollowing);
 
             mContext.startActivity(intent);
         }
