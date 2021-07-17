@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.movielix.MovieActivity;
 import com.movielix.R;
+import com.movielix.UserActivity;
 import com.movielix.bean.User;
 import com.movielix.constants.Constants;
 import com.squareup.picasso.Picasso;
@@ -90,8 +91,6 @@ public class UsersSuggestionAdapter extends RecyclerView.Adapter<UsersSuggestion
 
             mName.setText(Html.fromHtml(highlightedName));
 
-            Log.d(Constants.TAG, "----------------------- " +  mUser.getPhotoUrl());
-
             Picasso.get()
                    .load((mUser.getPhotoUrl().isEmpty()) ? null : mUser.getPhotoUrl())
                    .error(R.drawable.ic_default_profile_pic)
@@ -100,16 +99,12 @@ public class UsersSuggestionAdapter extends RecyclerView.Adapter<UsersSuggestion
 
         @Override
         public void onClick(View v) {
-            // todo
-            //Intent intent = new Intent(mContext, MovieActivity.class);
-
-            //intent.putExtra(Constants.MOVIE_ID_INTENT, mMovie.getId());
-            //intent.putExtra(Constants.MOVIE_TITLE_INTENT, mMovie.getTitle());
-            //intent.putExtra(Constants.MOVIE_GENRES_INTENT, mMovie.getGenresAsString());
-            //intent.putExtra(Constants.MOVIE_RELEASE_YEAR_INTENT, mMovie.getReleaseYear());
-            //intent.putExtra(Constants.MOVIE_IMAGE_INTENT, mMovie.getImageUrl());
-
-            //mContext.startActivity(intent);
+            Intent intent = new Intent(mContext, UserActivity.class);
+            intent.putExtra(Constants.USER_ID, mUser.getId());
+            intent.putExtra(Constants.USER_NAME, mUser.getName());
+            intent.putExtra(Constants.USER_PROFILE_PIC, mUser.getPhotoUrl());
+            intent.putExtra(Constants.USER_NUM_REVIEWS, mUser.getNumReviews());
+            mContext.startActivity(intent);
         }
     }
 }

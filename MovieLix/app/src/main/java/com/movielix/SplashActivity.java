@@ -36,6 +36,7 @@ public class SplashActivity extends AppCompatActivity {
 
         // Initialize Firebase Auth
         mAuth = FirebaseAuth.getInstance();
+        mAuth.signOut();
 
         if (ExternalStorage.isWritable()) {
             File logFile = new File(getExternalCacheDir(), Constants.LOG_FILE);

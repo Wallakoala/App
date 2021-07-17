@@ -83,4 +83,15 @@ public class Review extends FirestoreItem {
 
         return map;
     }
+
+    @Override
+    public String toString() {
+        return "Review{" +
+                "Score=" + mScore +
+                ", MovieId='" + mMovieId + '\'' +
+                ", UserId='" + mUserId + '\'' +
+                ", Comment='" + mComment + '\'' +
+                ", Timestamp=" + mTimestamp +
+                '}';
+    }
 }

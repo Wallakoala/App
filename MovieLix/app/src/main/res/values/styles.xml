@@ -19,6 +19,12 @@
         <item name="alertDialogStyle">@style/MyAlertDialogStyle</item>
     </style>
 
+    <style name="MyDialogTheme" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:textColorPrimary">@color/textLight</item>
+        <item name="android:background">@drawable/dark_background</item>
+    </style>
+
     <style name="AppTheme.NoActionBar">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
@@ -74,6 +80,10 @@
         <item name="android:background">@color/colorPrimary</item>
         <item name="buttonBarPositiveButtonStyle">@style/MyAlertDialogPositiveButtonStyle</item>
         <item name="buttonBarNegativeButtonStyle">@style/MyAlertDialogNegativeButtonStyle</item>
+    </style>
+
+    <style name="MyAlertDialogStyleLight" parent="MyAlertDialogStyle">
+        <item name="android:textColor">@color/textLight</item>
     </style>
 
     <style name="MyAlertDialogPositiveButtonStyle" parent="@style/Widget.MaterialComponents.Button.TextButton.Dialog">

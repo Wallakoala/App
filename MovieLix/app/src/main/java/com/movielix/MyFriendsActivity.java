@@ -10,30 +10,39 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.daimajia.androidanimations.library.Techniques;
 import com.daimajia.androidanimations.library.YoYo;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
-import com.movielix.adapter.FriendsAdapter;
+import com.movielix.adapter.UsersAdapter;
 import com.movielix.bean.User;
 import com.movielix.firestore.FirestoreConnector;
-import com.movielix.firestore.FirestoreListener;
+import com.movielix.firestore.IFirestoreListener;
+import com.movielix.util.Tuple;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 public class MyFriendsActivity extends AppCompatActivity {
 
+    private enum RefreshType {
+        SWIPE,
+        DEFAULT
+    }
+
     private ProgressBar mProgressBar;
     private TextView mMessageTextview;
     private RecyclerView mRecyclerView;
     private View mContainer;
+    private SwipeRefreshLayout mSwipeRefreshLayout;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.my_friends_activity);
+        setContentView(R.layout.activity_my_friends);
 
         mProgressBar = findViewById(R.id.my_friends_progress_bar);
         mMessageTextview = findViewById(R.id.my_friends_message_textview);
@@ -46,10 +55,18 @@ public class MyFriendsActivity extends AppCompatActivity {
             }
         });
 
+        mSwipeRefreshLayout = findViewById(R.id.my_friends_swipe_refresh_layout);
+        mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                getFriends(RefreshType.SWIPE);
+            }
+        });
+
         initializeFAB();
         hideMessage();
 
-        getReviews();
+        getFriends(RefreshType.DEFAULT);
     }
 
     /**
@@ -68,22 +85,23 @@ public class MyFriendsActivity extends AppCompatActivity {
     /**
      * Initializes the RecyclerView
      */
-    private void initializeRecyclerView(final List<User> users) {
-        FriendsAdapter reviewsAdapter = new FriendsAdapter(users, this);
+    private void initializeRecyclerView(final List<Tuple<User, Boolean>> users) {
+        UsersAdapter friendsAdapter = new UsersAdapter(users, this);
 
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this, RecyclerView.VERTICAL, false));
-        mRecyclerView.setAdapter(reviewsAdapter);
+        mRecyclerView.setAdapter(friendsAdapter);
         mRecyclerView.setVisibility(View.VISIBLE);
     }
 
     /**
-     * Method to retrieve the reviews and show the RecyclerView.
+     * Method to retrieve the user's friends and show the RecyclerView.
      */
-    private void getReviews() {
+    private void getFriends(final RefreshType refreshType) {
+        mSwipeRefreshLayout.setEnabled(false);
         mMessageTextview.setVisibility(View.GONE);
         mRecyclerView.setVisibility(View.GONE);
         FirestoreConnector.newInstance()
-                .getFriends(Objects.requireNonNull(FirebaseAuth.getInstance().getUid()), new FirestoreListener<User>() {
+                .getFriends(Objects.requireNonNull(FirebaseAuth.getInstance().getUid()), new IFirestoreListener<User>() {
             @Override
             public void onSuccess() {}
 
@@ -92,25 +110,40 @@ public class MyFriendsActivity extends AppCompatActivity {
 
             @Override
             public void onSuccess(final List<User> users) {
-                hideProgressBar();
+                if (refreshType == RefreshType.DEFAULT) {
+                    hideProgressBar();
+                } else {
+                    mSwipeRefreshLayout.setRefreshing(false);
+                }
+
                 if (users.isEmpty()) {
                     showMessage(getResources().getString(R.string.no_friends));
                 } else {
-                    initializeRecyclerView(users);
+                    List<Tuple<User, Boolean>> usersWrapper = new ArrayList<>();
+                    for (User user: users) {
+                        usersWrapper.add(new Tuple<>(user, true));
+                    }
+
+                    initializeRecyclerView(usersWrapper);
                 }
+
+                mSwipeRefreshLayout.setEnabled(true);
             }
 
             @Override
             public void onError() {
                 hideProgressBar();
+                hideMessage();
 
                 Snackbar.make(mContainer, R.string.something_went_wrong, Snackbar.LENGTH_LONG).setAction("Reintentar", new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         showProgressBar();
-                        getReviews();
+                        getFriends(refreshType);
                     }
                 }).show();
+
+                mSwipeRefreshLayout.setEnabled(true);
             }
         });
     }

@@ -1,5 +1,11 @@
 package com.movielix.bean;
 
+import android.util.Log;
+
+import androidx.annotation.NonNull;
+
+import com.movielix.constants.Constants;
+
 import java.util.ArrayList;
 import java.util.List;
 

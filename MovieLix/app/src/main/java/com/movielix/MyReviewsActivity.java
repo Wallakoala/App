@@ -3,7 +3,6 @@ package com.movielix;
 import android.animation.Animator;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -19,9 +18,8 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.movielix.adapter.ReviewsAdapter;
 import com.movielix.bean.Movie;
 import com.movielix.bean.Review;
-import com.movielix.constants.Constants;
 import com.movielix.firestore.FirestoreConnector;
-import com.movielix.firestore.FirestoreListener;
+import com.movielix.firestore.IFirestoreListener;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,7 +35,7 @@ public class MyReviewsActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.my_reviews_activity);
+        setContentView(R.layout.activity_my_reviews);
 
         mProgressBar = findViewById(R.id.my_reviews_progress_bar);
         mMessageTextview = findViewById(R.id.my_reviews_message_textview);
@@ -84,7 +82,7 @@ public class MyReviewsActivity extends AppCompatActivity {
         mMessageTextview.setVisibility(View.GONE);
         mReviewsRecyclerView.setVisibility(View.GONE);
         FirestoreConnector.newInstance()
-                .getReviewsByUser(Objects.requireNonNull(FirebaseAuth.getInstance().getUid()), new FirestoreListener<Review>() {
+                .getReviewsByUser(Objects.requireNonNull(FirebaseAuth.getInstance().getUid()), new IFirestoreListener<Review>() {
             @Override
             public void onSuccess() {}
 
@@ -103,7 +101,7 @@ public class MyReviewsActivity extends AppCompatActivity {
                     }
 
                     FirestoreConnector.newInstance()
-                            .getMoviesById(ids, new FirestoreListener<Movie>() {
+                            .getMoviesById(ids, new IFirestoreListener<Movie>() {
                                 @Override
                                 public void onSuccess() {}
 

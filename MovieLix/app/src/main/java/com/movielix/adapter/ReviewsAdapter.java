@@ -126,7 +126,7 @@ public class ReviewsAdapter extends RecyclerView.Adapter<ReviewsAdapter.ReviewHo
                 }
 
             } else {
-                // todo get the friend's name and profile pic somehow.
+                // todo #28 - get the friend's name and profile pic somehow.
             }
 
             int pgRatingImage = Util.getRatingImage(movie.getPGRating());

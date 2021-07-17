@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:clipToPadding="false"
+            android:clipChildren="false"
+            app:contentInsetStart="0dp"
+            app:contentInsetRight="0dp"
+            app:contentInsetLeft="0dp"
+            app:contentInsetStartWithNavigation="0dp"
+            app:contentInsetEndWithActions="0dp">
+
+            <com.movielix.font.MovieLixTextView
+                android:id="@+id/user_name"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:text="@string/friend_toolbar"
+                android:textSize="22sp"
+                android:textColor="@color/colorAccent"
+                android:textAppearance="@style/TextAppearance.Widget.AppCompat.Toolbar.Title"
+                app:customFont="BebasNeue-Regular.otf"/>
+
+        </androidx.appcompat.widget.Toolbar>
+
+        <ProgressBar
+            android:id="@+id/user_progress_bar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:indeterminate="true"
+            android:layout_gravity="center"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            style="?android:attr/progressBarStyleHorizontal"/>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/user_container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
+                <!-- Friend information -->
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@android:color/transparent"
+                    android:weightSum="1">
+
+                    <!-- Profile pic -->
+                    <FrameLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/border_transparent">
+
+                        <de.hdodenhof.circleimageview.CircleImageView
+                            android:id="@+id/user_profile_pic"
+                            android:layout_width="72dp"
+                            android:layout_height="72dp"
+                            android:layout_margin="16dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_default_profile_pic"/>
+
+                    </FrameLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="horizontal"
+                        android:weightSum="1"
+                        android:baselineAligned="false">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:orientation="vertical"
+                            android:gravity="center_vertical"
+                            android:paddingStart="8dp"
+                            android:background="@drawable/border_transparent"
+                            android:layout_weight="0.5">
+
+                            <com.movielix.font.MovieLixTextView
+                                android:id="@+id/friend_num_reviews"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="4dp"
+                                android:padding="2dp"
+                                android:text="@string/friend_num_reviews_2"
+                                android:textColor="@color/textLight"
+                                app:customFont="Raleway-SemiBold.ttf"/>
+
+                            <com.movielix.font.MovieLixTextView
+                                android:id="@+id/friend_num_following"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="4dp"
+                                android:padding="2dp"
+                                android:text="@string/friend_num_friends"
+                                android:textColor="@color/textLight"
+                                app:customFont="Raleway-SemiBold.ttf"/>
+
+                            <com.movielix.font.MovieLixTextView
+                                android:id="@+id/friend_num_followers"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="4dp"
+                                android:padding="2dp"
+                                android:text="@string/friend_num_followers"
+                                android:textColor="@color/textLight"
+                                app:customFont="Raleway-SemiBold.ttf"/>
+
+                        </LinearLayout>
+
+                        <!-- Follow button -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:gravity="start|center_vertical"
+                            android:layout_weight="0.5"
+                            android:background="@drawable/border_transparent">
+
+                            <Button
+                                android:id="@+id/friend_add_button"
+                                android:layout_width="114dp"
+                                android:layout_height="34dp"
+                                android:layout_marginEnd="16dp"
+                                android:text="@string/friend_follow"
+                                android:textSize="11dp"
+                                android:textColor="@color/colorAccent"
+                                android:background="@drawable/rounded_button_border_transparent"/>
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <!-- Friend's reviews -->
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/user_recyclerview"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:overScrollMode="always"
+                        app:fastScrollEnabled="false"/>
+
+                    <com.movielix.font.MovieLixTextView
+                        android:id="@+id/user_message_textview"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="top|center"
+                        android:layout_marginTop="256dp"
+                        android:layout_marginEnd="32dp"
+                        android:layout_marginStart="32dp"
+                        android:textSize="20sp"
+                        android:textColor="@color/textIdle"
+                        android:textStyle="bold"
+                        android:gravity="center"
+                        app:customFont="Raleway-Regular.ttf"/>
+
+                </FrameLayout>
+
+            </LinearLayout>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </LinearLayout>
+
+    <!-- Back button -->
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/friend_back_button"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_margin="16dp"
+        app:tint="@color/colorAccent"
+        app:srcCompat="@drawable/ic_back"/>
+
+</FrameLayout>
+

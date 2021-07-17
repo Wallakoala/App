@@ -5,6 +5,7 @@
     <string name="tab_right">Amigos</string>
 
     <string name="my_reviews">Mis valoraciones</string>
+    <string name="friend_toolbar">Pepito Fernández</string>
     <string name="my_friends">Mis amigos</string>
 
     <string name="navigation_drawer_open">Navigation drawer opened</string>
@@ -33,6 +34,11 @@
     <string name="reviews_item_movie_rating_2">5</string>
 
     <string name="friend_num_reviews">12</string>
+    <string name="friend_num_reviews_2">$1 valoraciones</string>
+    <string name="friend_num_followers">$1 seguidores</string>
+    <string name="friend_num_followers_singular">$1 seguidor</string>
+    <string name="friend_num_friends">$1 seguidos</string>
+    <string name="friend_num_friends_singular">$1 seguido</string>
     <string name="friend_follow">Seguir</string>
     <string name="friend_unfollow">Siguiendo</string>
 
@@ -71,12 +77,13 @@
     <string name="users_search_bar_placeholder">Buscar usuario</string>
     <string name="search_bar_hint">Buscar</string>
 
-    <string name="no_movies_found">No se ha encontrado ninguna película o serie con los términos\n\"%1\"</string>
+    <string name="no_movies_found">No se ha encontrado ninguna película o serie con los términos\n\"$1\"</string>
     <string name="no_users_found">No se ha encontrado ningún usuario"</string>
-    <string name="movie_suggestion_extra_info">(%1) - %2</string>
+    <string name="movie_suggestion_extra_info">($1) - $2</string>
     <string name="add_review_descriptor">Añadir valoracion</string>
     <string name="add_friend_descriptor">Añadir amigo</string>
 
     <string name="no_reviews">No has hecho ninguna valoración todavía.</string>
+    <string name="friend_no_reviews">$1 no ha hecho ninguna valoración todavía.</string>
     <string name="no_friends">No has añadido ningún amigo todavía.</string>
 </resources>
