@@ -4,8 +4,14 @@ import android.animation.Animator;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.graphics.Bitmap;
+import android.graphics.Typeface;
 import android.os.Bundle;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.view.Menu;
 import android.view.MenuItem;
+import android.view.SubMenu;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -26,16 +32,22 @@ import com.daimajia.androidanimations.library.YoYo;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.movielix.adapter.ReviewsAdapter;
 import com.movielix.bean.Movie;
 import com.movielix.bean.Review;
 import com.movielix.firestore.FirestoreConnector;
 import com.movielix.firestore.IFirestoreListener;
+import com.movielix.font.CustomTypeFaceSpan;
+import com.movielix.font.TypeFace;
 import com.movielix.interfaces.IFirestoreFieldListener;
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
+import de.hdodenhof.circleimageview.CircleImageView;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
@@ -54,6 +66,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private TextView mMessageTextView;
     private View mContainer;
+    private NavigationView mNavigationVew;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -196,16 +209,52 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
      */
     private void initializeDrawer() {
         // Navigation drawer
-        NavigationView nv = findViewById(R.id.nav_view);
+        mNavigationVew = findViewById(R.id.nav_view);
         mDrawerLayout = findViewById(R.id.drawer_layout);
         mDrawerToggle = new ActionBarDrawerToggle(
                 this, mDrawerLayout, mToolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         mDrawerLayout.addDrawerListener(mDrawerToggle);
-        nv.setNavigationItemSelectedListener(this);
+        mNavigationVew.setNavigationItemSelectedListener(this);
 
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             getSupportActionBar().setHomeButtonEnabled(true);
+        }
+
+        // Sacamos la cabecera del navigation drawer
+        View navHeader = mNavigationVew.getHeaderView(0);
+
+        // Establecemos el nombre y el email de la cabecera
+        TextView name  = navHeader.findViewById(R.id.nav_profile_username);
+        TextView email = navHeader.findViewById(R.id.nav_profile_email);
+
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+
+        name.setText(user.getDisplayName());
+        email.setText(user.getEmail());
+
+        CircleImageView profilePic = navHeader.findViewById(R.id.nav_profile_image);
+        Picasso.get()
+                .load(user.getPhotoUrl())
+                .error(R.drawable.ic_default_profile_pic)
+                .into(profilePic);
+
+        // Cambiamos la fuente de los items del navigation drawer
+        Menu m = mNavigationVew.getMenu();
+        for (int i = 0; i < m.size(); i++)  {
+            MenuItem mi = m.getItem(i);
+
+            SubMenu subMenu = mi.getSubMenu();
+            if (subMenu != null && subMenu.size() > 0)
+            {
+                for (int j = 0; j < subMenu.size(); j++)
+                {
+                    MenuItem subMenuItem = subMenu.getItem(j);
+                    applyFontToMenuItem(subMenuItem);
+                }
+            }
+
+            applyFontToMenuItem(mi);
         }
 
         mDrawerToggle.syncState();
@@ -346,5 +395,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
 
         mSwipeRefreshLayout.setEnabled(true);
+    }
+
+    /**
+     * Metodo que aplica la fuente a los items del menu del navigation drawer.
+     * @param mi: item del menu.
+     */
+    private void applyFontToMenuItem(MenuItem mi) {
+        Typeface font = TypeFace.getTypeFace(this, "Raleway-Light.ttf");
+
+        SpannableString newTitle = new SpannableString(mi.getTitle());
+        newTitle.setSpan(
+                new CustomTypeFaceSpan("" , font), 0 , newTitle.length(),  Spannable.SPAN_INCLUSIVE_INCLUSIVE);
+
+        mi.setTitle(newTitle);
     }
 }
