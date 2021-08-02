@@ -104,50 +104,6 @@ public class FirestoreConnector {
         return sFirestoreConnector;
     }
 
-    public List<Review> getDummyMovies(Context context) {
-        List<Review> reviews = new ArrayList<>();
-        Movie movie = new Movie(
-                "0"
-                , "La La Land"
-                , context.getString(R.string.reviews_item_movie_overview)
-                , 2016
-                , 128
-                , "https://m.media-amazon.com/images/M/MV5BMzUzNDM2NzM2MV5BMl5BanBnXkFtZTgwNTM3NTg4OTE@._V1_SX300.jpg"
-                , Arrays.asList("Comedia", "Romance")
-                , Movie.PG_RATING.G
-                , 83);
-
-        reviews.add(new Review(4, "0", "0", "Super divertida, y gonica", movie));
-
-        movie = new Movie(
-                "1"
-                , "Capitán América: El primer vengador"
-                , "Nacido durante la Gran Depresión, Steve Rogers creció como un chico enclenque en una familia pobre. Horrorizado por las noticias que llegaban de Europa sobre los nazis, decidió enrolarse en el ejército; sin embargo, debido a su precaria salud, fue rechazado una y otra vez. Enternecido por sus súplicas, el General Chester Phillips le ofrece la oportunidad de tomar parte en un experimento especial. la \\\"Operación Renacimiento\\\". Después de admi"
-                , 2014
-                , 124
-                , "https://m.media-amazon.com/images/M/MV5BMTYzOTc2NzU3N15BMl5BanBnXkFtZTcwNjY3MDE3NQ@@._V1_SX300.jpg"
-                , Arrays.asList("Acción", "Aventura")
-                , Movie.PG_RATING.PG
-                , 72);
-
-        reviews.add(new Review(2, "1", "0", "Americanada...", movie));
-
-        movie = new Movie(
-                "2"
-                , "Django desencadenado"
-                , "Dos años antes de estallar la Guerra Civil (1861-1865), Schultz, un cazarrecompensas alemán que le sigue la pista a unos asesinos, le promete al esclavo Django dejarlo en libertad si le ayuda a atraparlos. Terminado con éxito el trabajo, Django prefiere seguir al lado del alemán y ayudarle a capturar a los delincuentes más buscados del Sur. Se convierte así en un experto cazador de recompensas, pero su único objetivo es rescatar a su esposa Broomhilda, a la que perdió por culpa del tráfico de esclavos. La búsqueda llevará a Django y a Schultz hasta Calvin Candie, el malvado propietario"
-                , 2012
-                , 165
-                , "https://m.media-amazon.com/images/M/MV5BMjIyNTQ5NjQ1OV5BMl5BanBnXkFtZTcwODg1MDU4OA@@._V1_SX300.jpg"
-                , Arrays.asList("Drama", "Western")
-                , Movie.PG_RATING.R
-                , 90);
-
-        reviews.add(new Review(5, "2", "0", "Canela en rama", movie));
-
-        return reviews;
-    }
-
     /**
      * Method to retrieve a list of movie suggestions based on the search.
      *
@@ -436,7 +392,7 @@ public class FirestoreConnector {
                                     Movie lm = getMovieFromDocument(document);
                                     if (lm != null) {
                                         movies.add(lm);
-                                        Log.d(TAG, lm.toString());
+                                        Log.d(TAG, "[FirestoreConnector]::getMoviesById: " + lm.toString());
                                     }
                                 }
 
@@ -1004,6 +960,11 @@ public class FirestoreConnector {
                                 ids = new ArrayList<>();
                             }
 
+                            Log.d(TAG, "[FirestoreConnector]::getFollowingOfUser: list of ids received:");
+                            for (String id: ids) {
+                                Log.d(TAG, "[FirestoreConnector]::getFollowingOfUser: " + id);
+                            }
+
                             listener.onSuccess(ids);
 
                         } else {
@@ -1039,6 +1000,52 @@ public class FirestoreConnector {
 
                         } else {
                             Log.w(TAG, "[FirestoreConnector]::getFollowersOfUser: error getting users followed by user.", task.getException());
+                            listener.onError();
+                        }
+                    }
+                });
+    }
+
+    /**
+     *
+     * @param ids
+     * @param listener
+     */
+    public void getReviewsByUsers(@NonNull final List<String> ids, final IFirestoreListener<Review> listener) {
+        Log.d(TAG, "[FirestoreConnector]::getReviewsByUsers: request to get reviews by these users: ");
+        for (String id: ids) {
+            Log.d(TAG, "[FirestoreConnector]::getReviewsByUsers: " + id);
+        }
+
+        mDb.collection(REVIEWS_COLLECTION)
+                .whereIn(REVIEW_USER_ID, ids)
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful() && (task.getResult() != null)) {
+                            List<Review> reviews = new ArrayList<>();
+                            if (!task.getResult().getDocuments().isEmpty()) {
+                                for (DocumentSnapshot document : task.getResult().getDocuments()) {
+                                    Review review = new Review(
+                                            document.getId(),
+                                            Objects.requireNonNull(document.getLong(REVIEW_SCORE)).intValue(),
+                                            Objects.requireNonNull(document.getString(REVIEW_MOVIE_ID)),
+                                            Objects.requireNonNull(document.getString(REVIEW_USER_ID)),
+                                            document.getString(REVIEW_COMMENT),
+                                            null);
+
+                                    reviews.add(review);
+                                }
+
+                            } else {
+                                Log.w(TAG, "[FirestoreConnector]::getReviewsByUser: no reviews found");
+                            }
+
+                            listener.onSuccess(reviews);
+
+                        } else {
+                            Log.w(TAG, "[FirestoreConnector]::getReviewsByUser: error getting reviews.", task.getException());
                             listener.onError();
                         }
                     }

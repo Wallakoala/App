@@ -71,6 +71,9 @@
     <string name="review_sent">¡Valoración enviada!</string>
     <string name="review_error">¡Ops! Tu valoración no se ha podido enviar.</string>
 
+    <string name="reviews_no_users">¡Vaya! Aún no tienes ningún amigo.\nVe a la pantalla de Mis Amigos y añádelos.</string>
+    <string name="reviews_no_reviews">¡Vaya! Parece que tus amigos no han hecho ninguna valoración.</string>
+
     <string name="facebook_app_id">592176878302149</string> <string name="fb_login_protocol_scheme">fb592176878302149</string>
 
     <string name="search_bar_placeholder">Buscar película o serie</string>

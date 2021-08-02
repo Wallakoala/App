@@ -52,13 +52,40 @@
                 android:layout_marginEnd="16dp"
                 style="?android:attr/progressBarStyleHorizontal"/>
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/review_recyclerview"
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/reviews_container"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layoutAnimation="@anim/layout_animation_slide_from_bottom"
-                android:overScrollMode="always"
-                app:fastScrollEnabled="false"/>
+                android:layout_height="match_parent">
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/reviews_recyclerview"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layoutAnimation="@anim/layout_animation_slide_from_bottom"
+                        android:overScrollMode="always"
+                        app:fastScrollEnabled="false"/>
+
+                    <com.movielix.font.MovieLixTextView
+                        android:id="@+id/reviews_message_textview"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="top|center"
+                        android:layout_marginTop="256dp"
+                        android:layout_marginEnd="32dp"
+                        android:layout_marginStart="32dp"
+                        android:textSize="20sp"
+                        android:textColor="@color/textIdle"
+                        android:textStyle="bold"
+                        android:gravity="center"
+                        app:customFont="Raleway-Regular.ttf"/>
+
+                </FrameLayout>
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
 
         </LinearLayout>
 
@@ -70,7 +97,7 @@
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/fab_margin"
         app:layout_behavior=".behavior.ScrollAwareFABBehavior"
-        app:layout_anchor="@id/review_recyclerview"
+        app:layout_anchor="@id/reviews_recyclerview"
         app:layout_anchorGravity="bottom|right"
         app:srcCompat="@drawable/fab_background"
         android:contentDescription="@string/add_review_descriptor" />

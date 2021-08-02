@@ -28,7 +28,7 @@ public class Review extends FirestoreItem {
     private final Date mTimestamp;
 
     // Internal fields
-    private final Movie mMovie;
+    private Movie mMovie;
 
     public Review(int score, @NonNull String movieId, @NonNull String user, @Nullable String comment, @Nullable Movie movie) {
         this.mScore = score;
@@ -68,6 +68,10 @@ public class Review extends FirestoreItem {
 
     public Movie getMovie() {
         return mMovie;
+    }
+
+    public void setMovie(Movie movie) {
+        mMovie = movie;
     }
 
     public Map<String, Object> asMap() {
