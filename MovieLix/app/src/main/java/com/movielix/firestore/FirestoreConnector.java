@@ -17,17 +17,17 @@ import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
-import com.movielix.R;
 import com.movielix.bean.BaseMovie;
 import com.movielix.bean.LiteMovie;
 import com.movielix.bean.Movie;
 import com.movielix.bean.Review;
 import com.movielix.bean.User;
 import com.movielix.constants.Constants;
+import com.movielix.interfaces.IDeleteListener;
 import com.movielix.interfaces.IFirestoreFieldListener;
+import com.movielix.interfaces.IFirestoreListener;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -683,6 +683,72 @@ public class FirestoreConnector {
                         }
                     }
                 });
+    }
+    /**
+     * Method that returns a list of users suggestions given a search term.
+     *
+     * @param user_id
+     */
+    public void deleteUser(@NonNull final String user_id, final IDeleteListener listener){
+
+        // delete account code.
+        // paso 1: sacar id -> check
+        // paso 2: sacar lista de followers
+        // A) iterar elementos
+        // B) borrar myid de following de other
+        // paso 3: sacar lista de following
+        // A) iterar elementos
+        // B) borrar myid de followers de other
+        // paso 4: borrar reviews //no imprescindible... ya veremos
+        // paso 5: borrar user firestore
+        // paso 6: borrar user firebase
+
+        Log.d(TAG, "[FirestoreConnector]::deleteUser: request to delete user (" + user_id + ")");
+        getFollowersOfUser(user_id, new IFirestoreFieldListener<String>() {
+            @Override
+            public void onSuccess(List<String> ids) {
+                for (String id : ids){
+                    unfollow(id, user_id);
+                }
+                getReviewsByUser(user_id, new IFirestoreListener<Review>() {
+                    @Override
+                    public void onSuccess() {}
+
+                    @Override
+                    public void onSuccess(Review item) {}
+
+                    @Override
+                    public void onSuccess(List<Review> reviews) {
+                        for (Review review : reviews) {
+                            mDb.collection(REVIEWS_COLLECTION).document(review.mId).delete();
+                        }
+                        mDb.collection(FOLLOWING_COLLECTION).document(user_id).delete();
+                        mDb.collection(USERS_COLLECTION).document(user_id).delete().addOnSuccessListener(new OnSuccessListener<Void>() {
+                            @Override
+                            public void onSuccess(Void aVoid) {
+                                listener.onSuccess();
+                            }
+                        }).addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                listener.onError();
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onError() {
+                        listener.onError();
+                    }
+                });
+            }
+
+            @Override
+            public void onError() {
+                listener.onError();
+            }
+        });
+
     }
 
     /**

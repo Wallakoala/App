@@ -28,7 +28,7 @@ import com.movielix.adapter.UsersSuggestionAdapter;
 import com.movielix.bean.User;
 import com.movielix.constants.Constants;
 import com.movielix.firestore.FirestoreConnector;
-import com.movielix.firestore.IFirestoreListener;
+import com.movielix.interfaces.IFirestoreListener;
 import com.movielix.font.TypeFace;
 import com.movielix.interfaces.IFirestoreFieldListener;
 import com.movielix.util.Tuple;

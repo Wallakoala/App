@@ -28,7 +28,7 @@ import com.movielix.bean.LiteMovie;
 import com.movielix.bean.BaseMovie;
 import com.movielix.constants.Constants;
 import com.movielix.firestore.FirestoreConnector;
-import com.movielix.firestore.IFirestoreListener;
+import com.movielix.interfaces.IFirestoreListener;
 import com.movielix.font.TypeFace;
 
 import java.util.List;

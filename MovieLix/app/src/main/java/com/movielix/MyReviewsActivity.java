@@ -19,7 +19,7 @@ import com.movielix.adapter.ReviewsAdapter;
 import com.movielix.bean.Movie;
 import com.movielix.bean.Review;
 import com.movielix.firestore.FirestoreConnector;
-import com.movielix.firestore.IFirestoreListener;
+import com.movielix.interfaces.IFirestoreListener;
 
 import java.util.ArrayList;
 import java.util.List;

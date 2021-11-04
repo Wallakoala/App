@@ -4,7 +4,6 @@ import android.animation.Animator;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Configuration;
-import android.graphics.Bitmap;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.text.Spannable;
@@ -37,7 +36,8 @@ import com.movielix.adapter.ReviewsAdapter;
 import com.movielix.bean.Movie;
 import com.movielix.bean.Review;
 import com.movielix.firestore.FirestoreConnector;
-import com.movielix.firestore.IFirestoreListener;
+import com.movielix.interfaces.IDeleteListener;
+import com.movielix.interfaces.IFirestoreListener;
 import com.movielix.font.CustomTypeFaceSpan;
 import com.movielix.font.TypeFace;
 import com.movielix.interfaces.IFirestoreFieldListener;
@@ -143,8 +143,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             adb.setTitle("¿Seguro quieres salir?");
             adb.setPositiveButton("Aceptar", new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int which) {
+                    String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
                     FirebaseAuth.getInstance().signOut();
-                    Intent logoutIntent = new Intent(getApplicationContext(), IntroActivity.class);
+                    FirestoreConnector.newInstance().deleteUser(userId, new IDeleteListener() {
+                                @Override
+                                public void onSuccess() {
+
+                                }
+
+                                @Override
+                                public void onError() {
+
+                                }
+                            });
+                            Intent logoutIntent = new Intent(getApplicationContext(), IntroActivity.class);
                     logoutIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                     startActivity(logoutIntent);
                 }
@@ -156,6 +168,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
 
         mDrawerLayout.closeDrawer(GravityCompat.START);
+
         return true;
     }
 

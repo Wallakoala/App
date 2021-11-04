@@ -19,7 +19,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.movielix.adapter.UsersAdapter;
 import com.movielix.bean.User;
 import com.movielix.firestore.FirestoreConnector;
-import com.movielix.firestore.IFirestoreListener;
+import com.movielix.interfaces.IFirestoreListener;
 import com.movielix.util.Tuple;
 
 import java.util.ArrayList;

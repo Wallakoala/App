@@ -1,4 +1,6 @@
-package com.movielix.firestore;
+package com.movielix.interfaces;
+
+import com.movielix.firestore.FirestoreItem;
 
 import java.util.List;
 
