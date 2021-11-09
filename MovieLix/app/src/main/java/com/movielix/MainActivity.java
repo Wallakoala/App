@@ -8,6 +8,7 @@ import android.graphics.Typeface;
 import android.os.Bundle;
 import android.text.Spannable;
 import android.text.SpannableString;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SubMenu;
@@ -35,6 +36,7 @@ import com.google.firebase.auth.FirebaseUser;
 import com.movielix.adapter.ReviewsAdapter;
 import com.movielix.bean.Movie;
 import com.movielix.bean.Review;
+import com.movielix.constants.Constants;
 import com.movielix.firestore.FirestoreConnector;
 import com.movielix.interfaces.IDeleteListener;
 import com.movielix.interfaces.IFirestoreListener;
@@ -136,27 +138,29 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             // todo
 
         } else if (id == R.id.menu_licenses) {
-            // todo
+            String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+            FirestoreConnector.newInstance().deleteUser(userId, new IDeleteListener() {
+                @Override
+                public void onSuccess() {
+                    FirebaseAuth.getInstance().getCurrentUser().delete();
+                    Log.d(Constants.TAG, "Cuenta borrada");
+                }
+
+                @Override
+                public void onError() {
+                    Log.d(Constants.TAG, "Error al borrar cuenta");
+                }
+            });
 
         } else if (id == R.id.menu_sign_out) {
             AlertDialog.Builder adb = new AlertDialog.Builder(this, R.style.MyAlertDialogStyleLight);
             adb.setTitle("¿Seguro quieres salir?");
             adb.setPositiveButton("Aceptar", new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int which) {
-                    String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
                     FirebaseAuth.getInstance().signOut();
-                    FirestoreConnector.newInstance().deleteUser(userId, new IDeleteListener() {
-                                @Override
-                                public void onSuccess() {
 
-                                }
-
-                                @Override
-                                public void onError() {
-
-                                }
-                            });
-                            Intent logoutIntent = new Intent(getApplicationContext(), IntroActivity.class);
+                    Intent logoutIntent = new Intent(getApplicationContext(), IntroActivity.class);
                     logoutIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                     startActivity(logoutIntent);
                 }

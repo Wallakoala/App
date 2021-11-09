@@ -684,32 +684,46 @@ public class FirestoreConnector {
                     }
                 });
     }
+
     /**
-     * Method that returns a list of users suggestions given a search term.
+     * Method that deletes the user account along with its corresponding documents
      *
+     *    1: sacar id -> check
+     *    2: sacar lista de followers
+     *      A) iterar elementos
+     *      B) borrar myid de following de other
+     *    3: sacar lista de following
+     *      A) iterar elementos
+     *      B) borrar myid de followers de other
+     *    4: borrar reviews //no imprescindible... ya veremos
+     *    5: borrar user firestore
+     *    6: borrar user firebase
      * @param user_id
      */
     public void deleteUser(@NonNull final String user_id, final IDeleteListener listener){
-
-        // delete account code.
-        // paso 1: sacar id -> check
-        // paso 2: sacar lista de followers
-        // A) iterar elementos
-        // B) borrar myid de following de other
-        // paso 3: sacar lista de following
-        // A) iterar elementos
-        // B) borrar myid de followers de other
-        // paso 4: borrar reviews //no imprescindible... ya veremos
-        // paso 5: borrar user firestore
-        // paso 6: borrar user firebase
 
         Log.d(TAG, "[FirestoreConnector]::deleteUser: request to delete user (" + user_id + ")");
         getFollowersOfUser(user_id, new IFirestoreFieldListener<String>() {
             @Override
             public void onSuccess(List<String> ids) {
-                for (String id : ids){
-                    unfollow(id, user_id);
+                // friends stop following the user
+                for (String follower_id : ids){
+                    unfollow(follower_id, user_id);
                 }
+                getFollowingOfUser(user_id, new IFirestoreFieldListener<String>() {
+                    @Override
+                    public void onSuccess(List<String> followingIds) {
+                        // the user unfollow his friends
+                        for (String following_id : followingIds){
+                            unfollow(user_id, following_id);
+                        }
+                    }
+
+                    @Override
+                    public void onError() {
+                        listener.onError();
+                    }
+                });
                 getReviewsByUser(user_id, new IFirestoreListener<Review>() {
                     @Override
                     public void onSuccess() {}
@@ -719,10 +733,15 @@ public class FirestoreConnector {
 
                     @Override
                     public void onSuccess(List<Review> reviews) {
+                        // delete each review
                         for (Review review : reviews) {
                             mDb.collection(REVIEWS_COLLECTION).document(review.mId).delete();
                         }
+                        // delete the document from "following" table
                         mDb.collection(FOLLOWING_COLLECTION).document(user_id).delete();
+                        // delete the document from "followers" table
+                        mDb.collection(FOLLOWERS_COLLECTION).document(user_id).delete();
+                        // delete the user from "users" table
                         mDb.collection(USERS_COLLECTION).document(user_id).delete().addOnSuccessListener(new OnSuccessListener<Void>() {
                             @Override
                             public void onSuccess(Void aVoid) {
@@ -964,13 +983,13 @@ public class FirestoreConnector {
     }
 
     /**
-     * Method to remove a friend to the `following` collection and myself to as follower.
+     * Method to remove a friend to the `following` collection and myself as follower.
      *
      * @param user_id: user id.
      * @param friend_id: friend id.
      */
     public void unfollow(@NonNull final String user_id, @NonNull final String friend_id) {
-        Log.d(TAG, "[FirestoreConnector]::unfollow: request to remove friend (" + friend_id + ") to user (" + user_id + ")");
+        Log.d(TAG, "[FirestoreConnector]::unfollow: request to remove friend (" + friend_id + ") from user (" + user_id + ")");
 
         mDb.collection(FOLLOWING_COLLECTION)
                 .document(user_id)
@@ -978,7 +997,7 @@ public class FirestoreConnector {
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
-                        Log.d(TAG, "[FirestoreConnector]::unfollow: remove friend to `following` collection successfully");
+                        Log.d(TAG, "[FirestoreConnector]::unfollow: remove friend from `following` collection successfully");
 
                         mDb.collection(FOLLOWERS_COLLECTION)
                                 .document(friend_id)
@@ -986,13 +1005,13 @@ public class FirestoreConnector {
                                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                                     @Override
                                     public void onSuccess(Void aVoid) {
-                                        Log.d(TAG, "[FirestoreConnector]::unfollow: removed myself to `followers` collection successfully");
+                                        Log.d(TAG, "[FirestoreConnector]::unfollow: removed myself from `followers` collection successfully");
                                     }
                                 })
                                 .addOnFailureListener(new OnFailureListener() {
                                     @Override
                                     public void onFailure(@NonNull Exception e) {
-                                        Log.w(TAG, "[FirestoreConnector]::unfollow: error removing myself to `followers` collection", e);
+                                        Log.w(TAG, "[FirestoreConnector]::unfollow: error removing myself from `followers` collection", e);
                                     }
                                 });
                     }
@@ -1000,7 +1019,7 @@ public class FirestoreConnector {
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
-                        Log.w(TAG, "[FirestoreConnector]::unfollow: error removing friend to `following` collection", e);
+                        Log.w(TAG, "[FirestoreConnector]::unfollow: error removing friend from `following` collection", e);
                     }
                 });
     }
