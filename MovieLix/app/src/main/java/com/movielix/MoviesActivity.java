@@ -122,7 +122,7 @@ public class MoviesActivity extends AppCompatActivity implements MaterialSearchB
                         }
 
                         @Override
-                        public void onError() {
+                        public void onError(ErrCode reason) {
                             hideProgressBar(true);
                         }
                     });
@@ -222,7 +222,7 @@ public class MoviesActivity extends AppCompatActivity implements MaterialSearchB
                 }
 
                 @Override
-                public void onError() {
+                public void onError(ErrCode reason) {
                     Snackbar.make(mMoviesContainer, "Ops, algo ha ido mal", Snackbar.LENGTH_SHORT).show();
                 }
             });

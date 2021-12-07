@@ -131,7 +131,7 @@ public class MyFriendsActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onError() {
+            public void onError(ErrCode reason) {
                 hideProgressBar();
                 hideMessage();
 

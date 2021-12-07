@@ -624,9 +624,13 @@ public class LoginActivity extends AppCompatActivity implements IFirestoreListen
     }
 
     @Override
-    public void onError() {
+    public void onError(ErrCode reason) {
         mSigningIn = false;
-        showError(AuthType.FIRESTORE, AuthError.FIRESTORE);
+        if (reason == ErrCode.FATAL_ERROR) {
+            showError(AuthType.FIRESTORE, AuthError.FIRESTORE);
+        } else if (reason == ErrCode.NOT_FOUND) {
+            showError(AuthType.FIRESTORE, AuthError.USER_NOT_FOUND);
+        }
     }
 
     @Override

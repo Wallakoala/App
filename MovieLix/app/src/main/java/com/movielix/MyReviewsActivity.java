@@ -125,7 +125,7 @@ public class MyReviewsActivity extends AppCompatActivity {
                                 }
 
                                 @Override
-                                public void onError() {
+                                public void onError(ErrCode reason) {
                                     hideProgressBar();
 
                                     Snackbar.make(mContainer, R.string.something_went_wrong, Snackbar.LENGTH_LONG).setAction("Reintentar", new View.OnClickListener() {
@@ -141,7 +141,7 @@ public class MyReviewsActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onError() {
+            public void onError(ErrCode reason) {
                 hideProgressBar();
 
                 Snackbar.make(mContainer, R.string.something_went_wrong, Snackbar.LENGTH_LONG).setAction("Reintentar", new View.OnClickListener() {

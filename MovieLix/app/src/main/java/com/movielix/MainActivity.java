@@ -247,7 +247,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
 
-        name.setText(user.getDisplayName());
+        name.setText(Objects.requireNonNull(user).getDisplayName());
         email.setText(user.getEmail());
 
         CircleImageView profilePic = navHeader.findViewById(R.id.nav_profile_image);
@@ -323,7 +323,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                     }
 
                                     @Override
-                                    public void onError() {
+                                    public void onError(ErrCode reason) {
                                         hideProgressBar(refreshType);
                                         hideMessage();
 
@@ -344,7 +344,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         }
 
                         @Override
-                        public void onError() {
+                        public void onError(ErrCode reason) {
                             hideProgressBar(refreshType);
                             hideMessage();
 

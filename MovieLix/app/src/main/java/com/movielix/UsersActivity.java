@@ -126,7 +126,7 @@ public class UsersActivity extends AppCompatActivity implements MaterialSearchBa
                         }
 
                         @Override
-                        public void onError() {
+                        public void onError(ErrCode reason) {
                             hideProgressBar(true);
                         }
                     });
@@ -238,7 +238,7 @@ public class UsersActivity extends AppCompatActivity implements MaterialSearchBa
                 }
 
                 @Override
-                public void onError() {
+                public void onError(ErrCode reason) {
                     Snackbar.make(mUserContainer, "Ops, algo ha ido mal", Snackbar.LENGTH_SHORT).show();
                 }
             });

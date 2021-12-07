@@ -213,7 +213,7 @@ public class UserActivity extends AppCompatActivity {
                                 }
 
                                 @Override
-                                public void onError() {
+                                public void onError(ErrCode reason) {
                                     finishTask(false);
                                 }
                             });
@@ -221,7 +221,7 @@ public class UserActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onError() {
+            public void onError(ErrCode reason) {
                 finishTask(false);
             }
         });

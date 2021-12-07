@@ -660,7 +660,7 @@ public class RegisterActivity extends AppCompatActivity implements IFirestoreLis
     }
 
     @Override
-    public void onError() {
+    public void onError(ErrCode reason) {
         mRegistering = false;
         showError(AuthType.FIRESTORE, AuthError.FIRESTORE);
     }
