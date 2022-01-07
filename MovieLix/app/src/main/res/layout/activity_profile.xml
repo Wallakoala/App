@@ -5,6 +5,7 @@
     android:layout_height="match_parent">
 
     <LinearLayout
+        android:id="@+id/profile_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
@@ -44,10 +45,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:paddingBottom="24dp"
-                android:background="@drawable/border_transparent"
                 android:orientation="horizontal">
 
                 <de.hdodenhof.circleimageview.CircleImageView
+                    android:id="@+id/profile_pic"
                     android:layout_width="84dp"
                     android:layout_height="84dp"
                     android:layout_marginTop="24dp"
@@ -64,6 +65,7 @@
                     android:gravity="center_vertical">
 
                     <com.movielix.font.MovieLixTextView
+                        android:id="@+id/profile_name"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="8dp"
@@ -71,30 +73,66 @@
                         android:textSize="20sp"
                         android:textColor="@color/textLight"
                         android:textStyle="bold"
-                        android:text="@string/navigation_profile_name"/>
+                        android:text="@string/navigation_profile_name"
+                        app:customFont="BebasNeue-Regular.otf"/>
 
                     <com.movielix.font.MovieLixTextView
+                        android:id="@+id/profile_email"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textSize="12sp"
                         android:text="@string/navigation_profile_email"
-                        android:textColor="@color/textDark"/>
+                        android:textColor="@color/textDark"
+                        app:customFont="Raleway-Light.ttf"/>
 
                 </androidx.appcompat.widget.LinearLayoutCompat>
 
             </androidx.appcompat.widget.LinearLayoutCompat>
 
-            <!-- Register button -->
-            <br.com.simplepass.loadingbutton.customViews.CircularProgressButton
-                android:id="@+id/register_button"
+            <View
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="48dp"
-                android:text="@string/intro_register"
-                android:background="@drawable/rounded_button_fill"
-                app:spinning_bar_color="@android:color/white"
-                app:spinning_bar_width="2dp"
-                app:spinning_bar_padding="6dp"/>
+                android:layout_height="3px"
+                android:background="@color/darkDivider"/>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="3px"
+                android:layout_marginTop="64dp"
+                android:background="@color/darkDivider"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:gravity="bottom">
+
+                <!-- Sign out -->
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/profile_sign_out"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="24dp"
+                    android:layout_marginEnd="24dp"
+                    android:text="@string/profile_sign_out"
+                    android:textColor="@color/colorAccent"
+                    android:background="@drawable/rounded_button_border"/>
+
+                <!-- Delete account -->
+                <br.com.simplepass.loadingbutton.customViews.CircularProgressButton
+                    android:id="@+id/profile_delete"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginStart="24dp"
+                    android:layout_marginEnd="24dp"
+                    android:layout_marginBottom="24dp"
+                    android:text="@string/profile_delete_account"
+                    android:background="@drawable/rounded_button_fill"
+                    app:spinning_bar_color="@android:color/white"
+                    app:spinning_bar_width="2dp"
+                    app:spinning_bar_padding="6dp"/>
+
+            </LinearLayout>
 
         </androidx.appcompat.widget.LinearLayoutCompat>
 

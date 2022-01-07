@@ -26,11 +26,7 @@ public class IntroActivity extends AppCompatActivity {
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_intro);
-
-        FirebaseAuth.getInstance().signOut();
-
         initViews();
     }
 

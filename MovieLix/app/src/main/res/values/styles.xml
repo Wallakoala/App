@@ -82,7 +82,8 @@
     </style>
 
     <style name="MyAlertDialogStyleLight" parent="MyAlertDialogStyle">
-        <item name="android:textColor">@color/textLight</item>
+        <item name="android:textColor">@color/colorAccent</item>
+        <item name="android:textColorPrimary">@color/textIdle</item>
     </style>
 
     <style name="MyAlertDialogPositiveButtonStyle" parent="@style/Widget.MaterialComponents.Button.TextButton.Dialog">
