@@ -15,19 +15,20 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldPath;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
-import com.movielix.R;
 import com.movielix.bean.BaseMovie;
 import com.movielix.bean.LiteMovie;
 import com.movielix.bean.Movie;
 import com.movielix.bean.Review;
 import com.movielix.bean.User;
 import com.movielix.constants.Constants;
+import com.movielix.interfaces.IDeleteListener;
 import com.movielix.interfaces.IFirestoreFieldListener;
+import com.movielix.interfaces.IFirestoreListener;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -206,7 +207,7 @@ public class FirestoreConnector {
 
                                                         if (isLastSearch(search_term)) {
                                                             clearLastSearch();
-                                                            listener.onError();
+                                                            listener.onError(IFirestoreListener.ErrCode.FATAL_ERROR);
                                                         }
                                                     }
                                                 }
@@ -252,7 +253,7 @@ public class FirestoreConnector {
 
                             if (isLastSearch(search_term)) {
                                 clearLastSearch();
-                                listener.onError();
+                                listener.onError(IFirestoreListener.ErrCode.FATAL_ERROR);
                             }
                         }
                     }
@@ -311,7 +312,7 @@ public class FirestoreConnector {
 
                                                 } else {
                                                     Log.w(TAG, "[FirestoreConnector]::getMoviesByTitle: error getting movies.", task.getException());
-                                                    listener.onError();
+                                                    listener.onError(IFirestoreListener.ErrCode.FATAL_ERROR);
                                                 }
                                             }
                                         });
@@ -321,7 +322,7 @@ public class FirestoreConnector {
 
                         } else {
                             Log.w(TAG, "[FirestoreConnector]::getMoviesByTitle: error searching movies.", task.getException());
-                            listener.onError();
+                            listener.onError(IFirestoreListener.ErrCode.FATAL_ERROR);
                         }
                     }
                 });
@@ -359,12 +360,12 @@ public class FirestoreConnector {
 
                             } else {
                                 Log.w(TAG, "[FirestoreConnector]::getMovieById: no movie found with the id " + id);
-                                listener.onError();
+                                listener.onError(IFirestoreListener.ErrCode.FATAL_ERROR);
                             }
 
                         } else {
                             Log.w(TAG, "[FirestoreConnector]::getMovieById: error getting movie.", task.getException());
-                            listener.onError();
+                            listener.onError(IFirestoreListener.ErrCode.FATAL_ERROR);
                         }
                     }
                 });
@@ -400,12 +401,12 @@ public class FirestoreConnector {
 
                             } else {
                                 Log.w(TAG, "[FirestoreConnector]::getMoviesById: no movies found with the given ids");
-                                listener.onError();
+                                listener.onError(IFirestoreListener.ErrCode.FATAL_ERROR);
                             }
 
                         } else {
                             Log.w(TAG, "[FirestoreConnector]::getMoviesById: error getting movies.", task.getException());
-                            listener.onError();
+                            listener.onError(IFirestoreListener.ErrCode.FATAL_ERROR);
                         }
                     }
                 });
@@ -451,7 +452,7 @@ public class FirestoreConnector {
                                     @Override
                                     public void onFailure(@NonNull Exception e) {
                                         Log.w(TAG, "[FirestoreConnector]::createReview: incremented number of reviews in user failed", e);
-                                        listener.onError();
+                                        listener.onError(IFirestoreListener.ErrCode.FATAL_ERROR);
                                     }
                                 });
                     }
@@ -460,7 +461,7 @@ public class FirestoreConnector {
                     @Override
                     public void onFailure(@NonNull Exception e) {
                         Log.w(TAG, "[FirestoreConnector]::createReview: error creating review", e);
-                        listener.onError();
+                        listener.onError(IFirestoreListener.ErrCode.FATAL_ERROR);
                     }
                 });
     }
@@ -510,7 +511,7 @@ public class FirestoreConnector {
                                                     @Override
                                                     public void onFailure(@NonNull Exception e) {
                                                         Log.w(TAG, "[FirestoreConnector]::addUser: error initializing followers list", e);
-                                                        listener.onError();
+                                                        listener.onError(IFirestoreListener.ErrCode.FATAL_ERROR);
                                                     }
                                                 });
                                     }
@@ -519,7 +520,7 @@ public class FirestoreConnector {
                                     @Override
                                     public void onFailure(@NonNull Exception e) {
                                         Log.w(TAG, "[FirestoreConnector]::addUser: error initializing empty friends list", e);
-                                        listener.onError();
+                                        listener.onError(IFirestoreListener.ErrCode.FATAL_ERROR);
                                     }
                                 });
                     }
@@ -528,7 +529,7 @@ public class FirestoreConnector {
                     @Override
                     public void onFailure(@NonNull Exception e) {
                         Log.w(TAG, "[FirestoreConnector]::addUser: error creating user", e);
-                        listener.onError();
+                        listener.onError(IFirestoreListener.ErrCode.FATAL_ERROR);
                     }
                 });
     }
@@ -556,8 +557,15 @@ public class FirestoreConnector {
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
-                        Log.w(TAG, "[FirestoreConnector]::updateUser: error updating user", e);
-                        listener.onError();
+                        if (e instanceof FirebaseFirestoreException &&
+                                ((FirebaseFirestoreException) e).getCode() == FirebaseFirestoreException.Code.NOT_FOUND)
+                        {
+                            Log.w(TAG, "[FirestoreConnector]::updateUser: user does not exist", e);
+                            listener.onError(IFirestoreListener.ErrCode.NOT_FOUND);
+                        } else {
+                            Log.w(TAG, "[FirestoreConnector]::updateUser: error updating user", e);
+                            listener.onError(IFirestoreListener.ErrCode.FATAL_ERROR);
+                        }
                     }
                 });
     }
@@ -600,7 +608,7 @@ public class FirestoreConnector {
 
                         } else {
                             Log.w(TAG, "[FirestoreConnector]::getReviewsByUser: error getting reviews.", task.getException());
-                            listener.onError();
+                            listener.onError(IFirestoreListener.ErrCode.FATAL_ERROR);
                         }
                     }
                 });
@@ -662,7 +670,7 @@ public class FirestoreConnector {
 
                                                             } else {
                                                                 Log.w(TAG, "[FirestoreConnector]::getFriendsOf: error getting friends.", task.getException());
-                                                                listener.onError();
+                                                                listener.onError(IFirestoreListener.ErrCode.FATAL_ERROR);
                                                             }
                                                         }
                                                     });
@@ -679,10 +687,94 @@ public class FirestoreConnector {
 
                         } else {
                             Log.w(TAG, "[FirestoreConnector]::getFriendsOf: error getting friends.", task.getException());
-                            listener.onError();
+                            listener.onError(IFirestoreListener.ErrCode.FATAL_ERROR);
                         }
                     }
                 });
+    }
+
+    /**
+     * Method that deletes the user account along with its corresponding documents
+     *
+     *    1: sacar id -> check
+     *    2: sacar lista de followers
+     *      A) iterar elementos
+     *      B) borrar myid de following de other
+     *    3: sacar lista de following
+     *      A) iterar elementos
+     *      B) borrar myid de followers de other
+     *    4: borrar reviews //no imprescindible... ya veremos
+     *    5: borrar user firestore
+     *    6: borrar user firebase
+     * @param user_id
+     */
+    public void deleteUser(@NonNull final String user_id, final IDeleteListener listener) {
+        Log.d(TAG, "[FirestoreConnector]::deleteUser: request to delete user (" + user_id + ")");
+        getFollowersOfUser(user_id, new IFirestoreFieldListener<String>() {
+            @Override
+            public void onSuccess(List<String> ids) {
+                // friends stop following the user
+                for (String follower_id : ids){
+                    unfollow(follower_id, user_id);
+                }
+                getFollowingOfUser(user_id, new IFirestoreFieldListener<String>() {
+                    @Override
+                    public void onSuccess(List<String> followingIds) {
+                        // the user unfollow his friends
+                        for (String following_id : followingIds){
+                            unfollow(user_id, following_id);
+                        }
+                    }
+
+                    @Override
+                    public void onError() {
+                        listener.onError();
+                    }
+                });
+
+                getReviewsByUser(user_id, new IFirestoreListener<Review>() {
+                    @Override
+                    public void onSuccess() {}
+
+                    @Override
+                    public void onSuccess(Review item) {}
+
+                    @Override
+                    public void onSuccess(List<Review> reviews) {
+                        // delete each review
+                        for (Review review : reviews) {
+                            mDb.collection(REVIEWS_COLLECTION).document(review.mId).delete();
+                        }
+                        // delete the document from "following" table
+                        mDb.collection(FOLLOWING_COLLECTION).document(user_id).delete();
+                        // delete the document from "followers" table
+                        mDb.collection(FOLLOWERS_COLLECTION).document(user_id).delete();
+                        // delete the user from "users" table
+                        mDb.collection(USERS_COLLECTION).document(user_id).delete().addOnSuccessListener(new OnSuccessListener<Void>() {
+                            @Override
+                            public void onSuccess(Void aVoid) {
+                                listener.onSuccess();
+                            }
+                        }).addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                listener.onError();
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onError(ErrCode code) {
+                        listener.onError();
+                    }
+                });
+            }
+
+            @Override
+            public void onError() {
+                listener.onError();
+            }
+        });
     }
 
     /**
@@ -757,14 +849,14 @@ public class FirestoreConnector {
 
                                             } else {
                                                 Log.w(TAG, "[FirestoreConnector]::getUsersSuggestionsByName: error getting users.", task.getException());
-                                                listener.onError();
+                                                listener.onError(IFirestoreListener.ErrCode.FATAL_ERROR);
                                             }
                                         }
                                     });
 
                         } else {
                             Log.w(TAG, "[FirestoreConnector]::getUsersSuggestionsByName: error getting users.", task.getException());
-                            listener.onError();
+                            listener.onError(IFirestoreListener.ErrCode.FATAL_ERROR);
                         }
                     }
                 });
@@ -842,14 +934,14 @@ public class FirestoreConnector {
 
                                             } else {
                                                 Log.w(TAG, "[FirestoreConnector]::getUsersSuggestionsByName: error getting users.", task.getException());
-                                                listener.onError();
+                                                listener.onError(IFirestoreListener.ErrCode.FATAL_ERROR);
                                             }
                                         }
                                     });
 
                         } else {
                             Log.w(TAG, "[FirestoreConnector]::getUsersSuggestionsByName: error getting users.", task.getException());
-                            listener.onError();
+                            listener.onError(IFirestoreListener.ErrCode.FATAL_ERROR);
                         }
                     }
                 });
@@ -898,13 +990,13 @@ public class FirestoreConnector {
     }
 
     /**
-     * Method to remove a friend to the `following` collection and myself to as follower.
+     * Method to remove a friend to the `following` collection and myself as follower.
      *
      * @param user_id: user id.
      * @param friend_id: friend id.
      */
     public void unfollow(@NonNull final String user_id, @NonNull final String friend_id) {
-        Log.d(TAG, "[FirestoreConnector]::unfollow: request to remove friend (" + friend_id + ") to user (" + user_id + ")");
+        Log.d(TAG, "[FirestoreConnector]::unfollow: request to remove friend (" + friend_id + ") from user (" + user_id + ")");
 
         mDb.collection(FOLLOWING_COLLECTION)
                 .document(user_id)
@@ -912,7 +1004,7 @@ public class FirestoreConnector {
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
-                        Log.d(TAG, "[FirestoreConnector]::unfollow: remove friend to `following` collection successfully");
+                        Log.d(TAG, "[FirestoreConnector]::unfollow: remove friend from `following` collection successfully");
 
                         mDb.collection(FOLLOWERS_COLLECTION)
                                 .document(friend_id)
@@ -920,13 +1012,13 @@ public class FirestoreConnector {
                                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                                     @Override
                                     public void onSuccess(Void aVoid) {
-                                        Log.d(TAG, "[FirestoreConnector]::unfollow: removed myself to `followers` collection successfully");
+                                        Log.d(TAG, "[FirestoreConnector]::unfollow: removed myself from `followers` collection successfully");
                                     }
                                 })
                                 .addOnFailureListener(new OnFailureListener() {
                                     @Override
                                     public void onFailure(@NonNull Exception e) {
-                                        Log.w(TAG, "[FirestoreConnector]::unfollow: error removing myself to `followers` collection", e);
+                                        Log.w(TAG, "[FirestoreConnector]::unfollow: error removing myself from `followers` collection", e);
                                     }
                                 });
                     }
@@ -934,7 +1026,7 @@ public class FirestoreConnector {
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
-                        Log.w(TAG, "[FirestoreConnector]::unfollow: error removing friend to `following` collection", e);
+                        Log.w(TAG, "[FirestoreConnector]::unfollow: error removing friend from `following` collection", e);
                     }
                 });
     }
@@ -1046,7 +1138,7 @@ public class FirestoreConnector {
 
                         } else {
                             Log.w(TAG, "[FirestoreConnector]::getReviewsByUser: error getting reviews.", task.getException());
-                            listener.onError();
+                            listener.onError(IFirestoreListener.ErrCode.FATAL_ERROR);
                         }
                     }
                 });

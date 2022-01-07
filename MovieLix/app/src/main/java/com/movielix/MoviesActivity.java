@@ -28,7 +28,7 @@ import com.movielix.bean.LiteMovie;
 import com.movielix.bean.BaseMovie;
 import com.movielix.constants.Constants;
 import com.movielix.firestore.FirestoreConnector;
-import com.movielix.firestore.IFirestoreListener;
+import com.movielix.interfaces.IFirestoreListener;
 import com.movielix.font.TypeFace;
 
 import java.util.List;
@@ -122,7 +122,7 @@ public class MoviesActivity extends AppCompatActivity implements MaterialSearchB
                         }
 
                         @Override
-                        public void onError() {
+                        public void onError(ErrCode reason) {
                             hideProgressBar(true);
                         }
                     });
@@ -222,7 +222,7 @@ public class MoviesActivity extends AppCompatActivity implements MaterialSearchB
                 }
 
                 @Override
-                public void onError() {
+                public void onError(ErrCode reason) {
                     Snackbar.make(mMoviesContainer, "Ops, algo ha ido mal", Snackbar.LENGTH_SHORT).show();
                 }
             });

@@ -36,6 +36,7 @@ public class SplashActivity extends AppCompatActivity {
 
         // Initialize Firebase Auth
         mAuth = FirebaseAuth.getInstance();
+        // REMOVEME
         mAuth.signOut();
 
         if (ExternalStorage.isWritable()) {
@@ -79,7 +80,7 @@ public class SplashActivity extends AppCompatActivity {
     private void routeToAppropriateScreen(boolean signedIn) {
         View title = findViewById(R.id.title);
 
-        if (signedIn){
+        if (signedIn) {
             Log.d(Constants.TAG, "user is signed in");
 
             ActivityOptionsCompat options = ActivityOptionsCompat.

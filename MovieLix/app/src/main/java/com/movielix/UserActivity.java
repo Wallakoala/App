@@ -23,7 +23,7 @@ import com.movielix.bean.Movie;
 import com.movielix.bean.Review;
 import com.movielix.constants.Constants;
 import com.movielix.firestore.FirestoreConnector;
-import com.movielix.firestore.IFirestoreListener;
+import com.movielix.interfaces.IFirestoreListener;
 import com.movielix.interfaces.IFirestoreFieldListener;
 import com.squareup.picasso.Picasso;
 
@@ -213,7 +213,7 @@ public class UserActivity extends AppCompatActivity {
                                 }
 
                                 @Override
-                                public void onError() {
+                                public void onError(ErrCode reason) {
                                     finishTask(false);
                                 }
                             });
@@ -221,7 +221,7 @@ public class UserActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onError() {
+            public void onError(ErrCode reason) {
                 finishTask(false);
             }
         });

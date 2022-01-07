@@ -8,6 +8,8 @@
     <string name="friend_toolbar">Pepito Fernández</string>
     <string name="my_friends">Mis amigos</string>
 
+    <string name="profile_toolbar">Mi perfil</string>
+
     <string name="navigation_drawer_open">Navigation drawer opened</string>
     <string name="navigation_drawer_close">Navigation drawer closed</string>
     <string name="navigation_item_reviews">Mis valoraciones</string>
@@ -44,6 +46,9 @@
 
     <string name="rating_image">Rating image</string>
 
+    <string name="profile_sign_out">CERRAR SESIÓN</string>
+    <string name="profile_delete_account">BORRAR CUENTA</string>
+
     <string name="intro_slogan">Todas las opiniones que te importan\n en un sólo sitio.</string>
     <string name="intro_register">REGISTRAR</string>
     <string name="intro_login">ENTRAR</string>
@@ -65,7 +70,7 @@
 
     <string name="something_went_wrong">¡Oops! Algo ha ido mal</string>
     <string name="email_already_register">Este email ya ha sido registrado</string>
-    <string name="user_not_found">Usuario no encontrado</string>
+    <string name="user_not_found">Usuario no encontrado, por favor regístrate</string>
     <string name="email_used_with_different_provider">Este email ya se ha registado con otro proveedor</string>
 
     <string name="review_sent">¡Valoración enviada!</string>

@@ -28,7 +28,7 @@ import com.movielix.adapter.UsersSuggestionAdapter;
 import com.movielix.bean.User;
 import com.movielix.constants.Constants;
 import com.movielix.firestore.FirestoreConnector;
-import com.movielix.firestore.IFirestoreListener;
+import com.movielix.interfaces.IFirestoreListener;
 import com.movielix.font.TypeFace;
 import com.movielix.interfaces.IFirestoreFieldListener;
 import com.movielix.util.Tuple;
@@ -126,7 +126,7 @@ public class UsersActivity extends AppCompatActivity implements MaterialSearchBa
                         }
 
                         @Override
-                        public void onError() {
+                        public void onError(ErrCode reason) {
                             hideProgressBar(true);
                         }
                     });
@@ -238,7 +238,7 @@ public class UsersActivity extends AppCompatActivity implements MaterialSearchBa
                 }
 
                 @Override
-                public void onError() {
+                public void onError(ErrCode reason) {
                     Snackbar.make(mUserContainer, "Ops, algo ha ido mal", Snackbar.LENGTH_SHORT).show();
                 }
             });

@@ -54,7 +54,7 @@ import com.movielix.R;
 import com.movielix.bean.User;
 import com.movielix.constants.Constants;
 import com.movielix.firestore.FirestoreConnector;
-import com.movielix.firestore.IFirestoreListener;
+import com.movielix.interfaces.IFirestoreListener;
 import com.movielix.validator.EmailValidator;
 import com.movielix.validator.NameValidator;
 import com.movielix.validator.PasswordValidator;
@@ -660,7 +660,7 @@ public class RegisterActivity extends AppCompatActivity implements IFirestoreLis
     }
 
     @Override
-    public void onError() {
+    public void onError(ErrCode reason) {
         mRegistering = false;
         showError(AuthType.FIRESTORE, AuthError.FIRESTORE);
     }

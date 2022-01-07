@@ -4,11 +4,11 @@ import android.animation.Animator;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Configuration;
-import android.graphics.Bitmap;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.text.Spannable;
 import android.text.SpannableString;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SubMenu;
@@ -36,8 +36,10 @@ import com.google.firebase.auth.FirebaseUser;
 import com.movielix.adapter.ReviewsAdapter;
 import com.movielix.bean.Movie;
 import com.movielix.bean.Review;
+import com.movielix.constants.Constants;
 import com.movielix.firestore.FirestoreConnector;
-import com.movielix.firestore.IFirestoreListener;
+import com.movielix.interfaces.IDeleteListener;
+import com.movielix.interfaces.IFirestoreListener;
 import com.movielix.font.CustomTypeFaceSpan;
 import com.movielix.font.TypeFace;
 import com.movielix.interfaces.IFirestoreFieldListener;
@@ -79,12 +81,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         initializeFAB();
 
         mSwipeRefreshLayout = findViewById(R.id.swipe_refresh_layout);
-        mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                getReviews(RefreshType.SWIPE);
-            }
-        });
+        mSwipeRefreshLayout.setOnRefreshListener(() -> getReviews(RefreshType.SWIPE));
 
         mSwipeRefreshLayout.setDistanceToTriggerSync(SWIPE_TRIGGER_DISTANCE);
         mProgressBar = findViewById(R.id.reviews_progress_bar);
@@ -136,18 +133,28 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             // todo
 
         } else if (id == R.id.menu_licenses) {
-            // todo
+            String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+            FirestoreConnector.newInstance().deleteUser(userId, new IDeleteListener() {
+                @Override
+                public void onSuccess() {
+                    FirebaseAuth.getInstance().getCurrentUser().delete();
+                    Log.d(Constants.TAG, "Cuenta borrada");
+                }
+
+                @Override
+                public void onError() {
+                    Log.d(Constants.TAG, "Error al borrar cuenta");
+                }
+            });
 
         } else if (id == R.id.menu_sign_out) {
             AlertDialog.Builder adb = new AlertDialog.Builder(this, R.style.MyAlertDialogStyleLight);
             adb.setTitle("¿Seguro quieres salir?");
-            adb.setPositiveButton("Aceptar", new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int which) {
-                    FirebaseAuth.getInstance().signOut();
-                    Intent logoutIntent = new Intent(getApplicationContext(), IntroActivity.class);
-                    logoutIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                    startActivity(logoutIntent);
-                }
+            adb.setPositiveButton("Aceptar", (dialog, which) -> {
+                FirebaseAuth.getInstance().signOut();
+                Intent logoutIntent = new Intent(getApplicationContext(), IntroActivity.class);
+                logoutIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(logoutIntent);
             });
             adb.setNegativeButton("Cancelar", new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int which) { }
@@ -156,6 +163,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
 
         mDrawerLayout.closeDrawer(GravityCompat.START);
+
         return true;
     }
 
@@ -182,12 +190,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             getSupportActionBar().setDisplayShowTitleEnabled(false);
         }
 
-        mToolbar.findViewById(R.id.toolbar_add_friend).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(MainActivity.this, UsersActivity.class);
-                startActivity(intent);
-            }
+        mToolbar.findViewById(R.id.toolbar_add_friend).setOnClickListener(view -> {
+            Intent intent = new Intent(MainActivity.this, UsersActivity.class);
+            startActivity(intent);
         });
     }
 
@@ -223,6 +228,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         // Sacamos la cabecera del navigation drawer
         View navHeader = mNavigationVew.getHeaderView(0);
+        navHeader.setOnClickListener(v -> {
+            Intent intent = new Intent(this, ProfileActivity.class);
+            startActivity(intent);
+        });
 
         // Establecemos el nombre y el email de la cabecera
         TextView name  = navHeader.findViewById(R.id.nav_profile_username);
@@ -230,7 +239,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
 
-        name.setText(user.getDisplayName());
+        name.setText(Objects.requireNonNull(user).getDisplayName());
         email.setText(user.getEmail());
 
         CircleImageView profilePic = navHeader.findViewById(R.id.nav_profile_image);
@@ -306,7 +315,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                     }
 
                                     @Override
-                                    public void onError() {
+                                    public void onError(ErrCode reason) {
                                         hideProgressBar(refreshType);
                                         hideMessage();
 
@@ -327,7 +336,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         }
 
                         @Override
-                        public void onError() {
+                        public void onError(ErrCode reason) {
                             hideProgressBar(refreshType);
                             hideMessage();
 

@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:id="@+id/profile_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:clipToPadding="false"
+            android:clipChildren="false"
+            app:contentInsetStart="0dp"
+            app:contentInsetRight="0dp"
+            app:contentInsetLeft="0dp"
+            app:contentInsetStartWithNavigation="0dp"
+            app:contentInsetEndWithActions="0dp">
+
+            <com.movielix.font.MovieLixTextView
+                android:id="@+id/user_name"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:text="@string/profile_toolbar"
+                android:textSize="22sp"
+                android:textColor="@color/colorAccent"
+                android:textAppearance="@style/TextAppearance.Widget.AppCompat.Toolbar.Title"
+                app:customFont="BebasNeue-Regular.otf"/>
+
+        </androidx.appcompat.widget.Toolbar>
+
+        <androidx.appcompat.widget.LinearLayoutCompat
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <androidx.appcompat.widget.LinearLayoutCompat
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingBottom="24dp"
+                android:orientation="horizontal">
+
+                <de.hdodenhof.circleimageview.CircleImageView
+                    android:id="@+id/profile_pic"
+                    android:layout_width="84dp"
+                    android:layout_height="84dp"
+                    android:layout_marginTop="24dp"
+                    android:layout_marginStart="24dp"
+                    android:src="@drawable/ic_default_profile_pic"/>
+
+                <androidx.appcompat.widget.LinearLayoutCompat
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:layout_marginTop="24dp"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginEnd="24dp"
+                    android:gravity="center_vertical">
+
+                    <com.movielix.font.MovieLixTextView
+                        android:id="@+id/profile_name"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="8dp"
+                        android:gravity="center_vertical"
+                        android:textSize="20sp"
+                        android:textColor="@color/textLight"
+                        android:textStyle="bold"
+                        android:text="@string/navigation_profile_name"
+                        app:customFont="BebasNeue-Regular.otf"/>
+
+                    <com.movielix.font.MovieLixTextView
+                        android:id="@+id/profile_email"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="12sp"
+                        android:text="@string/navigation_profile_email"
+                        android:textColor="@color/textDark"
+                        app:customFont="Raleway-Light.ttf"/>
+
+                </androidx.appcompat.widget.LinearLayoutCompat>
+
+            </androidx.appcompat.widget.LinearLayoutCompat>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="3px"
+                android:background="@color/darkDivider"/>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="3px"
+                android:layout_marginTop="64dp"
+                android:background="@color/darkDivider"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:gravity="bottom">
+
+                <!-- Sign out -->
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/profile_sign_out"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="24dp"
+                    android:layout_marginEnd="24dp"
+                    android:text="@string/profile_sign_out"
+                    android:textColor="@color/colorAccent"
+                    android:background="@drawable/rounded_button_border"/>
+
+                <!-- Delete account -->
+                <br.com.simplepass.loadingbutton.customViews.CircularProgressButton
+                    android:id="@+id/profile_delete"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginStart="24dp"
+                    android:layout_marginEnd="24dp"
+                    android:layout_marginBottom="24dp"
+                    android:text="@string/profile_delete_account"
+                    android:background="@drawable/rounded_button_fill"
+                    app:spinning_bar_color="@android:color/white"
+                    app:spinning_bar_width="2dp"
+                    app:spinning_bar_padding="6dp"/>
+
+            </LinearLayout>
+
+        </androidx.appcompat.widget.LinearLayoutCompat>
+
+    </LinearLayout>
+
+    <!-- Back button -->
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/friend_back_button"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_margin="16dp"
+        app:tint="@color/colorAccent"
+        app:srcCompat="@drawable/ic_back"/>
+
+</FrameLayout>

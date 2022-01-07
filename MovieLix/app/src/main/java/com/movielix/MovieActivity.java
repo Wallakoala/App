@@ -15,7 +15,7 @@ import com.movielix.bean.Movie;
 import com.movielix.bean.Review;
 import com.movielix.constants.Constants;
 import com.movielix.firestore.FirestoreConnector;
-import com.movielix.firestore.IFirestoreListener;
+import com.movielix.interfaces.IFirestoreListener;
 import com.squareup.picasso.Picasso;
 import com.stepstone.apprating.AppRatingDialog;
 import com.stepstone.apprating.listener.RatingDialogListener;
@@ -97,7 +97,7 @@ public class MovieActivity extends AppCompatActivity implements RatingDialogList
             public void onSuccess(List<Movie> items) {}
 
             @Override
-            public void onError() {
+            public void onError(ErrCode reason) {
 
             }
         });
@@ -126,7 +126,7 @@ public class MovieActivity extends AppCompatActivity implements RatingDialogList
                     public void onSuccess(List<Review> items) {}
 
                     @Override
-                    public void onError() {
+                    public void onError(ErrCode reason) {
                         Snackbar snackbar = Snackbar.make(findViewById(R.id.movie_container), R.string.review_error, Snackbar.LENGTH_SHORT);
                         snackbar.getView().setBackgroundColor(getColor(R.color.colorPrimaryMedium));
 

@@ -19,7 +19,7 @@ import com.movielix.adapter.ReviewsAdapter;
 import com.movielix.bean.Movie;
 import com.movielix.bean.Review;
 import com.movielix.firestore.FirestoreConnector;
-import com.movielix.firestore.IFirestoreListener;
+import com.movielix.interfaces.IFirestoreListener;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -125,7 +125,7 @@ public class MyReviewsActivity extends AppCompatActivity {
                                 }
 
                                 @Override
-                                public void onError() {
+                                public void onError(ErrCode reason) {
                                     hideProgressBar();
 
                                     Snackbar.make(mContainer, R.string.something_went_wrong, Snackbar.LENGTH_LONG).setAction("Reintentar", new View.OnClickListener() {
@@ -141,7 +141,7 @@ public class MyReviewsActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onError() {
+            public void onError(ErrCode reason) {
                 hideProgressBar();
 
                 Snackbar.make(mContainer, R.string.something_went_wrong, Snackbar.LENGTH_LONG).setAction("Reintentar", new View.OnClickListener() {
